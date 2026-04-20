@@ -200,7 +200,7 @@ export default function Browse() {
                 <p style={{ color: '#6b6b80', fontSize: '1.1rem', margin: 0 }}>{emptyMsg}</p>
             </div>
         ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '30px' }}>
+            <div className="event-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '30px' }}>
                 {events.map((e, index) => {
                     const isBooked = myBookedEventIds.includes(e.id);
                     const isOwner = user?.id === e.organizer?.id || user?.role === 'ADMIN';
@@ -400,7 +400,7 @@ export default function Browse() {
                     {selectedEvent && (
                         <div>
                             <div style={{ position: 'relative' }}>
-                                <img src={selectedEvent.imageUrl || '/event-placeholder.jpg'} style={{ width: '100%', height: '320px', objectFit: 'cover' }} />
+                                <img className="modal-banner-img" src={selectedEvent.imageUrl || '/event-placeholder.jpg'} style={{ width: '100%', height: '320px', objectFit: 'cover' }} />
                                 <div style={{
                                     position: 'absolute',
                                     bottom: 0,
@@ -410,8 +410,8 @@ export default function Browse() {
                                     background: 'linear-gradient(to top, #16162b 0%, transparent 100%)'
                                 }} />
                             </div>
-                            <div style={{ padding: '32px 40px 40px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                            <div className="modal-content-padding" style={{ padding: '32px 40px 40px' }}>
+                                <div className="modal-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                                     <div>
                                         <Tag color={new Date(parseInt(selectedEvent.date) || selectedEvent.date) < now ? "default" : "blue"} style={{ marginBottom: '12px' }}>
                                             {new Date(parseInt(selectedEvent.date) || selectedEvent.date) < now ? "Completed" : selectedEvent.eventType}
@@ -457,7 +457,7 @@ export default function Browse() {
                                 </div>
 
                                 {/* Info grid */}
-                                <div style={{
+                                <div className="modal-info-grid" style={{
                                     display: 'grid',
                                     gridTemplateColumns: 'repeat(4, 1fr)',
                                     gap: '16px',
@@ -498,6 +498,7 @@ export default function Browse() {
                                             dataSource={selectedEvent.attendees}
                                             pagination={{ pageSize: 5 }}
                                             rowKey="id"
+                                            scroll={{ x: 600 }}
                                             columns={[
                                                 {
                                                     title: 'User',
@@ -614,7 +615,7 @@ export default function Browse() {
                     <p style={{ margin: '0 0 1rem 0', color: '#6b6b80', fontSize: '0.9rem' }}>Update your rich media event details below.</p>
 
                     <Form form={editForm} layout="vertical" onFinish={handleUpdateSubmit} requiredMark={false} className="compact-form">
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                        <div className="grid-2" style={{ gap: '12px', marginBottom: '12px' }}>
                             <Form.Item name="title" label={<label style={{ fontWeight: '600', color: '#a0a0b8', fontSize: '0.85rem' }}>Event Title *</label>} rules={[{ required: true }]} style={{ marginBottom: 0 }}>
                                 <Input placeholder="e.g. Next.js Dev Con" style={{ borderRadius: '10px', padding: '10px 14px' }} />
                             </Form.Item>
@@ -672,7 +673,7 @@ export default function Browse() {
                             <Input.TextArea rows={3} placeholder="Event description..." style={{ borderRadius: '10px' }} />
                         </Form.Item>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '18px' }}>
+                        <div className="grid-2" style={{ gap: '12px', marginBottom: '18px' }}>
                             <Form.Item name="date" label={<label style={{ fontWeight: '600', color: '#a0a0b8', fontSize: '0.85rem' }}>Date & Time *</label>} rules={[{ required: true }]} style={{ marginBottom: 0 }}>
                                 <DatePicker showTime style={{ width: '100%', borderRadius: '10px' }} />
                             </Form.Item>

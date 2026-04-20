@@ -192,6 +192,7 @@ export default function VendorManagement() {
           columns={columns}
           rowKey="id"
           pagination={{ pageSize: 10 }}
+          scroll={{ x: 800 }}
           style={{ background: 'transparent' }}
         />
       </div>

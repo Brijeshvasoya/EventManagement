@@ -88,11 +88,9 @@ export default function Profile() {
           <AntText type="secondary">Manage your personal information and account security.</AntText>
         </div>
 
-        <div style={{ 
+        <div className="form-card" style={{ 
           background: 'var(--card-bg)', 
           backdropFilter: 'blur(24px)',
-          padding: '2.5rem', 
-          borderRadius: '24px', 
           border: '1px solid var(--border-color)',
           boxShadow: 'var(--shadow-lg)'
         }}>

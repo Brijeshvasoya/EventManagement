@@ -156,13 +156,11 @@ export default function CreateEvent() {
       }}
     >
       <Head><title>Post New Event | EventHub</title></Head>
-      <div style={{
+      <div className="form-card" style={{
         maxWidth: '800px',
         margin: '2rem auto',
-        padding: '2.5rem',
         background: 'rgba(22, 22, 35, 0.8)',
         backdropFilter: 'blur(20px)',
-        borderRadius: '28px',
         border: '1px solid rgba(255,255,255,0.06)',
         boxShadow: '0 16px 48px rgba(0,0,0,0.3)'
       }}>
@@ -304,10 +302,7 @@ export default function CreateEvent() {
             </div>
 
             {ticketTypes.map((ticket, idx) => (
-              <div key={idx} style={{
-                display: 'grid',
-                gridTemplateColumns: '1.5fr 1fr 1fr auto',
-                gap: '12px',
+              <div key={idx} className="ticket-tier-row" style={{
                 background: 'rgba(255,255,255,0.02)',
                 padding: '16px',
                 borderRadius: '14px',
@@ -393,6 +388,16 @@ export default function CreateEvent() {
       </div>
 
       <style jsx>{`
+        .ticket-tier-row {
+          display: grid;
+          grid-template-columns: 1.5fr 1fr 1fr auto;
+          gap: 12px;
+        }
+        @media (max-width: 600px) {
+          .ticket-tier-row {
+             grid-template-columns: 1fr 1fr;
+          }
+        }
         @keyframes spin {
           to { transform: rotate(360deg); }
         }

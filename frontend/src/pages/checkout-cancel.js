@@ -59,7 +59,7 @@ export default function CheckoutCancel() {
             Your payment request was not completed and no charges were made. If this was a mistake, you can try booking again.
           </p>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/dashboard">
               <Button type="primary" size="large" style={{ borderRadius: '12px', height: '48px', padding: '0 28px' }}>
                 Return to Dashboard

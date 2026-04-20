@@ -1539,13 +1539,39 @@ textarea.ant-input {
 }
 
 /* ===== RESPONSIVE ===== */
+@media (max-width: 991px) {
+  .ant-layout-sider {
+    display: none !important;
+  }
+  .mobile-only-header {
+    display: flex !important;
+  }
+  .page-content {
+    margin: 16px !important;
+  }
+  /* Fix Grid columns breaking on mobile */
+  .page-content > div > div > div[style*="display: grid"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Fix Details modal grid on mobile */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(4"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  
+  /* PDF Template hiding on mobile */
+  [id^="ticket-rich-template"] {
+     display: none !important;
+  }
+}
+
 @media (max-width: 768px) {
   .grid-2 {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
 
   .event-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
 
   .hero-section h2 {
@@ -1554,7 +1580,107 @@ textarea.ant-input {
 
   .auth-card,
   .form-card {
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: var(--radius-xl);
+  }
+  
+  .mobile-pad-reduce {
+    padding: 16px !important;
+  }
+  
+  h1 {
+    font-size: 2.2rem !important;
+  }
+  
+  .dashboard-hero {
+    padding: 2rem 1.5rem !important;
+  }
+  
+  .dashboard-hero h1 {
+    font-size: 2.2rem !important;
+  }
+  
+  .booking-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  /* Modal responsive wrapper */
+  .ant-modal {
+    max-width: 95vw !important;
+    margin: 10px auto !important;
+    top: 5% !important;
+    padding-bottom: 20px !important;
+  }
+  
+  .ant-modal-content {
+    border-radius: 20px !important;
+    padding: 16px !important;
+  }
+  
+  .ant-modal-body {
+    padding: 12px 0 !important;
+  }
+  
+  /* Catch generic inline padding on modals */
+  .ant-modal div[style*="padding: 32px 40px 40px"],
+  .ant-modal div[style*="padding: 40px"],
+  .ant-modal div[style*="padding: 24px"] {
+    padding: 16px !important;
+  }
+  
+  /* Targeted Browse Modal Classes */
+  .modal-banner-img {
+    height: 200px !important;
+  }
+  
+  .modal-header-flex {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+  
+  .modal-info-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  
+  .modal-content-padding {
+    padding: 20px !important;
+  }
+  
+  /* Modal Title & Typography sizing */
+  .ant-modal h1 {
+    font-size: 1.6rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .ant-modal h2 {
+    font-size: 1.4rem !important;
+  }
+  
+  /* Shrink hardcoded tall hero images inside modals */
+  .ant-modal img[style*="height: 400px"],
+  .ant-modal img[style*="height: '400px'"] {
+    height: 200px !important;
+  }
+  
+  /* Ticket booking modal adjustments */
+  .ant-modal .booking-card {
+    padding: 16px !important;
+  }
+  
+  /* Ensure responsive grids don't overflow on small devices by forcing 1 column */
+  div[style*="grid-template-columns: repeat(auto-fill"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Modal Content Grid Adjustments */
+  div[style*="grid-template-columns: 1.2fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  div[style*="display: grid"][style*="grid-template-columns: repeat(4"] {
+    grid-template-columns: 1fr !important;
   }
 }

@@ -170,7 +170,7 @@ export default function EventDetailsPage() {
   };
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="mobile-pad-reduce" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
       <Head><title>{event.title} | Organizer Dashboard</title></Head>
 
       <Button
@@ -187,7 +187,7 @@ export default function EventDetailsPage() {
           <Card
             cover={
               <div style={{ position: 'relative', overflow: 'hidden' }}>
-                <img alt={event.title} src={event.imageUrl || '/event-placeholder.jpg'} style={{ height: '300px', objectFit: 'cover', width: '100%' }} />
+                <img className="modal-banner-img" alt={event.title} src={event.imageUrl || '/event-placeholder.jpg'} style={{ height: '300px', objectFit: 'cover', width: '100%' }} />
                 <div style={{
                   position: 'absolute',
                   bottom: 0, left: 0, right: 0,
@@ -241,7 +241,7 @@ export default function EventDetailsPage() {
               { title: 'Tickets Sold', value: totalTickets, prefix: <TeamOutlined style={{ color: '#7c5cfc' }} />, color: '#7c5cfc' },
               { title: 'Vendors', value: event.vendors?.length || 0, prefix: <ShopOutlined style={{ color: '#ff8b3d' }} />, color: '#ff8b3d' }
             ].map((stat, i) => (
-              <Col span={8} key={i}>
+              <Col xs={24} sm={12} md={8} key={i}>
                 <Card style={{
                   borderRadius: '20px',
                   textAlign: 'center',
@@ -263,7 +263,7 @@ export default function EventDetailsPage() {
 
           <Card
             title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                 <span style={{ color: '#f0f0f5' }}><TeamOutlined /> Attendees & Bookings</span>
                 <Button
                   type="primary"
@@ -287,6 +287,7 @@ export default function EventDetailsPage() {
               dataSource={event.attendees}
               columns={attendeeColumns}
               rowKey="id"
+              scroll={{ x: 600 }}
               pagination={{ pageSize: 5 }}
               locale={{ emptyText: <Empty description="No bookings yet" /> }}
             />
@@ -305,6 +306,7 @@ export default function EventDetailsPage() {
               dataSource={event.vendors}
               columns={vendorColumns}
               rowKey="id"
+              scroll={{ x: 600 }}
               pagination={false}
               locale={{ emptyText: <Empty description="No vendors assigned to this event" /> }}
             />

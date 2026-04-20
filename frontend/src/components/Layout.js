@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Menu, Button, Avatar, Space, Typography, ConfigProvider, theme } from 'antd';
+import { Layout, Menu, Button, Avatar, Space, Typography, ConfigProvider, theme, Drawer } from 'antd';
 import { 
   AppstoreOutlined, 
   GlobalOutlined, 
@@ -10,7 +10,8 @@ import {
   LoginOutlined,
   UserAddOutlined,
   ShopOutlined,
-  ThunderboltOutlined
+  ThunderboltOutlined,
+  MenuOutlined
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -22,6 +23,7 @@ const { Text: AntText } = Typography;
 export default function AppLayout({ children }) {
   const { user, logout, loading } = useAuth();
   const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (loading) return null;
   if (['/login', '/signup'].includes(router.pathname)) return <>{children}</>;
@@ -119,6 +121,7 @@ export default function AppLayout({ children }) {
               padding: '0 8px',
               background: 'transparent' 
             }}
+            onClick={() => setMobileMenuOpen(false)}
           />
           
           {/* User Section */}
@@ -209,8 +212,65 @@ export default function AppLayout({ children }) {
           </div>
         </Sider>
 
+        <Drawer
+          title={<div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><ThunderboltOutlined style={{ color: '#7c5cfc' }} /> EventHub</div>}
+          placement="left"
+          onClose={() => setMobileMenuOpen(false)}
+          open={mobileMenuOpen}
+          styles={{ 
+            body: { padding: 0, display: 'flex', flexDirection: 'column', background: '#0a0a0f' },
+            header: { background: '#1a1a2e', borderBottom: '1px solid rgba(255,255,255,0.06)' }
+          }}
+          width={280}
+        >
+          <Menu 
+            theme="dark" 
+            mode="inline" 
+            selectedKeys={[selectedKey]} 
+            items={menuItems} 
+            style={{ borderRight: 0, background: 'transparent', padding: '16px 8px', flex: 1 }}
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div style={{ padding: '20px 16px', borderTop: '1px solid rgba(255, 255, 255, 0.06)', background: 'rgba(22, 22, 43, 0.85)' }}>
+            {user ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <Button block onClick={() => { setMobileMenuOpen(false); router.push('/profile'); }}>Profile</Button>
+                <Button danger block onClick={() => { setMobileMenuOpen(false); logout(); }}>Logout</Button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <Button block onClick={() => { setMobileMenuOpen(false); router.push('/login'); }}>Login</Button>
+                <Button type="primary" block onClick={() => { setMobileMenuOpen(false); router.push('/signup'); }}>Sign Up</Button>
+              </div>
+            )}
+          </div>
+        </Drawer>
+
         <Layout style={{ background: '#0a0a0f', width: '100%' }}>
-          <Content style={{ margin: '24px', overflow: 'initial' }}>
+          {/* Mobile Header */}
+          <div className="mobile-only-header" style={{
+            display: 'none',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '16px 24px',
+            background: 'rgba(22, 22, 43, 0.85)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+            position: 'sticky',
+            top: 0,
+            zIndex: 99
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <ThunderboltOutlined style={{ color: '#7c5cfc', fontSize: '20px' }} />
+              <Typography.Title level={4} style={{ margin: 0, color: '#f0f0f5' }}>EventHub</Typography.Title>
+            </div>
+            <Button
+              type="text"
+              icon={<MenuOutlined style={{ fontSize: '20px', color: '#f0f0f5' }} />}
+              onClick={() => setMobileMenuOpen(true)}
+            />
+          </div>
+
+          <Content className="page-content" style={{ margin: '24px', overflow: 'initial' }}>
             {children}
           </Content>
         </Layout>

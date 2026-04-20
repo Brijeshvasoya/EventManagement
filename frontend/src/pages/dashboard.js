@@ -185,7 +185,7 @@ export default function Dashboard() {
         </Modal>
 
         {/* HERO BANNER */}
-        <div style={{
+        <div className="dashboard-hero" style={{
           marginBottom: '4rem',
           background: 'linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 30%, #252545 60%, #1a1a3a 100%)',
           padding: '3.5rem 3.5rem',
@@ -262,7 +262,7 @@ export default function Dashboard() {
         {/* ANALYTICS & EVENT OVERVIEW (ORGANIZER ONLY) */}
         {isOrganizer && (
           <div style={{ marginBottom: '5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '16px' }}>
               <div>
                 <h2 style={{ fontSize: '1.6rem', fontWeight: '800', color: '#f0f0f5', margin: 0, letterSpacing: '-0.5px' }}>Event Management</h2>
                 <p style={{ color: '#6b6b80', margin: '4px 0 0 0', fontSize: '0.9rem' }}>Overview of your hosted events and revenue</p>
@@ -271,7 +271,7 @@ export default function Dashboard() {
             </div>
 
             {analyticsData && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '3rem' }}>
+              <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '3rem' }}>
                 <Card style={{ 
                   borderRadius: '24px', 
                   padding: '8px',
@@ -344,7 +344,7 @@ export default function Dashboard() {
                 <p style={{ color: '#6b6b80', margin: 0 }}>You haven't hosted any events yet.</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
+              <div className="event-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
                 {myEventsData.myEvents.map(e => (
                   <Card 
                     key={e.id} 
@@ -372,7 +372,7 @@ export default function Dashboard() {
 
         {/* TICKET WALLET SECTION */}
         <div style={{ marginBottom: '3rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <h2 style={{ fontSize: '1.6rem', fontWeight: '800', color: '#f0f0f5', margin: 0, letterSpacing: '-0.5px' }}>
                 {isOrganizer ? 'My Personal Tickets' : '🎫 Ticket Wallet'}
@@ -408,9 +408,9 @@ export default function Dashboard() {
               </p>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(440px, 1fr))', gap: '24px' }}>
+            <div className="event-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(440px, 1fr))', gap: '24px' }}>
               {bookings.map(b => (
-                <div key={b.id} style={{ 
+                <div className="booking-card" key={b.id} style={{ 
                   background: 'rgba(22, 22, 35, 0.8)', 
                   borderRadius: '24px', 
                   padding: '24px',

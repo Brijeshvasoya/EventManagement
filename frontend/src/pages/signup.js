@@ -129,10 +129,9 @@ export default function Signup() {
             position: 'absolute', inset: 0, opacity: 0.4,
           }} />
 
-          <div style={{
+          <div className="auth-card" style={{
             width: '100%', maxWidth: '520px', position: 'relative', zIndex: 2,
             background: 'var(--card-bg)', backdropFilter: 'blur(40px)',
-            padding: '2.5rem', borderRadius: 'var(--radius-2xl)',
             border: '1px solid var(--glass-border)', boxShadow: 'var(--shadow-lg)',
             animation: 'fadeInScale 0.8s var(--ease-out)'
           }}>
