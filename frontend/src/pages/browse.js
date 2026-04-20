@@ -41,11 +41,11 @@ export default function Browse() {
     const handleAIImageGenerate = async () => {
         const title = editForm.getFieldValue('title');
         const eventType = editForm.getFieldValue('eventType');
-        
+
         if (!title) return toast.error("Please enter an event title first!");
         setAiImageLoading(true);
         try {
-            const res = await fetch('http://localhost:4000/api/ai/generate-image', {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}:4000/api/ai/generate-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
                 body: JSON.stringify({ title, eventType })
@@ -189,8 +189,8 @@ export default function Browse() {
 
     const EventGrid = ({ events, emptyMsg }) => (
         events.length === 0 ? (
-            <div style={{ 
-                padding: '5rem 2rem', 
+            <div style={{
+                padding: '5rem 2rem',
                 textAlign: 'center',
                 background: 'rgba(22, 22, 35, 0.5)',
                 borderRadius: '24px',
@@ -210,18 +210,18 @@ export default function Browse() {
                             key={e.id}
                             hoverable
                             cover={
-                                <div onClick={() => showDetails(e, isOwner)} style={{ 
-                                    height: '220px', 
-                                    position: 'relative', 
-                                    overflow: 'hidden', 
-                                    cursor: 'pointer' 
+                                <div onClick={() => showDetails(e, isOwner)} style={{
+                                    height: '220px',
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                    cursor: 'pointer'
                                 }}>
-                                    <img 
-                                        src={e.imageUrl || '/event-placeholder.jpg'} 
-                                        style={{ 
+                                    <img
+                                        src={e.imageUrl || '/event-placeholder.jpg'}
+                                        style={{
                                             width: '100%', height: '100%', objectFit: 'cover',
                                             transition: 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)'
-                                        }} 
+                                        }}
                                         onMouseOver={ev => ev.currentTarget.style.transform = 'scale(1.05)'}
                                         onMouseOut={ev => ev.currentTarget.style.transform = 'scale(1)'}
                                     />
@@ -280,9 +280,9 @@ export default function Browse() {
                                     <Tooltip title="Delete Event"><DeleteOutlined style={{ color: '#ff4d6a' }} /></Tooltip>
                                 </Popconfirm>
                             ] : []}
-                            style={{ 
-                                borderRadius: '24px', 
-                                overflow: 'hidden', 
+                            style={{
+                                borderRadius: '24px',
+                                overflow: 'hidden',
                                 border: '1px solid rgba(255, 255, 255, 0.06)',
                                 background: 'rgba(22, 22, 35, 0.8)',
                                 backdropFilter: 'blur(20px)',
@@ -293,8 +293,8 @@ export default function Browse() {
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                                 <Tag color="blue" style={{ borderRadius: '8px', fontWeight: 600 }}>{e.eventType || 'Public'}</Tag>
-                                <span style={{ 
-                                    color: '#6b6b80', 
+                                <span style={{
+                                    color: '#6b6b80',
                                     fontSize: '0.8rem',
                                     fontFamily: 'monospace',
                                     background: 'rgba(255,255,255,0.03)',
@@ -305,7 +305,7 @@ export default function Browse() {
                             <h3 style={{ fontSize: '1.35rem', fontWeight: '800', color: '#f0f0f5', marginBottom: '14px', lineHeight: 1.25 }}>{e.title}</h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', color: '#a0a0b8' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem' }}>
-                                    <CalendarOutlined style={{ color: '#7c5cfc' }} /> 
+                                    <CalendarOutlined style={{ color: '#7c5cfc' }} />
                                     {new Date(parseInt(e.date) || e.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem' }}>
@@ -345,11 +345,11 @@ export default function Browse() {
             <Head><title>Browse Events | EventHub</title></Head>
             <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', minHeight: '100vh' }}>
                 {/* Premium Hero */}
-                <div style={{ 
-                    textAlign: 'center', 
-                    marginBottom: '4rem', 
+                <div style={{
+                    textAlign: 'center',
+                    marginBottom: '4rem',
                     marginTop: '2rem',
-                    position: 'relative' 
+                    position: 'relative'
                 }}>
                     <div style={{
                         display: 'inline-block',
@@ -366,13 +366,13 @@ export default function Browse() {
                     }}>
                         ✨ Discover Amazing Events
                     </div>
-                    <h1 style={{ 
-                        fontSize: '3.8rem', 
-                        fontWeight: '900', 
+                    <h1 style={{
+                        fontSize: '3.8rem',
+                        fontWeight: '900',
                         background: 'linear-gradient(135deg, #f0f0f5 0%, #a0a0b8 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
-                        letterSpacing: '-2.5px', 
+                        letterSpacing: '-2.5px',
                         marginBottom: '1rem',
                         lineHeight: 1.1
                     }}>
@@ -383,16 +383,16 @@ export default function Browse() {
                     </p>
                 </div>
 
-                <Tabs 
-                    defaultActiveKey="1" 
-                    centered 
-                    size="large" 
+                <Tabs
+                    defaultActiveKey="1"
+                    centered
+                    size="large"
                     items={[
                         { key: '1', label: '🔥 Upcoming', children: <EventGrid events={upcomingEvents} emptyMsg="No upcoming events found." /> },
                         user?.role !== 'ORGANIZER' && { key: '2', label: '🎫 Participated', children: <EventGrid events={participatedEvents} emptyMsg="You haven't booked any events yet." /> },
                         { key: '3', label: '✅ Completed', children: <EventGrid events={completedEvents} emptyMsg="No past events found." /> }
-                    ].filter(Boolean)} 
-                    style={{ marginBottom: '4rem' }} 
+                    ].filter(Boolean)}
+                    style={{ marginBottom: '4rem' }}
                 />
 
                 {/* EVENT DETAIL MODAL */}
@@ -431,9 +431,9 @@ export default function Browse() {
                                         ) : (
                                             /* Hide Reserve Spot button if user is the organizer, show analytics link instead */
                                             user?.id === selectedEvent.organizer?.id ? (
-                                                <Button 
-                                                    type="primary" 
-                                                    size="large" 
+                                                <Button
+                                                    type="primary"
+                                                    size="large"
                                                     icon={<EyeOutlined />}
                                                     onClick={() => router.push(`/events/${selectedEvent.id}`)}
                                                     style={{ borderRadius: '12px', height: '50px', padding: '0 32px', fontWeight: 'bold', background: 'linear-gradient(135deg, #00d4aa 0%, #00b890 100%)', border: 'none' }}
@@ -442,10 +442,10 @@ export default function Browse() {
                                                 </Button>
                                             ) : (
                                                 new Date(parseInt(selectedEvent.date) || selectedEvent.date) >= now && (
-                                                    <Button 
-                                                        type="primary" 
-                                                        size="large" 
-                                                        onClick={() => openBooking(selectedEvent)} 
+                                                    <Button
+                                                        type="primary"
+                                                        size="large"
+                                                        onClick={() => openBooking(selectedEvent)}
                                                         style={{ borderRadius: '12px', height: '50px', padding: '0 36px', fontWeight: 'bold' }}
                                                     >
                                                         Reserve Spot
@@ -455,11 +455,11 @@ export default function Browse() {
                                         )}
                                     </div>
                                 </div>
-                                
+
                                 {/* Info grid */}
-                                <div style={{ 
-                                    display: 'grid', 
-                                    gridTemplateColumns: 'repeat(4, 1fr)', 
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(4, 1fr)',
                                     gap: '16px',
                                     marginBottom: '32px'
                                 }}>
@@ -542,8 +542,8 @@ export default function Browse() {
                                         </h3>
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
                                             {selectedEvent.vendors.map(v => (
-                                                <Card key={v.id} size="small" style={{ 
-                                                    borderRadius: '16px', 
+                                                <Card key={v.id} size="small" style={{
+                                                    borderRadius: '16px',
                                                     border: '1px solid rgba(255,255,255,0.06)',
                                                     background: 'rgba(255,255,255,0.03)'
                                                 }}>
@@ -562,16 +562,16 @@ export default function Browse() {
                 </Modal>
 
                 {/* TICKET SELECTION MODAL */}
-                <Modal 
-                    title={<span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><WalletOutlined /> Select Your Tickets</span>} 
-                    open={isBookingModalOpen} 
-                    onCancel={() => setIsBookingModalOpen(false)} 
+                <Modal
+                    title={<span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><WalletOutlined /> Select Your Tickets</span>}
+                    open={isBookingModalOpen}
+                    onCancel={() => setIsBookingModalOpen(false)}
                     footer={[
-                        <Button key="back" onClick={() => setIsBookingModalOpen(false)}>Cancel</Button>, 
+                        <Button key="back" onClick={() => setIsBookingModalOpen(false)}>Cancel</Button>,
                         <Button key="submit" type="primary" loading={sessionLoading} onClick={handleCheckout} style={{ height: '40px', borderRadius: '10px' }}>
                             Proceed to Secure Payment
                         </Button>
-                    ]} 
+                    ]}
                     centered
                 >
                     {selectedEvent && (
@@ -585,7 +585,7 @@ export default function Browse() {
                                 <InputNumber min={1} max={10} style={{ width: '100%', height: '45px', lineHeight: '45px' }} value={bookingOptions.quantity} onChange={(val) => setBookingOptions({ ...bookingOptions, quantity: val })} />
                             </div>
                             <Divider />
-                            <div style={{ 
+                            <div style={{
                                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                 padding: '16px 20px',
                                 background: 'rgba(124, 92, 252, 0.06)',
@@ -633,31 +633,31 @@ export default function Browse() {
                         <div style={{ marginBottom: '12px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                                 <label style={{ fontWeight: '600', color: '#a0a0b8', fontSize: '0.85rem' }}>Event Cover Image *</label>
-                                <Button 
-                                    type="text" 
-                                    size="small" 
-                                    onClick={handleAIImageGenerate} 
+                                <Button
+                                    type="text"
+                                    size="small"
+                                    onClick={handleAIImageGenerate}
                                     loading={aiImageLoading}
                                     style={{ color: '#7c5cfc', fontSize: '0.75rem', fontWeight: 700 }}
                                 >
                                     {aiImageLoading ? '✨ Generating...' : '✨ Generate with AI'}
                                 </Button>
                             </div>
-                            <div style={{ 
-                                border: '2px dashed rgba(255,255,255,0.08)', 
-                                borderRadius: '14px', 
-                                padding: '16px', 
-                                textAlign: 'center', 
+                            <div style={{
+                                border: '2px dashed rgba(255,255,255,0.08)',
+                                borderRadius: '14px',
+                                padding: '16px',
+                                textAlign: 'center',
                                 background: 'rgba(255,255,255,0.02)',
                                 transition: 'all 0.3s ease'
                             }}>
                                 {previewImage ? (
-                                    <img 
-                                        src={previewImage} 
-                                        crossOrigin="anonymous" 
-                                        referrerPolicy="no-referrer" 
-                                        style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px', marginBottom: '10px' }} 
-                                        alt="Preview" 
+                                    <img
+                                        src={previewImage}
+                                        crossOrigin="anonymous"
+                                        referrerPolicy="no-referrer"
+                                        style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px', marginBottom: '10px' }}
+                                        alt="Preview"
                                     />
                                 ) : (
                                     <div style={{ padding: '20px', color: '#6b6b80' }}>📸 Image preview here</div>

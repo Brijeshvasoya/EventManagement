@@ -41,7 +41,7 @@ const startServer = async () => {
       context: async ({ req }) => {
         let user = null;
         const authHeader = req.headers.authorization || '';
-        
+
         if (authHeader.startsWith('Bearer ')) {
           const token = authHeader.split(' ')[1];
           if (token) {
@@ -56,7 +56,7 @@ const startServer = async () => {
           }
         }
 
-        return { 
+        return {
           user,
           dataLoaders: {
             userLoader: createUserLoader()
@@ -68,7 +68,7 @@ const startServer = async () => {
 
   const PORT = process.env.PORT || 4000;
   app.listen(PORT, () => {
-    console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
+    console.log(`🚀 Server ready at ${process.env.BACKEND_URL}:${PORT}/graphql`);
   });
 };
 

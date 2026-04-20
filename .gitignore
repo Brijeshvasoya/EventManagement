@@ -1,6 +1,4 @@
 node_modules/
-.env
-.env.local
 .next/
 out/
 build/
@@ -17,9 +15,6 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
-backend/.env
-frontend/.env
-frontend/.env.local
 frontend/.next/
 frontend/out/
 frontend/build/

@@ -6,7 +6,7 @@ const { GraphQLError } = require('graphql');
 exports.register = async ({ name, email, password, role }) => {
   const existing = await User.findOne({ email });
   if (existing) throw new GraphQLError('User already exists');
-  
+
   const hashedPassword = await bcrypt.hash(password, 10);
   const user = await User.create({ name, email, password: hashedPassword, role: role || 'USER' });
   return { token: signToken({ id: user.id, email: user.email, role: user.role, name: user.name }), user };
@@ -23,7 +23,7 @@ exports.login = async ({ email, password }) => {
 exports.updateProfile = async (id, { name, email, currentPassword, newPassword }) => {
   const user = await User.findById(id);
   if (!user) throw new GraphQLError('User not found');
-  
+
   if (name) user.name = name;
   if (email) {
     const exists = await User.findOne({ email });
@@ -35,10 +35,10 @@ exports.updateProfile = async (id, { name, email, currentPassword, newPassword }
     if (!currentPassword) throw new GraphQLError('Current password is required to set a new one');
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) throw new GraphQLError('Current password is incorrect');
-    
+
     user.password = await bcrypt.hash(newPassword, 10);
   }
-  
+
   await user.save();
   return user;
 };
