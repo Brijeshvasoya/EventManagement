@@ -62,7 +62,7 @@ export default function EventDetailsPage() {
       title: 'User',
       key: 'user',
       render: (_, record) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <AntText strong style={{ color: '#f0f0f5' }}><UserOutlined /> {record.user.name}</AntText>
           <AntText style={{ fontSize: '12px', color: '#6b6b80' }}><MailOutlined /> {record.user.email}</AntText>
         </Space>
@@ -228,7 +228,7 @@ export default function EventDetailsPage() {
               ))}
             </div>
 
-            <Divider orientation="left" style={{ color: '#6b6b80' }}>Description</Divider>
+            <Divider titlePlacement="left" style={{ color: '#6b6b80' }}>Description</Divider>
             <AntText style={{ lineHeight: '1.7', color: '#a0a0b8' }}>{event.description}</AntText>
           </Card>
         </Col>
@@ -254,7 +254,7 @@ export default function EventDetailsPage() {
                     value={stat.value}
                     precision={stat.precision}
                     prefix={stat.prefix}
-                    valueStyle={{ color: stat.color, fontWeight: 800 }}
+                    styles={{ content: { color: stat.color, fontWeight: 800 } }}
                   />
                 </Card>
               </Col>

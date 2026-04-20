@@ -43,7 +43,7 @@ const resolvers = {
     createVendor: async (_, { input }, { user }) => {
       if (!user || (user.role !== 'ORGANIZER' && user.role !== 'ADMIN')) throw new GraphQLError('Unauthorized');
       const { eventIds, ...vendorData } = input;
-      
+
       // Safety: Verify all assigned events belong to this organizer (unless Admin)
       if (eventIds && eventIds.length > 0 && user.role !== 'ADMIN') {
         const Event = require('../models/Event');
@@ -62,7 +62,7 @@ const resolvers = {
       const vendor = await Vendor.findById(id);
       if (!vendor) throw new GraphQLError('Vendor not found');
       if (vendor.organizer.toString() !== user.id && user.role !== 'ADMIN') throw new GraphQLError('Forbidden');
-      
+
       const { eventIds, ...vendorData } = input;
 
       // Safety: Verify all newly assigned events belong to this organizer (unless Admin)
@@ -138,7 +138,7 @@ const resolvers = {
     },
     qrCode: async (parent) => {
       try {
-        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
         return await QRCode.toDataURL(`${baseUrl}/v/${parent.id}`);
       } catch (e) {
         return null; // fallback gracefully if qrcode fails

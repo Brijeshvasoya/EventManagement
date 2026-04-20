@@ -237,7 +237,7 @@ const EventCard = React.memo(({ event, onBook, onDelete, onUpdate }) => {
              <Input.TextArea rows={3} />
            </Form.Item>
 
-           <Divider orientation="left" style={{ margin: '8px 0' }}>Ticket Tiers & Pricing</Divider>
+           <Divider titlePlacement="left" style={{ margin: '8px 0' }}>Ticket Tiers & Pricing</Divider>
            
            <Form.List name="ticketTypes">
             {(fields, { add, remove }) => (

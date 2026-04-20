@@ -149,7 +149,7 @@ export default function Profile() {
             requiredMark={false}
             size="large"
           >
-            <Divider orientation="left" style={{ margin: '0 0 1.5rem 0', borderColor: 'var(--border-color)' }}>
+            <Divider titlePlacement="left" style={{ margin: '0 0 1.5rem 0', borderColor: 'var(--border-color)' }}>
               <AntText strong style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Basic Information
               </AntText>
@@ -177,7 +177,7 @@ export default function Profile() {
               />
             </Form.Item>
 
-            <Divider orientation="left" style={{ margin: '2.5rem 0 1.5rem 0', borderColor: 'var(--border-color)' }}>
+            <Divider titlePlacement="left" style={{ margin: '2.5rem 0 1.5rem 0', borderColor: 'var(--border-color)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <SafetyOutlined style={{ color: 'var(--primary-color)' }} />
                 <AntText strong style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>

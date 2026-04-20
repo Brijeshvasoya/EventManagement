@@ -6,8 +6,8 @@ const Event = require('../../models/Event');
 
 exports.createCheckoutSession = async (eventId, ticketType, quantity, user) => {
   requireAuth(user);
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  
+  const APP_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
+
   const event = await Event.findById(eventId);
   if (!event) throw new Error('Event not found');
 
@@ -18,13 +18,13 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user) => {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [{
-        price_data: { 
-          currency: 'usd', 
-          product_data: { 
+        price_data: {
+          currency: 'usd',
+          product_data: {
             name: `${event.title} - ${ticketType}`,
             description: `Quantity: ${quantity} ticket(s)`
-          }, 
-          unit_amount: Math.round(ticket.price * 100) 
+          },
+          unit_amount: Math.round(ticket.price * 100)
         },
         quantity: quantity,
       }],
@@ -37,6 +37,6 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user) => {
     });
     return session.url;
   }
-  
+
   return `${APP_URL}/checkout-success?eventId=${eventId}&ticketType=${ticketType}&quantity=${quantity}&sessionId=MOCK_SESSION_${Date.now()}`;
 };
