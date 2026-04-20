@@ -141,10 +141,10 @@ export default function VendorManagement() {
   ];
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="mobile-pad-reduce" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <Head><title>Vendor Management | EventHub</title></Head>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <div style={{
             display: 'inline-block',
