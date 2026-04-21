@@ -15,6 +15,8 @@ const Booking = require('./models/Booking');
 const User = require('./models/User');
 const Event = require('./models/Event');
 const { generateTicketPDF } = require('./utils/pdfGenerator');
+const QRCode = require('qrcode');
+
 
 
 connectDB();
@@ -108,7 +110,31 @@ const startServer = async () => {
   });
 
 
+  // QR Code Generation Route (for public access in emails)
+  app.get('/api/tickets/qr/:bookingId', async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const verificationUrl = `${FRONTEND_URL}/v/${bookingId}`;
+      
+      const qrBuffer = await QRCode.toBuffer(verificationUrl, {
+
+        errorCorrectionLevel: 'H',
+        margin: 1,
+        width: 300
+      });
+
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+      res.send(qrBuffer);
+    } catch (error) {
+      console.error('QR generation error:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+
   // Prevent abuse & brute force (200 requests per 15 minutes)
+
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 200,

@@ -10,7 +10,10 @@ exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
 
   try {
     const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000';
+    const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
     const ticketUrl = `${BACKEND_URL}/api/tickets/download/${booking.id}`;
+    const verifyUrl = `${FRONTEND_URL}/v/${booking.id}`;
+
 
 
     // ✅ Safe date parsing
@@ -26,9 +29,9 @@ exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
 
     console.log(`📤 Sending email via Resend... [From: ${FROM_EMAIL}, To: ${recipient}]`);
 
-    // ✅ Generate QR Code Buffer for Email Embedding
-    const qrBuffer = await QRCode.toBuffer(ticketUrl);
-    const qrBase64 = qrBuffer.toString('base64');
+    // ✅ Generate Verification QR for Attachment & Gate Entry
+    const verifyQrBuffer = await QRCode.toBuffer(verifyUrl);
+
 
     const emailOptions = {
       from: FROM_EMAIL,
@@ -84,9 +87,10 @@ View your ticket: ${ticketUrl}
             <!-- QR Code Section -->
             <div style="text-align: center; margin-top: 30px; padding: 20px; border: 1px dashed #e2e8f0; border-radius: 12px;">
               <p style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; color: #1e1b4b;">Your Entry QR Code</p>
-              <img src="cid:qrcode" alt="Entry QR Code" style="width: 180px; height: 180px;" />
+              <img src="${BACKEND_URL}/api/tickets/qr/${booking.id}" alt="Entry QR Code" style="width: 180px; height: 180px;" />
               <p style="margin: 10px 0 0 0; font-size: 12px; color: #94a3b8; font-family: monospace;">#${booking.id.slice(-8).toUpperCase()}</p>
             </div>
+
 
             <!-- Note -->
             <div style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 12px; text-align: center;">
@@ -104,15 +108,15 @@ View your ticket: ${ticketUrl}
       `,
     };
 
-    // ✅ Attachments (PDF & QR CID)
+    // ✅ Attachments: PDF ticket and standalone QR entry pass
     emailOptions.attachments = [
       {
-        filename: 'qrcode.png',
-        content: qrBuffer,
-        cid: 'qrcode', 
-        content_id: 'qrcode',
+        filename: 'Entry_Pass_QR.png',
+        content: verifyQrBuffer,
       }
     ];
+
+
 
     if (pdfBuffer) {
       emailOptions.attachments.push({
