@@ -45,7 +45,7 @@ export default function Browse() {
         if (!title) return toast.error("Please enter an event title first!");
         setAiImageLoading(true);
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}:4000/api/ai/generate-image`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/ai/generate-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
                 body: JSON.stringify({ title, eventType })

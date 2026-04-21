@@ -48,7 +48,7 @@ export default function CreateEvent() {
     setAiLoading(true);
     try {
       // For now, assuming a helper or proxy on backend for internal AI tool
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}:4000/api/ai/generate`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/ai/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ title: form.title, eventType: form.eventType })
@@ -69,7 +69,7 @@ export default function CreateEvent() {
     if (!form.title) return toast.error("Please enter an event title first!");
     setAiImageLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}:4000/api/ai/generate-image`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/ai/generate-image`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ title: form.title, eventType: form.eventType })
@@ -96,7 +96,7 @@ export default function CreateEvent() {
 
       toast.loading('Uploading to Secure Cloud...', { id: 'upload' });
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}:4000/api/upload`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/upload`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
           body: formData
