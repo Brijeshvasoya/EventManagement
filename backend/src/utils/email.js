@@ -20,6 +20,8 @@ exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
     });
 
     const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const TEST_RECIPIENT = process.env.RESEND_TEST_RECIPIENT;
+    const recipient = TEST_RECIPIENT || user.email;
 
     // ✅ Generate QR Code Buffer for Email Embedding
     const qrBuffer = await QRCode.toBuffer(booking.id.toString());
@@ -27,7 +29,7 @@ exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
 
     const emailOptions = {
       from: `EventHub Premium <${FROM_EMAIL}>`,
-      to: "scaleteam.brijesh@gmail.com",
+      to: recipient,
       subject: `Ticket Confirmed: ${event.title} 🎉`,
 
       // ✅ Plain text fallback
@@ -129,18 +131,18 @@ View your ticket: ${ticketUrl}
       // Handle known Resend Sandbox restriction
       if (errorMsg.toLowerCase().includes('testing emails') || errorMsg.toLowerCase().includes('sandbox')) {
         console.warn('⚠️  RESEND SANDBOX LIMITATION: You can only send emails to your verified account email.');
-        console.warn(`   Attempted recipient: ${user.email}`);
+        console.warn(`   Attempted recipient: ${recipient}`);
         return;
       }
 
       throw new Error(errorMsg);
     }
 
-    console.log(`✅ Ticket email sent to ${user.email}`);
+    console.log(`✅ Ticket email sent to ${recipient}${TEST_RECIPIENT ? ' (Redirected Test Mail)' : ''}`);
   } catch (error) {
     const isSandbox = error.message && (error.message.toLowerCase().includes('testing emails') || error.message.toLowerCase().includes('sandbox'));
 
-    console.error(`❌ DISPATCH ERROR: Failed to send ticket email to ${user.email}`);
+    console.error(`❌ DISPATCH ERROR: Failed to send ticket email to ${recipient}`);
 
     if (isSandbox) {
       console.error('👉 FIX: In sandbox mode, the recipient MUST be your registered Resend email (or verify your domain).');
