@@ -26,7 +26,7 @@ exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
     console.log(`📤 Sending email via Resend... [From: ${FROM_EMAIL}, To: ${recipient}]`);
 
     // ✅ Generate QR Code Buffer for Email Embedding
-    const qrBuffer = await QRCode.toBuffer(booking.id.toString());
+    const qrBuffer = await QRCode.toBuffer(ticketUrl);
     const qrBase64 = qrBuffer.toString('base64');
 
     const emailOptions = {
