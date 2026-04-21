@@ -6,7 +6,7 @@ exports.generateTicketPDF = async (user, booking, event) => {
     try {
       const doc = new PDFDocument({ 
         size: 'A4', 
-        margin: 50,
+        margin: 0, 
         info: {
           Title: `Ticket - ${event.title}`,
           Author: 'EventHub Premium',
@@ -20,126 +20,133 @@ exports.generateTicketPDF = async (user, booking, event) => {
         resolve(result);
       });
 
-      // --- Background Decoration ---
-      // Draw a subtle gradient-like background or a border
+      // --- COLORS & THEME ---
+      const primary = '#1e1b4b'; // Deep Indigo
+      const accent = '#4f46e5';  // Indigo
+      const textMain = '#1e293b';
+      const textMuted = '#64748b';
+      const bgLight = '#f8fafc';
+      const border = '#e2e8f0';
+
+      // Draw page background
       doc.rect(0, 0, doc.page.width, doc.page.height).fill('#ffffff');
-      
-      // Top header bar
-      doc.rect(0, 0, doc.page.width, 150).fill('#1e1b4b');
 
-      // --- Header Text ---
+      // --- TICKET CARD DESIGN ---
+      const ticketMargin = 40;
+      const ticketWidth = doc.page.width - (ticketMargin * 2);
+      const ticketHeight = 350; 
+      const startY = 80;
+
+      // Main Card Container with shadow effect
+      doc.save();
+      doc.roundedRect(ticketMargin + 2, startY + 2, ticketWidth, ticketHeight, 12).fill('#f1f5f9'); // Shadow
+      doc.roundedRect(ticketMargin, startY, ticketWidth, ticketHeight, 12).fill('#ffffff');
+      doc.roundedRect(ticketMargin, startY, ticketWidth, ticketHeight, 12).lineWidth(1).strokeColor(border).stroke();
+      doc.restore();
+
+      // Left Section Header (Indigo Background)
+      const headerHeight = 85;
+      doc.save();
+      doc.path(`M ${ticketMargin + 12} ${startY} L ${ticketMargin + ticketWidth - 12} ${startY} Q ${ticketMargin + ticketWidth} ${startY} ${ticketMargin + ticketWidth} ${startY + 12} L ${ticketMargin + ticketWidth} ${startY + headerHeight} L ${ticketMargin} ${startY + headerHeight} L ${ticketMargin} ${startY + 12} Q ${ticketMargin} ${startY} ${ticketMargin + 12} ${startY} Z`)
+         .fill(primary);
+      doc.restore();
+
+      // Header Text
       doc.fillColor('#ffffff')
-         .fontSize(10)
-         .text('OFFICIAL EVENT PASS', 50, 40, { characterSpacing: 2 });
-      
-      doc.fontSize(32)
-         .font('Helvetica-Bold')
-         .text(event.title.toUpperCase(), 50, 65, { width: 500 });
-
-      // Ticket ID Badge
-      doc.fillColor('#ffffff', 0.1)
-         .rect(50, 115, 180, 25)
-         .fill();
-      
-      doc.fillColor('#ffffff', 1)
-         .fontSize(10)
+         .fontSize(9)
          .font('Helvetica')
-         .text(`TICKET ID: #${booking.id.slice(-8).toUpperCase()}`, 65, 122);
-
-      // --- Content Section ---
-      doc.fillColor('#1e1b4b');
-      
-      // Guest Detail Label
-      doc.fontSize(10)
-         .font('Helvetica-Bold')
-         .fillColor('#4338ca')
-         .text('GUEST NAME', 50, 190);
+         .text('OFFICIAL EVENT ACCESS PASS', ticketMargin + 30, startY + 22, { characterSpacing: 1.5 });
       
       doc.fontSize(24)
          .font('Helvetica-Bold')
-         .fillColor('#1e293b')
-         .text(user.name, 50, 205);
+         .text(event.title.toUpperCase(), ticketMargin + 30, startY + 38, { width: ticketWidth - 60, ellipsis: true });
 
-      // Split into two columns
-      const col1 = 50;
-      const col2 = 300;
-      const rowY = 270;
+      // Dividers & Columns
+      const sidebarWidth = 180;
+      const dividerX = ticketMargin + ticketWidth - sidebarWidth;
 
-      // Date
-      doc.fontSize(10)
-         .font('Helvetica-Bold')
-         .fillColor('#4338ca')
-         .text('DATE & TIME', col1, rowY);
-      
+      // Vertical Dotted Divider
+      doc.save()
+         .moveTo(dividerX, startY + headerHeight)
+         .lineTo(dividerX, startY + ticketHeight)
+         .dash(4, { space: 4 })
+         .strokeColor('#cbd5e1')
+         .lineWidth(1)
+         .stroke()
+         .restore();
+
+      // --- LEFT CONTENT (DETAILS) ---
+      const contentPadding = 30;
+      const leftX = ticketMargin + contentPadding;
+      let currentY = startY + headerHeight + 25;
+
+      // Row 1: Guest Name
+      doc.fillColor(accent).font('Helvetica-Bold').fontSize(9).text('GUEST NAME', leftX, currentY);
+      doc.fillColor(textMain).font('Helvetica-Bold').fontSize(20).text(user.name, leftX, currentY + 14);
+
+      currentY += 65;
+
+      // Row 2: Date & Location
+      // Column A: Date
+      doc.fillColor(accent).font('Helvetica-Bold').fontSize(9).text('DATE & TIME', leftX, currentY);
       const eventDate = new Date(parseInt(event.date) || event.date);
-      doc.fontSize(14)
-         .font('Helvetica-Bold')
-         .fillColor('#334155')
-         .text(eventDate.toLocaleDateString(), col1, rowY + 15);
+      doc.fillColor(textMain).font('Helvetica-Bold').fontSize(14).text(eventDate.toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' }), leftX, currentY + 14);
+      doc.fillColor(textMuted).font('Helvetica').fontSize(11).text(eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), leftX, currentY + 32);
+
+      // Column B: Location
+      const col2X = leftX + 220;
+      doc.fillColor(accent).font('Helvetica-Bold').fontSize(9).text('LOCATION', col2X, currentY);
+      doc.fillColor(textMain).font('Helvetica-Bold').fontSize(12).text(event.location, col2X, currentY + 14, { width: dividerX - col2X - 20, height: 40 });
+
+      currentY += 75;
+
+      // Row 3: Ticket ID & Type
+      doc.fillColor(accent).font('Helvetica-Bold').fontSize(9).text('TICKET ID', leftX, currentY);
+      doc.fillColor(textMain).font('Helvetica').fontSize(11).text(`#${booking.id.slice(-8).toUpperCase()}`, leftX, currentY + 14);
+
+      doc.fillColor(accent).font('Helvetica-Bold').fontSize(9).text('TIER / ACCESS', col2X, currentY);
+      doc.fillColor(accent).font('Helvetica-Bold').fontSize(14).text(booking.ticketType || 'REGULAR', col2X, currentY + 14);
+
+      // Quantity Badge
+      const qtyText = `${booking.quantity || 1} ADMIT`;
+      const qtyWidth = doc.widthOfString(qtyText) + 20;
+      doc.roundedRect(dividerX - qtyWidth - 30, startY + headerHeight + 25, qtyWidth, 20, 4).fill('#f1f5f9');
+      doc.fillColor(textMain).fontSize(9).font('Helvetica-Bold').text(qtyText, dividerX - qtyWidth - 20, startY + headerHeight + 31);
+
+      // --- RIGHT CONTENT (QR CODE) ---
+      const qrAreaX = dividerX;
+      const qrSectionWidth = sidebarWidth;
       
-      doc.fontSize(12)
-         .font('Helvetica')
-         .fillColor('#64748b')
-         .text(eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), col1, rowY + 35);
+      // Light background for QR area
+      doc.path(`M ${dividerX} ${startY + headerHeight} L ${ticketMargin + ticketWidth - 12} ${startY + headerHeight} L ${ticketMargin + ticketWidth} ${startY + headerHeight} L ${ticketMargin + ticketWidth} ${startY + ticketHeight - 12} Q ${ticketMargin + ticketWidth} ${startY + ticketHeight} ${ticketMargin + ticketWidth - 12} ${startY + ticketHeight} L ${dividerX} ${startY + ticketHeight} Z`)
+         .fill(bgLight);
 
-      // Location
-      doc.fontSize(10)
-         .font('Helvetica-Bold')
-         .fillColor('#4338ca')
-         .text('LOCATION', col2, rowY);
-      
-      doc.fontSize(14)
-         .font('Helvetica-Bold')
-         .fillColor('#334155')
-         .text(event.location, col2, rowY + 15, { width: 250 });
-
-      // Lower Row
-      const row2Y = 360;
-
-      // Tier
-      doc.fontSize(10)
-         .font('Helvetica-Bold')
-         .fillColor('#4338ca')
-         .text('TICKET TIER', col1, row2Y);
-      
-      doc.fontSize(18)
-         .font('Helvetica-Bold')
-         .fillColor('#4f46e5')
-         .text(booking.ticketType || 'REGULAR', col1, row2Y + 15);
-
-      // Quantity
-      doc.fontSize(10)
-         .font('Helvetica-Bold')
-         .fillColor('#4338ca')
-         .text('QUANTITY', col2, row2Y);
-      
-      doc.fontSize(18)
-         .font('Helvetica-Bold')
-         .fillColor('#1e293b')
-         .text(`${booking.quantity || 1} Person(s)`, col2, row2Y + 15);
-
-      // --- QR Section ---
-      doc.rect(50, 450, doc.page.width - 100, 1).fill('#e2e8f0'); // Separator
-
-      // Generate QR Code with full verification URL
+      // Generate QR Code
       const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-      const qrDataUrl = await QRCode.toDataURL(`${FRONTEND_URL}/v/${booking.id}`);
-      // QRCode.toDataURL returns "data:image/png;base64,..."
+      const qrDataUrl = await QRCode.toDataURL(`${FRONTEND_URL}/v/${booking.id}`, {
+        margin: 1,
+        width: 400,
+        color: {
+          dark: primary,
+          light: bgLight
+        }
+      });
       const qrImageBuffer = Buffer.from(qrDataUrl.split(',')[1], 'base64');
 
-      doc.image(qrImageBuffer, (doc.page.width - 150) / 2, 500, { width: 150 });
+      const qrSize = 120;
+      doc.image(qrImageBuffer, qrAreaX + (qrSectionWidth - qrSize) / 2, startY + headerHeight + 40, { width: qrSize });
       
-      doc.fillColor('#1e1b4b')
-         .fontSize(10)
-         .font('Helvetica-Bold')
-         .text('SCAN FOR GATE ENTRY', 0, 660, { align: 'center' });
+      doc.fillColor(primary).font('Helvetica-Bold').fontSize(8)
+         .text('SCAN FOR GATE ENTRY', qrAreaX, startY + headerHeight + 175, { width: qrSectionWidth, align: 'center' });
 
-      // Footer
-      doc.rect(0, doc.page.height - 40, doc.page.width, 40).fill('#f8fafc');
+      doc.fillColor(textMuted).font('Helvetica').fontSize(6)
+         .text(booking.id, qrAreaX + 10, startY + ticketHeight - 20, { width: qrSectionWidth - 20, align: 'center' });
+
+      // --- FOOTER ---
       doc.fillColor('#94a3b8')
-         .fontSize(9)
+         .fontSize(8)
          .font('Helvetica')
-         .text('Verified by EventHub Premium SaaS • Secure Digital Pass', 0, doc.page.height - 25, { align: 'center' });
+         .text('This is a digital pass powered by EventHub. Please bring a valid ID for verification.', 0, startY + ticketHeight + 30, { align: 'center' });
 
       doc.end();
     } catch (error) {
