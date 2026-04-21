@@ -29,7 +29,6 @@ export default function Login() {
       toast.success('Welcome back! ✨');
       login(data.login.token, returnUrl || '/dashboard');
     } catch (err) {
-      alert(err.toString())
       toast.error(err.message);
     }
   };
