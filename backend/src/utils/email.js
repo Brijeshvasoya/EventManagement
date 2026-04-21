@@ -4,6 +4,9 @@ const QRCode = require('qrcode');
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
+  const recipient = process.env.RESEND_TEST_RECIPIENT || user.email;
+  const isTestRedirect = !!process.env.RESEND_TEST_RECIPIENT;
+
   try {
     const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
     const ticketUrl = `${FRONTEND_URL}/v/${booking.id}`;
@@ -20,8 +23,6 @@ exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
     });
 
     const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
-    const TEST_RECIPIENT = process.env.RESEND_TEST_RECIPIENT;
-    const recipient = TEST_RECIPIENT || user.email;
 
     // ✅ Generate QR Code Buffer for Email Embedding
     const qrBuffer = await QRCode.toBuffer(booking.id.toString());
@@ -138,7 +139,7 @@ View your ticket: ${ticketUrl}
       throw new Error(errorMsg);
     }
 
-    console.log(`✅ Ticket email sent to ${recipient}${TEST_RECIPIENT ? ' (Redirected Test Mail)' : ''}`);
+    console.log(`✅ Ticket email sent to ${recipient}${isTestRedirect ? ' (Redirected Test Mail)' : ''}`);
   } catch (error) {
     const isSandbox = error.message && (error.message.toLowerCase().includes('testing emails') || error.message.toLowerCase().includes('sandbox'));
 
