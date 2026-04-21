@@ -4,7 +4,7 @@ const QRCode = require('qrcode');
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
-  const recipient = (user.email || process.env.RESEND_TEST_RECIPIENT).trim();
+  const recipient = (process.env.RESEND_TEST_RECIPIENT || user.email).trim();
   const isTestRedirect = !!process.env.RESEND_TEST_RECIPIENT;
   const FROM_EMAIL = (process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev').trim();
 
