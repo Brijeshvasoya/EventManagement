@@ -1,10 +1,26 @@
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // Use STARTTLS (TLS upgrade), not implicit SSL on port 465
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  },
+  connectionTimeout: 5000, // 5 s to establish the TCP connection
+  socketTimeout: 5000      // 5 s of inactivity before the socket is killed
+});
+
+// Verify SMTP connectivity on startup so misconfiguration surfaces immediately
+// rather than silently failing on the first real email send.
+transporter.verify((error) => {
+  if (error) {
+    console.error('❌ SMTP connection failed:', error.message);
+    console.error('   Check EMAIL_USER / EMAIL_PASS env vars and that the Gmail');
+    console.error('   account has an App Password configured (2FA required).');
+  } else {
+    console.log('✅ SMTP transporter is ready to send emails');
   }
 });
 
@@ -43,6 +59,9 @@ exports.sendTicketEmail = async (user, booking, event) => {
     await transporter.sendMail(mailOptions);
     console.log(`✅ Ticket email sent to ${user.email}`);
   } catch (error) {
-    console.error('❌ Error sending email:', error.message);
+    console.error(`❌ Failed to send ticket email to ${user.email}`);
+    console.error('   Code    :', error.code);       // e.g. ECONNREFUSED, ETIMEDOUT
+    console.error('   Message :', error.message);
+    console.error('   Response:', error.response);   // SMTP server reply, if any
   }
 };
