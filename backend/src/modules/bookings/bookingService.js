@@ -4,13 +4,16 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { sendTicketEmail } = require('../../utils/email');
 const { generateTicketPDF } = require('../../utils/pdfGenerator');
 const User = require('../../models/User');
+const { requireAuth } = require('../../utils/authGuard');
 
 const bookingService = {
   getMyBookings: async (user) => {
+    requireAuth(user);
     return Booking.find({ user: user.id, status: { $ne: 'CANCELLED' } }).sort({ createdAt: -1 });
   },
 
   bookEvent: async ({ eventId, ticketType, amountPaid, stripePaymentId, paymentIntentId, quantity }, user) => {
+    requireAuth(user);
     // Extract ID string if an object was passed accidentally
     const cleanEventId = typeof eventId === 'object' ? (eventId._id || eventId.id) : eventId;
 
@@ -64,6 +67,7 @@ const bookingService = {
   },
 
   cancelBooking: async (bookingId, user) => {
+    requireAuth(user);
     const booking = await Booking.findById(bookingId);
     if (!booking) throw new Error('Booking not found');
     if (booking.user.toString() !== user.id) throw new Error('Unauthorized');
@@ -115,6 +119,7 @@ const bookingService = {
   },
 
   getEventAttendees: async (eventId, user) => {
+    requireAuth(user);
     // Check if user is the organizer of the event
     const event = await Event.findById(eventId);
     if (!event) throw new Error('Event not found');
