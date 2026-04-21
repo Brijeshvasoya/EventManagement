@@ -29,7 +29,6 @@ exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
 
     console.log(`📤 Sending email via Resend... [From: ${FROM_EMAIL}, To: ${recipient}]`);
 
-    // ✅ Generate Verification QR for Attachment & Gate Entry
     const verifyQrBuffer = await QRCode.toBuffer(verifyUrl);
 
 

@@ -95,39 +95,51 @@ const startServer = async () => {
   app.get('/api/tickets/download/:bookingId', async (req, res) => {
     try {
       const { bookingId } = req.params;
-      const booking = await Booking.findById(bookingId).populate('user event');
-      if (!booking) return res.status(404).send('Booking not found');
+      console.log(`📡 Attempting ticket download for Booking ID: ${bookingId}`);
 
+      const booking = await Booking.findById(bookingId).populate('user event');
+      if (!booking) {
+        console.error(`❌ Booking ${bookingId} not found`);
+        return res.status(404).send('Ticket Download Failed: Booking not found.');
+      }
+
+      console.log(`📄 Generating PDF for ${booking.user.name} - ${booking.event.title}`);
       const pdfBuffer = await generateTicketPDF(booking.user, booking, booking.event);
 
+      const fileName = `Ticket_${booking.event.title.replace(/[^a-zA-Z0-9]/g, '_')}_${bookingId.slice(-6)}.pdf`;
+
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename=Ticket_${booking.event.title.replace(/\s+/g, '_')}.pdf`);
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+      
+      console.log(`✅ Sending PDF: ${fileName} (${pdfBuffer.length} bytes)`);
       res.send(pdfBuffer);
     } catch (error) {
-      console.error('Download error:', error);
-      res.status(500).send('Internal Server Error');
+      console.error('❌ Download error:', error);
+      res.status(500).send('Download Error: Failed to generate ticket PDF.');
     }
   });
+
 
 
   // QR Code Generation Route (for public access in emails)
   app.get('/api/tickets/qr/:bookingId', async (req, res) => {
     try {
       const { bookingId } = req.params;
-      const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-      const verificationUrl = `${FRONTEND_URL}/v/${bookingId}`;
+      const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000';
+      const downloadUrl = `${BACKEND_URL}/api/tickets/download/${bookingId}`;
       
-      const qrBuffer = await QRCode.toBuffer(verificationUrl, {
-
+      const qrBuffer = await QRCode.toBuffer(downloadUrl, {
         errorCorrectionLevel: 'H',
         margin: 1,
         width: 300
       });
 
       res.setHeader('Content-Type', 'image/png');
-      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); 
       res.send(qrBuffer);
     } catch (error) {
+
       console.error('QR generation error:', error);
       res.status(500).send('Internal Server Error');
     }
