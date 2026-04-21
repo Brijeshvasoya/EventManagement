@@ -9,8 +9,9 @@ exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
   const FROM_EMAIL = (process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev').trim();
 
   try {
-    const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const ticketUrl = `${FRONTEND_URL}/v/${booking.id}`;
+    const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000';
+    const ticketUrl = `${BACKEND_URL}/api/tickets/download/${booking.id}`;
+
 
     // ✅ Safe date parsing
     const eventDate = isNaN(event.date)
@@ -107,17 +108,16 @@ View your ticket: ${ticketUrl}
     emailOptions.attachments = [
       {
         filename: 'qrcode.png',
-        content: qrBase64,
-        encoding: 'base64',
-        cid: 'qrcode', // Matches <img src="cid:qrcode">
+        content: qrBuffer,
+        cid: 'qrcode', 
+        content_id: 'qrcode',
       }
     ];
 
     if (pdfBuffer) {
       emailOptions.attachments.push({
         filename: `Ticket_${event.title.replace(/\s+/g, '_')}.pdf`,
-        content: pdfBuffer.toString('base64'),
-        encoding: 'base64',
+        content: pdfBuffer,
       });
     }
 

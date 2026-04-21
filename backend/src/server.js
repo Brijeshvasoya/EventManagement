@@ -11,6 +11,11 @@ const typeDefs = require('./graphql/typeDefs');
 const resolvers = require('./graphql/resolvers');
 const createLoaders = require('./loaders');
 const { verifyToken } = require('./utils/jwt');
+const Booking = require('./models/Booking');
+const User = require('./models/User');
+const Event = require('./models/Event');
+const { generateTicketPDF } = require('./utils/pdfGenerator');
+
 
 connectDB();
 
@@ -83,6 +88,25 @@ const startServer = async () => {
     if (!req.file) return res.status(400).json({ error: 'No image provided' });
     res.json({ url: req.file.path });
   });
+
+  // Ticket Download Route
+  app.get('/api/tickets/download/:bookingId', async (req, res) => {
+    try {
+      const { bookingId } = req.params;
+      const booking = await Booking.findById(bookingId).populate('user event');
+      if (!booking) return res.status(404).send('Booking not found');
+
+      const pdfBuffer = await generateTicketPDF(booking.user, booking, booking.event);
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=Ticket_${booking.event.title.replace(/\s+/g, '_')}.pdf`);
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error('Download error:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+
 
   // Prevent abuse & brute force (200 requests per 15 minutes)
   const limiter = rateLimit({
