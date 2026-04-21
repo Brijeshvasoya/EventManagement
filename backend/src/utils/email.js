@@ -26,7 +26,7 @@ exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
     const qrBase64 = qrBuffer.toString('base64');
 
     const emailOptions = {
-      from: 'EventHub Premium <noreply@eventhub.dev>',
+      from: 'EventHub Premium <onboarding@resend.dev>',
       to: user.email,
       subject: `Ticket Confirmed: ${event.title} 🎉`,
 
