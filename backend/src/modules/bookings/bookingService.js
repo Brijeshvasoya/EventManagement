@@ -41,8 +41,19 @@ const bookingService = {
       });
     }
 
-    // ASYNC EMAIL RECEIPT (Don't await to avoid slowing down the user)
-    sendTicketEmail(user, booking, event).catch(e => console.error('Email failed but booking saved:', e.message));
+    // ASYNC EMAIL RECEIPT: Fetch full user if needed (e.g. if called from Webhook with minimal user info)
+    (async () => {
+      try {
+        const fullUser = (user.email && user.name) ? user : await User.findById(user.id || user);
+        if (fullUser) {
+          await sendTicketEmail(fullUser, booking, event);
+        } else {
+          console.error('❌ Could not send ticket email: Recipient user details not found');
+        }
+      } catch (e) {
+        console.error('Email failed but booking saved:', e.message);
+      }
+    })();
 
     return booking;
   },
