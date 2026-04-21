@@ -121,8 +121,9 @@ exports.generateTicketPDF = async (user, booking, event) => {
       // --- QR Section ---
       doc.rect(50, 450, doc.page.width - 100, 1).fill('#e2e8f0'); // Separator
 
-      // Generate QR Code
-      const qrDataUrl = await QRCode.toDataURL(booking.id.toString());
+      // Generate QR Code with full verification URL
+      const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const qrDataUrl = await QRCode.toDataURL(`${FRONTEND_URL}/v/${booking.id}`);
       // QRCode.toDataURL returns "data:image/png;base64,..."
       const qrImageBuffer = Buffer.from(qrDataUrl.split(',')[1], 'base64');
 

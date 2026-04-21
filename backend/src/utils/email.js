@@ -5,7 +5,8 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
   try {
-    const BASE_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+    const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const ticketUrl = `${FRONTEND_URL}/v/${booking.id}`;
 
     // ✅ Safe date parsing
     const eventDate = isNaN(event.date)
@@ -18,8 +19,6 @@ exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
       day: 'numeric',
     });
 
-    // ✅ Dynamic ticket URL
-    const ticketUrl = `${BASE_URL}/tickets/${booking.id}`;
     const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
     // ✅ Generate QR Code Buffer for Email Embedding
@@ -122,22 +121,31 @@ View your ticket: ${ticketUrl}
     const response = await resend.emails.send(emailOptions);
 
     if (response.error) {
-      // Handle known Resend Sandbox restriction (only sends to owner)
-      if (response.error.message.includes('testing emails')) {
-        console.warn('⚠️  RESEND SANDBOX LIMITATION: Email not sent to recipient because domain is not verified.');
-        console.warn(`   Target was: ${user.email}. In sandbox mode, you can only send to your own registered email.`);
-        return; // Exit gracefully as this is a configuration/tier issue, not a code bug
+      const errorMsg = response.error.message || 'Unknown Resend Error';
+      
+      // Detailed logging for debugging
+      console.error('❌ Resend API Error Object:', JSON.stringify(response.error, null, 2));
+
+      // Handle known Resend Sandbox restriction
+      if (errorMsg.toLowerCase().includes('testing emails') || errorMsg.toLowerCase().includes('sandbox')) {
+        console.warn('⚠️  RESEND SANDBOX LIMITATION: You can only send emails to your verified account email.');
+        console.warn(`   Attempted recipient: ${user.email}`);
+        return; 
       }
-      throw new Error(response.error.message);
+
+      throw new Error(errorMsg);
     }
 
     console.log(`✅ Ticket email sent to ${user.email}`);
   } catch (error) {
+    const isSandbox = error.message && (error.message.toLowerCase().includes('testing emails') || error.message.toLowerCase().includes('sandbox'));
+    
     console.error(`❌ DISPATCH ERROR: Failed to send ticket email to ${user.email}`);
-    if (error.message.includes('testing emails')) {
-      console.error('👉 FIX: Verify your domain at resend.com/domains to send to external users.');
+    
+    if (isSandbox) {
+      console.error('👉 FIX: In sandbox mode, the recipient MUST be your registered Resend email (or verify your domain).');
     } else {
-      console.error('Full error details:', error);
+      console.error('Full stack trace:', error);
     }
   }
 };
