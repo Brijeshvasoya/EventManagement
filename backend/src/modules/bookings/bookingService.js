@@ -2,6 +2,7 @@ const Booking = require('../../models/Booking');
 const Event = require('../../models/Event');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { sendTicketEmail } = require('../../utils/email');
+const { generateTicketPDF } = require('../../utils/pdfGenerator');
 const User = require('../../models/User');
 
 const bookingService = {
@@ -41,17 +42,21 @@ const bookingService = {
       });
     }
 
-    // ASYNC EMAIL RECEIPT: Fetch full user if needed (e.g. if called from Webhook with minimal user info)
+    // ASYNC EMAIL RECEIPT: Fetch full user if needed & generate PDF attachment
     (async () => {
       try {
         const fullUser = (user.email && user.name) ? user : await User.findById(user.id || user);
         if (fullUser) {
-          await sendTicketEmail(fullUser, booking, event);
+          // Generate the PDF buffer
+          const pdfBuffer = await generateTicketPDF(fullUser, booking, event);
+          
+          // Send email with the attachment
+          await sendTicketEmail(fullUser, booking, event, pdfBuffer);
         } else {
           console.error('❌ Could not send ticket email: Recipient user details not found');
         }
       } catch (e) {
-        console.error('Email failed but booking saved:', e.message);
+        console.error('Email/PDF generation failed but booking saved:', e.message);
       }
     })();
 
