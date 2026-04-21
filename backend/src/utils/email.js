@@ -4,8 +4,9 @@ const QRCode = require('qrcode');
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
-  const recipient = process.env.RESEND_TEST_RECIPIENT || user.email;
+  const recipient = (process.env.RESEND_TEST_RECIPIENT || user.email).trim();
   const isTestRedirect = !!process.env.RESEND_TEST_RECIPIENT;
+  const FROM_EMAIL = (process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev').trim();
 
   try {
     const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -22,14 +23,14 @@ exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
       day: 'numeric',
     });
 
-    const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    console.log(`📤 Sending email via Resend... [From: ${FROM_EMAIL}, To: ${recipient}]`);
 
     // ✅ Generate QR Code Buffer for Email Embedding
     const qrBuffer = await QRCode.toBuffer(booking.id.toString());
     const qrBase64 = qrBuffer.toString('base64');
 
     const emailOptions = {
-      from: `EventHub Premium <${FROM_EMAIL}>`,
+      from: FROM_EMAIL,
       to: recipient,
       subject: `Ticket Confirmed: ${event.title} 🎉`,
 
