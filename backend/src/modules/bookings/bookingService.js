@@ -9,7 +9,7 @@ const bookingService = {
     return Booking.find({ user: user.id, status: { $ne: 'CANCELLED' } }).sort({ createdAt: -1 });
   },
 
-  bookEvent: async ({ eventId, ticketType, amountPaid, stripePaymentId, quantity }, user) => {
+  bookEvent: async ({ eventId, ticketType, amountPaid, stripePaymentId, paymentIntentId, quantity }, user) => {
     // Extract ID string if an object was passed accidentally
     const cleanEventId = typeof eventId === 'object' ? (eventId._id || eventId.id) : eventId;
 
@@ -17,18 +17,29 @@ const bookingService = {
     if (!event) throw new Error('Event not found');
 
     // Prevent double processing the same payment session
-    const existing = await Booking.findOne({ stripePaymentId: stripePaymentId, status: 'CONFIRMED' });
-    if (existing) return existing;
+    let booking = await Booking.findOne({ stripePaymentId });
 
-    const booking = await Booking.create({
-      event: cleanEventId,
-      user: user.id,
-      ticketType: ticketType || 'REGULAR',
-      amountPaid: amountPaid || 0,
-      stripePaymentId,
-      status: 'CONFIRMED',
-      quantity: quantity || 1
-    });
+    if (booking) {
+      if (booking.status === 'CONFIRMED') return booking;
+      
+      booking.status = 'CONFIRMED';
+      booking.paymentStatus = 'PAID';
+      booking.paymentIntentId = paymentIntentId;
+      if (amountPaid) booking.amountPaid = amountPaid;
+      await booking.save();
+    } else {
+      booking = await Booking.create({
+        event: cleanEventId,
+        user: user.id,
+        ticketType: ticketType || 'REGULAR',
+        amountPaid: amountPaid || 0,
+        stripePaymentId,
+        paymentIntentId,
+        status: 'CONFIRMED',
+        paymentStatus: 'PAID',
+        quantity: quantity || 1
+      });
+    }
 
     // ASYNC EMAIL RECEIPT (Don't await to avoid slowing down the user)
     sendTicketEmail(user, booking, event).catch(e => console.error('Email failed but booking saved:', e.message));
@@ -64,6 +75,7 @@ const bookingService = {
               amount: refundAmount,
               reason: 'requested_by_customer'
             });
+            booking.paymentStatus = 'REFUNDED';
             console.log(`✅ Partial Refund (75%) successful for booking ID: ${bookingId}. Amount: $${booking.amountPaid * 0.75}`);
           } else {
             console.log(`ℹ️ No refund processed for booking ID: ${bookingId} (Amount was $0)`);
@@ -123,6 +135,25 @@ const bookingService = {
     booking.status = 'CHECKED_IN';
     await booking.save();
 
+    return booking;
+  },
+
+  updatePaymentStatus: async (stripeId, status, paymentStatus) => {
+    // stripeId can be session ID or payment intent ID or charge ID
+    // We try to find by either stripePaymentId (session) or paymentIntentId
+    const booking = await Booking.findOne({
+      $or: [{ stripePaymentId: stripeId }, { paymentIntentId: stripeId }]
+    });
+
+    if (!booking) {
+      console.warn(`⚠️ updatePaymentStatus: No booking found for ID ${stripeId}`);
+      return null;
+    }
+
+    if (status) booking.status = status;
+    if (paymentStatus) booking.paymentStatus = paymentStatus;
+    
+    await booking.save();
     return booking;
   }
 };

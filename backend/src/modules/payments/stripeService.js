@@ -3,6 +3,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_mock', { api
 const { requireAuth } = require('../../utils/authGuard');
 
 const Event = require('../../models/Event');
+const Booking = require('../../models/Booking');
 
 exports.createCheckoutSession = async (eventId, ticketType, quantity, user) => {
   requireAuth(user);
@@ -35,6 +36,19 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user) => {
       success_url: `${APP_URL}/checkout-success?eventId=${eventId}&ticketType=${ticketType}&quantity=${quantity}&sessionId={CHECKOUT_SESSION_ID}`,
       cancel_url: `${APP_URL}/checkout-cancel`,
     });
+
+    // Create a PENDING booking record
+    await Booking.create({
+      event: eventId,
+      user: user.id,
+      ticketType,
+      quantity,
+      amountPaid: ticket.price * quantity,
+      stripePaymentId: session.id,
+      status: 'PENDING',
+      paymentStatus: 'PENDING'
+    });
+
     return session.url;
   }
 

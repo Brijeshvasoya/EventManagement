@@ -30,7 +30,8 @@ exports.stripeWebhook = async (req, res) => {
         ticketType: ticketType || 'REGULAR',
         quantity: parseInt(quantity) || 1,
         amountPaid: session.amount_total / 100,
-        stripePaymentId: session.id
+        stripePaymentId: session.id,
+        paymentIntentId: session.payment_intent // Capture the PI ID
       }, { id: userId, role: 'USER' }); 
       console.log(`✅ Webhook: Success - Ticket booked for User ${userId}`);
     } catch (e) {
@@ -42,13 +43,39 @@ exports.stripeWebhook = async (req, res) => {
   if (event.type === 'payment_intent.payment_failed') {
     const intent = event.data.object;
     console.warn(`⚠️ Webhook: Payment Failed for Intent ${intent.id} - Reason: ${intent.last_payment_error?.message}`);
-    // Future: Here we could notify the user via email if needed
+    
+    try {
+      await bookingService.updatePaymentStatus(intent.id, 'CANCELLED', 'FAILED');
+      console.log(`📉 Webhook: Updated booking status to FAILED for Intent ${intent.id}`);
+    } catch (e) {
+      console.error('❌ Webhook: Update error -', e.message);
+    }
   }
 
-  // 3. Expiry case: Checkout Session Expired
+  // 3. Refund case: Charge Refunded
+  if (event.type === 'charge.refunded') {
+    const charge = event.data.object;
+    console.log(`💰 Webhook: Charge Refunded - ${charge.id}`);
+
+    try {
+      // Find by payment_intent which is usually what we store
+      await bookingService.updatePaymentStatus(charge.payment_intent, 'CANCELLED', 'REFUNDED');
+      console.log(`🔄 Webhook: Updated booking status to REFUNDED for PI ${charge.payment_intent}`);
+    } catch (e) {
+      console.error('❌ Webhook: Refund update error -', e.message);
+    }
+  }
+
+  // 4. Expiry case: Checkout Session Expired
   if (event.type === 'checkout.session.expired') {
     const session = event.data.object;
     console.log(`⏳ Webhook: Session Expired - User abandoned the checkout for Event ${session.metadata?.eventId}`);
+    
+    try {
+      await bookingService.updatePaymentStatus(session.id, 'CANCELLED', 'FAILED');
+    } catch (e) {
+      console.error('❌ Webhook: Expiry update error -', e.message);
+    }
   }
 
   // Acknowledge receipt to Stripe
