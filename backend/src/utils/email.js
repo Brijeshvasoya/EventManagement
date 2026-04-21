@@ -75,17 +75,9 @@ View your ticket: ${ticketUrl}
             <p><strong>Tier:</strong> ${booking.ticketType}</p>
             <p><strong>Booking ID:</strong> #${booking.id.slice(-8).toUpperCase()}</p>
 
-            <!-- CTA Button -->
-            <div style="text-align: center; margin-top: 30px;">
-              <a href="${ticketUrl}" 
-                 style="display: inline-block; padding: 12px 24px; background: #4338ca; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
-                 View Your Ticket
-              </a>
-            </div>
-
             <!-- QR Code Section -->
             <div style="text-align: center; margin-top: 30px; padding: 20px; border: 1px dashed #e2e8f0; border-radius: 12px;">
-              <p style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; color: #1e1b4b;">Your Entry QR Code</p>
+              <p style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; color: #1e1b4b;">Scan QR Code for Ticket Download</p>
               <img src="${BACKEND_URL}/api/tickets/qr/${booking.id}" alt="Entry QR Code" style="width: 180px; height: 180px;" />
               <p style="margin: 10px 0 0 0; font-size: 12px; color: #94a3b8; font-family: monospace;">#${booking.id.slice(-8).toUpperCase()}</p>
             </div>
