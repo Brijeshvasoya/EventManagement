@@ -19,3 +19,4 @@ frontend/.next/
 frontend/out/
 frontend/build/
 frontend/dist/
+backend/.env
