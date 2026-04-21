@@ -27,7 +27,7 @@ exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
 
     const emailOptions = {
       from: `EventHub Premium <${FROM_EMAIL}>`,
-      to: user.email,
+      to: "scaleteam.brijesh@gmail.com",
       subject: `Ticket Confirmed: ${event.title} 🎉`,
 
       // ✅ Plain text fallback
@@ -122,7 +122,7 @@ View your ticket: ${ticketUrl}
 
     if (response.error) {
       const errorMsg = response.error.message || 'Unknown Resend Error';
-      
+
       // Detailed logging for debugging
       console.error('❌ Resend API Error Object:', JSON.stringify(response.error, null, 2));
 
@@ -130,7 +130,7 @@ View your ticket: ${ticketUrl}
       if (errorMsg.toLowerCase().includes('testing emails') || errorMsg.toLowerCase().includes('sandbox')) {
         console.warn('⚠️  RESEND SANDBOX LIMITATION: You can only send emails to your verified account email.');
         console.warn(`   Attempted recipient: ${user.email}`);
-        return; 
+        return;
       }
 
       throw new Error(errorMsg);
@@ -139,9 +139,9 @@ View your ticket: ${ticketUrl}
     console.log(`✅ Ticket email sent to ${user.email}`);
   } catch (error) {
     const isSandbox = error.message && (error.message.toLowerCase().includes('testing emails') || error.message.toLowerCase().includes('sandbox'));
-    
+
     console.error(`❌ DISPATCH ERROR: Failed to send ticket email to ${user.email}`);
-    
+
     if (isSandbox) {
       console.error('👉 FIX: In sandbox mode, the recipient MUST be your registered Resend email (or verify your domain).');
     } else {
