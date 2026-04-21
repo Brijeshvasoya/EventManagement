@@ -172,15 +172,6 @@ export default function EventDetailsPage() {
   return (
     <div className="mobile-pad-reduce" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
       <Head><title>{event.title} | Organizer Dashboard</title></Head>
-
-      <Button
-        icon={<ArrowLeftOutlined />}
-        onClick={() => router.back()}
-        style={{ marginBottom: '2rem', borderRadius: '10px' }}
-      >
-        Back to Browse
-      </Button>
-
       <Row gutter={[32, 32]}>
         {/* Left Side: Event Info */}
         <Col xs={24} lg={8}>

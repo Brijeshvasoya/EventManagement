@@ -17,7 +17,7 @@ exports.login = async ({ email, password }) => {
   if (!user || !(await bcrypt.compare(password, user.password))) {
     throw new GraphQLError('Invalid credentials', { extensions: { code: 'UNAUTHENTICATED' } });
   }
-  return { token: signToken({ id: user.id, email: user.email, role: user.role, name: user.name }), user };
+  return { token: signToken({ id: user.id, email: user.email, role: user.role, name: user.name, createdAt: user.createdAt }), user };
 };
 
 exports.updateProfile = async (id, { name, email, currentPassword, newPassword }) => {

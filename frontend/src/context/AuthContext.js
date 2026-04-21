@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
   const login = (token, returnUrl = '/') => {
     localStorage.setItem('token', token);
     const decoded = jwtDecode(token);
-    setUser({ id: decoded.id, role: decoded.role, name: decoded.name, email: decoded.email });
+    setUser({ id: decoded.id, role: decoded.role, name: decoded.name, email: decoded.email, createdAt: decoded.createdAt });
     router.push(returnUrl);
   };
 

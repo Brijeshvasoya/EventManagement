@@ -32,13 +32,13 @@ export default function Profile() {
 
   const onFinish = async (values) => {
     try {
-      const { data } = await updateProfile({ 
-        variables: { 
-          name: values.name, 
+      const { data } = await updateProfile({
+        variables: {
+          name: values.name,
           email: values.email,
           currentPassword: values.currentPassword,
           newPassword: values.newPassword
-        } 
+        }
       });
       setUser({ ...user, name: data.updateProfile.name, email: data.updateProfile.email });
       form.setFieldsValue({ currentPassword: '', newPassword: '' });
@@ -49,11 +49,11 @@ export default function Profile() {
   };
 
   return (
-    <ConfigProvider 
-      theme={{ 
+    <ConfigProvider
+      theme={{
         algorithm: theme.darkAlgorithm,
-        token: { 
-          colorPrimary: '#7c5cfc', 
+        token: {
+          colorPrimary: '#7c5cfc',
           fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
           borderRadius: 14,
           colorBgContainer: '#16162b',
@@ -63,24 +63,11 @@ export default function Profile() {
           colorTextSecondary: '#a0a0b8',
           colorBgLayout: '#0a0a0f',
           controlHeight: 45,
-        } 
+        }
       }}
     >
       <Head><title>Manage Profile | EventHub</title></Head>
       <div style={{ maxWidth: '640px', margin: '2rem auto', padding: '0 24px' }}>
-        <Link href="/dashboard" style={{ 
-          display: 'inline-flex', 
-          alignItems: 'center', 
-          gap: '8px', 
-          color: 'var(--primary-color)', 
-          marginBottom: '2rem', 
-          fontWeight: 600,
-          fontSize: '0.95rem',
-          transition: 'all 0.2s'
-        }}>
-          <ArrowLeftOutlined /> Back to Dashboard
-        </Link>
-
         <div style={{ marginBottom: '2.5rem' }}>
           <Title level={2} style={{ margin: 0, fontWeight: 800, letterSpacing: '-1px' }}>
             Account Settings
@@ -88,33 +75,33 @@ export default function Profile() {
           <AntText type="secondary">Manage your personal information and account security.</AntText>
         </div>
 
-        <div className="form-card" style={{ 
-          background: 'var(--card-bg)', 
+        <div className="form-card" style={{
+          background: 'var(--card-bg)',
           backdropFilter: 'blur(24px)',
           border: '1px solid var(--border-color)',
           boxShadow: 'var(--shadow-lg)'
         }}>
           {/* User Identity Header */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '1.5rem', 
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1.5rem',
             marginBottom: '3rem',
             padding: '24px',
             background: 'var(--gradient-glass)',
             borderRadius: '20px',
             border: '1px solid var(--border-color)'
           }}>
-            <div style={{ 
-              width: '80px', 
-              height: '80px', 
-              borderRadius: '22px', 
-              background: 'var(--gradient-main)', 
-              color: '#fff', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              fontSize: '2rem', 
+            <div style={{
+              width: '80px',
+              height: '80px',
+              borderRadius: '22px',
+              background: 'var(--gradient-main)',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '2rem',
               fontWeight: 800,
               boxShadow: 'var(--shadow-glow)',
               flexShrink: 0
@@ -124,7 +111,7 @@ export default function Profile() {
             <div>
               <Title level={3} style={{ margin: 0, fontWeight: 700 }}>{user.name}</Title>
               <Space style={{ marginTop: '8px' }}>
-                <div style={{ 
+                <div style={{
                   padding: '4px 12px',
                   background: 'rgba(124, 92, 252, 0.12)',
                   border: '1px solid var(--primary-glow)',
@@ -135,7 +122,7 @@ export default function Profile() {
                   textTransform: 'uppercase',
                   letterSpacing: '1px'
                 }}>{user.role}</div>
-                <AntText type="secondary" style={{ fontSize: '0.9rem' }}>Member since 2024</AntText>
+                <AntText type="secondary" style={{ fontSize: '0.9rem' }}>Member since {user.createdAt?.slice(0, 4)}</AntText>
               </Space>
             </div>
           </div>
@@ -158,8 +145,8 @@ export default function Profile() {
               name="name"
               rules={[{ required: true, message: 'Please enter your name' }]}
             >
-              <Input 
-                prefix={<UserOutlined style={{ color: 'var(--text-muted)' }} />} 
+              <Input
+                prefix={<UserOutlined style={{ color: 'var(--text-muted)' }} />}
                 style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
               />
             </Form.Item>
@@ -169,8 +156,8 @@ export default function Profile() {
               name="email"
               rules={[{ required: true, message: 'Please enter your email' }, { type: 'email', message: 'Please enter a valid email' }]}
             >
-              <Input 
-                prefix={<MailOutlined style={{ color: 'var(--text-muted)' }} />} 
+              <Input
+                prefix={<MailOutlined style={{ color: 'var(--text-muted)' }} />}
                 style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
               />
             </Form.Item>
@@ -189,9 +176,9 @@ export default function Profile() {
               name="currentPassword"
               extra={<AntText type="secondary" style={{ fontSize: '0.8rem' }}>Required only if changing password or email.</AntText>}
             >
-              <Input.Password 
-                prefix={<LockOutlined style={{ color: 'var(--text-muted)' }} />} 
-                placeholder="Enter current password" 
+              <Input.Password
+                prefix={<LockOutlined style={{ color: 'var(--text-muted)' }} />}
+                placeholder="Enter current password"
                 style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
               />
             </Form.Item>
@@ -200,23 +187,23 @@ export default function Profile() {
               label="New Password"
               name="newPassword"
             >
-              <Input.Password 
-                prefix={<LockOutlined style={{ color: 'var(--text-muted)' }} />} 
-                placeholder="Set a new secure password" 
+              <Input.Password
+                prefix={<LockOutlined style={{ color: 'var(--text-muted)' }} />}
+                placeholder="Set a new secure password"
                 style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
               />
             </Form.Item>
 
             <Form.Item style={{ marginTop: '3rem', marginBottom: 0 }}>
-              <Button 
-                type="primary" 
-                htmlType="submit" 
-                loading={updating} 
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={updating}
                 block
                 icon={<CheckCircleOutlined />}
-                style={{ 
-                  height: '54px', 
-                  fontSize: '1.05rem', 
+                style={{
+                  height: '54px',
+                  fontSize: '1.05rem',
                   fontWeight: 700,
                   background: 'var(--gradient-main)',
                   border: 'none',
