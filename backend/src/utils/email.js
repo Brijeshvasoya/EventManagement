@@ -86,7 +86,7 @@ View your ticket: ${ticketUrl}
             <!-- Note -->
             <div style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 12px; text-align: center;">
               <p style="margin: 0; font-size: 14px; color: #64748b;">
-                Show this QR code or the attached PDF at the venue entrance.
+                Use this QR code to download your ticket.
               </p>
             </div>
           </div>
