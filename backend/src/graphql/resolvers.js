@@ -187,7 +187,23 @@ const resolvers = {
   },
   User: {
     createdAt: (parent) => parent.createdAt ? (typeof parent.createdAt === 'string' ? parent.createdAt : parent.createdAt.toISOString()) : null,
-    loyaltyPoints: (parent) => parent.loyaltyPoints || 0,
+    loyaltyPoints: async (parent) => {
+      const Booking = require('../models/Booking');
+      // Use parent._id for Mongoose query consistency
+      const userId = parent._id || parent.id;
+      const count = await Booking.countDocuments({ user: userId, status: 'CONFIRMED' });
+      
+      const storedPoints = parent.loyaltyPoints || 0;
+      const hasRedeemed = parent.redeemedRewards && parent.redeemedRewards.length > 0;
+      
+      // If user has never redeemed, we can safely fallback to (count * 100) 
+      // ensuring existing bookings are credited. Once they redeem, we trust the storedPoints.
+      if (!hasRedeemed) {
+        return Math.max(storedPoints, count * 100);
+      }
+      
+      return storedPoints;
+    },
     redeemedRewards: (parent) => parent.redeemedRewards || [],
     rating: async (parent) => {
       if (parent.role !== 'ORGANIZER') return null;
