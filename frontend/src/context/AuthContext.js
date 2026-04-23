@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const decoded = jwtDecode(token);
         if (decoded.exp * 1000 < Date.now()) throw new Error('Token expired');
-        setUser({ id: decoded.id, role: decoded.role, name: decoded.name, email: decoded.email });
+        setUser({ id: decoded.id, role: decoded.role, name: decoded.name, email: decoded.email, createdAt: decoded.createdAt });
       } catch (e) {
         localStorage.removeItem('token');
       }

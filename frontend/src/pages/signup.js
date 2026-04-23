@@ -109,7 +109,7 @@ export default function Signup() {
             Join the elite circle of event professional organizers and scale your experiences globally.
           </p>
 
-          <div style={{ display: 'flex', gap: '20px' }}>
+          <div style={{ display: 'flex', gap: '20px', marginBottom: '40px' }}>
             {[
               { icon: '🎯', text: 'Professional Suite', desc: 'All-in-one management tools' },
               { icon: '⚡', text: 'Instant Scale', desc: 'Global server infrastructure' }
@@ -122,6 +122,42 @@ export default function Signup() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Testimonial Card */}
+          <div style={{ 
+            background: 'rgba(255, 255, 255, 0.9)', 
+            backdropFilter: 'blur(10px)', 
+            padding: '32px', 
+            borderRadius: '24px', 
+            border: '1px solid rgba(67, 56, 202, 0.1)', 
+            maxWidth: '660px',
+            animation: 'fadeInUp 1s ease-out 0.8s both',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.03)'
+          }}>
+            <div style={{ color: '#FBBF24', fontSize: '1.2rem', marginBottom: '16px' }}>
+              {"★ ★ ★ ★ ★"}
+            </div>
+            <p style={{ fontSize: '1.1rem', color: '#312E81', fontWeight: 500, lineHeight: 1.6, marginBottom: '24px', fontStyle: 'italic' }}>
+              "EventHub made our event coordination seamless. Managing bookings and tracking attendee growth has never been this efficient. A must-have for every organizer!"
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.1rem' }}>P</div>
+                <div>
+                  <div style={{ fontWeight: 700, color: '#1B2A4E', fontSize: '0.95rem' }}>Priya Sharma</div>
+                  <div style={{ color: '#64748B', fontSize: '0.8rem' }}>Head of Events, Nexus Corp</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ display: 'flex', marginRight: '8px' }}>
+                  {[ '#8B5CF6', '#06B6D4', '#EC4899', '#F59E0B', '#10B981' ].map((c, i) => (
+                    <div key={i} style={{ width: '28px', height: '28px', borderRadius: '50%', background: c, border: '2px solid white', marginLeft: i === 0 ? 0 : '-10px' }}></div>
+                  ))}
+                </div>
+                <span style={{ color: '#94A3B8', fontSize: '0.8rem', fontWeight: 600 }}>+9,000 more</span>
+              </div>
+            </div>
           </div>
         </div>
 

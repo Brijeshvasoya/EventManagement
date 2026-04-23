@@ -1,5 +1,13 @@
 import { gql } from '@apollo/client';
 
+export const GET_ME = gql`
+  query GetMe {
+    me {
+      id name email role createdAt loyaltyPoints rating
+    }
+  }
+`;
+
 export const GET_EVENTS = gql`
   query GetEvents($limit: Int, $offset: Int) {
     events(limit: $limit, offset: $offset) {
@@ -65,7 +73,7 @@ export const GET_MY_BOOKINGS = gql`
 export const UPDATE_PROFILE = gql`
   mutation UpdateProfile($name: String, $email: String, $currentPassword: String, $newPassword: String) {
     updateProfile(name: $name, email: $email, currentPassword: $currentPassword, newPassword: $newPassword) {
-      id name email role
+      id name email role createdAt loyaltyPoints rating
     }
   }
 `;

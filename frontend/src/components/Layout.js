@@ -153,7 +153,26 @@ export default function AppLayout({ children }) {
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <Button type="primary" icon={<SettingOutlined style={{ color: 'white' }} />} onClick={() => router.push('/profile')} style={{ flex: 1, borderRadius: '12px', background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 100%)', border: 'none' }} />
-                  <Button danger type="primary" icon={<LogoutOutlined />} onClick={logout} style={{ flex: 1, borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: 'none' }} />
+                  <div
+                    onClick={logout}
+                    style={{
+                      flex: 1,
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #FF3B3B 0%, #950101 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      height: '44px',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 15px rgba(149, 1, 1, 0.3)',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                  >
+                    <LogoutOutlined style={{ fontSize: '1.2rem' }} />
+                  </div>
                 </div>
               </div>
             ) : (
@@ -207,7 +226,24 @@ export default function AppLayout({ children }) {
                   </div>
                 </div>
                 <Button size="large" block icon={<SettingOutlined />} onClick={() => { setMobileMenuOpen(false); router.push('/profile'); }} style={{ borderRadius: '14px', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>Profile Settings</Button>
-                <Button size="large" danger block icon={<LogoutOutlined />} onClick={() => { setMobileMenuOpen(false); logout(); }} style={{ borderRadius: '14px', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: 'none' }}>Logout</Button>
+                <div
+                  onClick={() => { setMobileMenuOpen(false); logout(); }}
+                  style={{
+                    borderRadius: '14px',
+                    background: 'linear-gradient(135deg, #FF3B3B 0%, #950101 100%)',
+                    color: 'white',
+                    height: '54px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(149, 1, 1, 0.3)'
+                  }}
+                >
+                  <LogoutOutlined style={{ fontSize: '1.2rem' }} /> Logout
+                </div>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

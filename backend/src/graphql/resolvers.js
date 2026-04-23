@@ -163,6 +163,20 @@ const resolvers = {
       const id = parent.event?._id ? parent.event._id.toString() : parent.event?.toString();
       return id ? loaders.eventLoader.load(id) : null;
     },
+  },
+  User: {
+    createdAt: (parent) => parent.createdAt ? (typeof parent.createdAt === 'string' ? parent.createdAt : parent.createdAt.toISOString()) : null,
+    loyaltyPoints: async (parent) => {
+      if (parent.role !== 'USER') return null;
+      const Booking = require('../models/Booking');
+      const count = await Booking.countDocuments({ user: parent.id || parent._id, status: 'CONFIRMED' });
+      return count * 10;
+    },
+    rating: async (parent) => {
+      if (parent.role !== 'ORGANIZER') return null;
+      // Future: Calculate based on event reviews
+      return 5.0;
+    }
   }
 };
 module.exports = resolvers;

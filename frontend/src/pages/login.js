@@ -109,10 +109,10 @@ export default function Login() {
             Access your events dashboard and monitor your global impact in real-time.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', maxWidth: '700px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', maxWidth: '700px', marginBottom: '48px' }}>
             {[
               { icon: <ThunderboltOutlined />, title: 'Smart Sync', desc: 'Real-time booking' },
-              { icon: <BarChartOutlined />, title: 'Insight AI', desc: 'Growth analytics' }
+              { icon: <BarChartOutlined />, title: 'Insight Pro', desc: 'Growth analytics' }
             ].map((item, i) => (
               <div key={i} className="feature-card" style={{ display: 'flex', gap: '16px', alignItems: 'center', background: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(10px)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(67, 56, 202, 0.1)', animation: `fadeInRight 0.8s ease-out ${0.5 + (i * 0.1)}s both` }}>
                 <div style={{ fontSize: '1.5rem', color: 'rgb(67, 56, 202)' }}>{item.icon}</div>
@@ -122,6 +122,43 @@ export default function Login() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Social Proof Bar */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '24px',
+            animation: 'fadeInUp 1s ease-out 0.8s both'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              {[ 
+                'https://i.pravatar.cc/100?u=1', 
+                'https://i.pravatar.cc/100?u=2', 
+                'https://i.pravatar.cc/100?u=12', 
+                'https://i.pravatar.cc/100?u=4' 
+              ].map((url, i) => (
+                <div key={i} style={{ 
+                  width: '40px', 
+                  height: '40px', 
+                  borderRadius: '50%', 
+                  backgroundImage: `url(${url})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  border: '2px solid white', 
+                  marginLeft: i === 0 ? 0 : '-12px',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                }}></div>
+              ))}
+            </div>
+            <div>
+              <div style={{ color: '#FBBF24', fontSize: '1rem', marginBottom: '2px' }}>
+                {"★ ★ ★ ★ ★"}
+              </div>
+              <div style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: 500 }}>
+                <span style={{ color: '#1B2A4E', fontWeight: 700 }}>4.9 / 5</span> from 2,400+ reviews
+              </div>
+            </div>
           </div>
         </div>
 

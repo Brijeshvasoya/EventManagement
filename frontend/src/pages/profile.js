@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import toast from 'react-hot-toast';
-import { UPDATE_PROFILE } from '@/features/events/graphql/queries';
-import { useMutation } from '@apollo/client/react';
+import { UPDATE_PROFILE, GET_MY_EVENTS, GET_MY_BOOKINGS, GET_ME } from '@/features/events/graphql/queries';
 import Link from 'next/link';
-import { Form, Input, Button, Typography, ConfigProvider, theme, Space, Divider } from 'antd';
-import { ArrowLeftOutlined, UserOutlined, MailOutlined, LockOutlined, SafetyOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Typography, ConfigProvider, Space, Divider, Avatar, Skeleton } from 'antd';
+import { UserOutlined, MailOutlined, LockOutlined, SafetyOutlined, CheckCircleOutlined, ThunderboltOutlined, CalendarOutlined, StarOutlined, GiftOutlined } from '@ant-design/icons';
+import { useMutation, useQuery } from '@apollo/client/react';
 
 const { Title, Text: AntText } = Typography;
 
@@ -14,6 +14,26 @@ export default function Profile() {
   const { user, setUser } = useAuth();
   const [updateProfile, { loading: updating }] = useMutation(UPDATE_PROFILE);
   const [form] = Form.useForm();
+
+  // Fetch Latest User Data (Rating/Points)
+  const { data: meData, loading: meLoading } = useQuery(GET_ME, {
+    skip: !user,
+    onCompleted: (data) => {
+      if (data.me) setUser({ ...user, ...data.me });
+    }
+  });
+
+  // Fetch Stats Dynamically (Events Count)
+  const { data: eventsData, loading: eventsLoading } = useQuery(user?.role === 'ORGANIZER' ? GET_MY_EVENTS : GET_MY_BOOKINGS, {
+    skip: !user
+  });
+
+  const statsCount = user?.role === 'ORGANIZER'
+    ? eventsData?.myEvents?.length || 0
+    : eventsData?.myBookings?.length || 0;
+
+  const points = meData?.me?.loyaltyPoints || 0;
+  const rating = meData?.me?.rating || 5.0;
 
   useEffect(() => {
     if (user) {
@@ -25,7 +45,7 @@ export default function Profile() {
   }, [user, form]);
 
   if (!user) return (
-    <div style={{ textAlign: 'center', padding: '100px', color: 'var(--text-muted)' }}>
+    <div style={{ textAlign: 'center', padding: '100px', background: 'white', borderRadius: '24px' }}>
       <AntText type="secondary">Please login to manage profile.</AntText>
     </div>
   );
@@ -51,150 +71,125 @@ export default function Profile() {
   return (
     <ConfigProvider
       theme={{
-        algorithm: theme.darkAlgorithm,
         token: {
-          colorPrimary: '#7c5cfc',
-          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-          borderRadius: 14,
-          colorBgContainer: '#16162b',
-          colorBgElevated: '#1a1a2e',
-          colorBorder: 'rgba(255, 255, 255, 0.08)',
-          colorText: '#f0f0f5',
-          colorTextSecondary: '#a0a0b8',
-          colorBgLayout: '#0a0a0f',
-          controlHeight: 45,
+          colorPrimary: 'rgb(67, 56, 202)',
+          fontFamily: "'Inter', sans-serif",
+          borderRadius: 20,
         }
       }}
     >
-      <Head><title>Manage Profile | EventHub</title></Head>
-      <div style={{ maxWidth: '640px', margin: '2rem auto', padding: '0 24px' }}>
-        <div style={{ marginBottom: '2.5rem' }}>
-          <Title level={2} style={{ margin: 0, fontWeight: 800, letterSpacing: '-1px' }}>
-            Account Settings
-          </Title>
-          <AntText type="secondary">Manage your personal information and account security.</AntText>
-        </div>
+      <Head><title>Profile Settings | EventHub</title></Head>
 
-        <div className="form-card" style={{
-          background: 'var(--card-bg)',
-          backdropFilter: 'blur(24px)',
-          border: '1px solid var(--border-color)',
-          boxShadow: 'var(--shadow-lg)'
+      <div style={{ padding: '20px 0' }}>
+        {/* Top Header Card */}
+        <div style={{
+          background: 'white',
+          borderRadius: '32px',
+          padding: '40px',
+          marginBottom: '32px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '24px',
+          border: '1px solid rgba(67, 56, 202, 0.08)'
         }}>
-          {/* User Identity Header */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1.5rem',
-            marginBottom: '3rem',
-            padding: '24px',
-            background: 'var(--gradient-glass)',
-            borderRadius: '20px',
-            border: '1px solid var(--border-color)'
-          }}>
-            <div style={{
-              width: '80px',
-              height: '80px',
-              borderRadius: '22px',
-              background: 'var(--gradient-main)',
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '2rem',
-              fontWeight: 800,
-              boxShadow: 'var(--shadow-glow)',
-              flexShrink: 0
-            }}>
-              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+            <div style={{ position: 'relative' }}>
+              <Avatar size={100} icon={<UserOutlined />} style={{
+                background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 100%)',
+                fontSize: '40px',
+                boxShadow: '0 10px 20px rgba(27, 42, 78, 0.2)'
+              }} />
+              <div style={{
+                position: 'absolute', bottom: 5, right: 5,
+                width: '24px', height: '24px', background: '#10B981',
+                borderRadius: '50%', border: '4px solid white'
+              }}></div>
             </div>
             <div>
-              <Title level={3} style={{ margin: 0, fontWeight: 700 }}>{user.name}</Title>
-              <Space style={{ marginTop: '8px' }}>
-                <div style={{
-                  padding: '4px 12px',
-                  background: 'rgba(124, 92, 252, 0.12)',
-                  border: '1px solid var(--primary-glow)',
-                  borderRadius: '8px',
-                  color: 'var(--primary-color)',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px'
-                }}>{user.role}</div>
-                <AntText type="secondary" style={{ fontSize: '0.9rem' }}>Member since {user.createdAt?.slice(0, 4)}</AntText>
-              </Space>
+              <Title level={2} style={{ margin: 0, fontWeight: 900, color: '#1B2A4E', letterSpacing: '-1px' }}>{user.name}</Title>
+              <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
+                <span style={{ color: '#64748B', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
+                  <ThunderboltOutlined style={{ color: 'rgb(67, 56, 202)' }} /> {user.role}
+                </span>
+                <span style={{ color: '#64748B', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
+                  <CalendarOutlined style={{ color: 'rgb(67, 56, 202)' }} /> Member since {user.createdAt?.slice(0, 4) || '2024'}
+                </span>
+              </div>
             </div>
           </div>
-
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={onFinish}
-            requiredMark={false}
-            size="large"
-          >
-            <Divider titlePlacement="left" style={{ margin: '0 0 1.5rem 0', borderColor: 'var(--border-color)' }}>
-              <AntText strong style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                Basic Information
-              </AntText>
-            </Divider>
-
-            <Form.Item
-              label="Full Name"
-              name="name"
-              rules={[{ required: true, message: 'Please enter your name' }]}
-            >
-              <Input
-                prefix={<UserOutlined style={{ color: 'var(--text-muted)' }} />}
-                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
-              />
-            </Form.Item>
-
-            <Form.Item
-              label="Email Address"
-              name="email"
-              rules={[{ required: true, message: 'Please enter your email' }, { type: 'email', message: 'Please enter a valid email' }]}
-            >
-              <Input
-                prefix={<MailOutlined style={{ color: 'var(--text-muted)' }} />}
-                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
-              />
-            </Form.Item>
-
-            <Divider titlePlacement="left" style={{ margin: '2.5rem 0 1.5rem 0', borderColor: 'var(--border-color)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <SafetyOutlined style={{ color: 'var(--primary-color)' }} />
-                <AntText strong style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                  Security & Password
-                </AntText>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ textAlign: 'center', padding: '12px 24px', background: 'rgba(67, 56, 202, 0.05)', borderRadius: '16px', minWidth: '100px' }}>
+              <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#312E81' }}>
+                {eventsLoading ? '...' : statsCount}
               </div>
-            </Divider>
+              <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>
+                {user.role === 'ORGANIZER' ? 'EVENTS' : 'BOOKINGS'}
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', padding: '12px 24px', background: 'rgba(67, 56, 202, 0.05)', borderRadius: '16px', minWidth: '100px' }}>
+              <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#312E81' }}>
+                {meLoading ? '...' : (user.role === 'ORGANIZER' ? rating.toFixed(1) : points)}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>
+                {user.role === 'ORGANIZER' ? 'RATING' : 'POINTS'}
+              </div>
+            </div>
+          </div>
+        </div>
 
-            <Form.Item
-              label="Current Password"
-              name="currentPassword"
-              extra={<AntText type="secondary" style={{ fontSize: '0.8rem' }}>Required only if changing password or email.</AntText>}
-            >
-              <Input.Password
-                prefix={<LockOutlined style={{ color: 'var(--text-muted)' }} />}
-                placeholder="Enter current password"
-                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
-              />
-            </Form.Item>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+          requiredMark={false}
+          size="large"
+        >
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px' }}>
 
-            <Form.Item
-              label="New Password"
-              name="newPassword"
-            >
-              <Input.Password
-                prefix={<LockOutlined style={{ color: 'var(--text-muted)' }} />}
-                placeholder="Set a new secure password"
-                style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
-              />
-            </Form.Item>
+            {/* Account Information */}
+            <div style={{
+              background: 'white',
+              borderRadius: '32px',
+              padding: '40px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+              border: '1px solid rgba(67, 56, 202, 0.08)'
+            }}>
+              <Divider orientation="left" style={{ marginTop: 0 }}>
+                <span style={{ color: '#1B2A4E', fontWeight: 800, fontSize: '1rem', letterSpacing: '0.5px' }}>BASIC INFO</span>
+              </Divider>
 
-            <Form.Item style={{ marginTop: '3rem', marginBottom: 0 }}>
+              <Form.Item label="FULL NAME" name="name" rules={[{ required: true }]}>
+                <Input prefix={<UserOutlined style={{ color: '#94A3B8', marginRight: '8px' }} />} placeholder="Update your name" style={{ borderRadius: '12px' }} />
+              </Form.Item>
+
+              <Form.Item label="EMAIL ADDRESS" name="email" rules={[{ required: true, type: 'email' }]}>
+                <Input prefix={<MailOutlined style={{ color: '#94A3B8', marginRight: '8px' }} />} placeholder="Update your email" style={{ borderRadius: '12px' }} />
+              </Form.Item>
+            </div>
+
+            {/* Security Settings */}
+            <div style={{
+              background: 'white',
+              borderRadius: '32px',
+              padding: '40px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+              border: '1px solid rgba(67, 56, 202, 0.08)'
+            }}>
+              <Divider orientation="left" style={{ marginTop: 0 }}>
+                <span style={{ color: '#1B2A4E', fontWeight: 800, fontSize: '1rem', letterSpacing: '0.5px' }}>SECURITY</span>
+              </Divider>
+
+              <Form.Item label="CURRENT PASSWORD" name="currentPassword">
+                <Input.Password prefix={<LockOutlined style={{ color: '#94A3B8', marginRight: '8px' }} />} placeholder="Required to save changes" style={{ borderRadius: '12px' }} />
+              </Form.Item>
+
+              <Form.Item label="NEW PASSWORD" name="newPassword">
+                <Input.Password prefix={<LockOutlined style={{ color: '#94A3B8', marginRight: '8px' }} />} placeholder="Leave blank to keep same" style={{ borderRadius: '12px' }} />
+              </Form.Item>
+
               <Button
                 type="primary"
                 htmlType="submit"
@@ -203,22 +198,34 @@ export default function Profile() {
                 icon={<CheckCircleOutlined />}
                 style={{
                   height: '54px',
-                  fontSize: '1.05rem',
-                  fontWeight: 700,
-                  background: 'var(--gradient-main)',
+                  borderRadius: '16px',
+                  fontWeight: 800,
+                  marginTop: '12px',
+                  background: 'linear-gradient(90deg, #1B2A4E 0%, #312E81 100%)',
                   border: 'none',
-                  boxShadow: '0 8px 24px var(--primary-glow)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
+                  boxShadow: '0 10px 20px rgba(27, 42, 78, 0.15)'
                 }}
               >
-                Update Profile Settings
+                SAVE ALL SETTINGS
               </Button>
-            </Form.Item>
-          </Form>
-        </div>
+            </div>
+
+          </div>
+        </Form>
       </div>
+
+      <style jsx global>{`
+        .ant-form-item-label label {
+          font-weight: 800 !important;
+          font-size: 0.75rem !important;
+          color: #94A3B8 !important;
+          letter-spacing: 0.5px !important;
+        }
+        .ant-input:focus, .ant-input-focused {
+          border-color: rgb(67, 56, 202) !important;
+          box-shadow: 0 0 0 4px rgba(67, 56, 202, 0.08) !important;
+        }
+      `}</style>
     </ConfigProvider>
   );
 }
