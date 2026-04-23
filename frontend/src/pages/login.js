@@ -6,10 +6,10 @@ import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import Head from 'next/head';
 import toast from 'react-hot-toast';
-import { Form, Input, Button, Typography, ConfigProvider, theme } from 'antd';
-import { MailOutlined, LockOutlined, ArrowLeftOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Typography, ConfigProvider } from 'antd';
+import { MailOutlined, LockOutlined, ThunderboltOutlined, BarChartOutlined, GlobalOutlined, CustomerServiceOutlined, ArrowRightOutlined } from '@ant-design/icons';
 
-const { Title, Text: AntText } = Typography;
+const { Text: AntText } = Typography;
 
 const LOGIN_MUTATION = gql`
   mutation Login($email: String!, $password: String!) {
@@ -36,204 +36,288 @@ export default function Login() {
   return (
     <ConfigProvider
       theme={{
-        algorithm: theme.darkAlgorithm,
         token: {
-          colorPrimary: '#7c5cfc',
-          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-          borderRadius: 16,
-          colorBgContainer: 'var(--bg-secondary)',
-          colorBorder: 'var(--border-color)',
-          controlHeight: 40,
+          colorPrimary: 'rgb(67, 56, 202)',
+          fontFamily: "'Inter', sans-serif",
+          borderRadius: 20,
+          controlHeight: 48,
         }
       }}
     >
-      <Head><title>Sign In | EventHub Console</title></Head>
+      <Head>
+        <title>Sign In | EventHub</title>
+      </Head>
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        width: '100vw',
         display: 'flex',
-        background: 'radial-gradient(circle at 100% 0%, rgba(124, 92, 252, 0.25) 0%, transparent 100%)',
-        position: 'relative',
-        overflow: 'hidden'
+        background: 'linear-gradient(rgba(255, 255, 255, 0.8) 0%, rgba(67, 56, 202, 0.1) 100%)',
+        overflow: 'hidden',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        fontFamily: "'Inter', sans-serif"
       }}>
-        {/* Left Pane: Branding */}
+        {/* RE-ADDED: Round Type Glass Circles Animation */}
+        <div className="glass-orb o1"></div>
+        <div className="glass-orb o2"></div>
+        <div className="glass-orb o3"></div>
+
+        {/* Decorative Spinning Circles */}
+        <div className="spinning-circle sc1"></div>
+        <div className="spinning-circle sc2"></div>
+
+        {/* Orbiting Glow Lights */}
+        <div className="glow-light g1"></div>
+        <div className="glow-light g2"></div>
+
+        {/* Floating Event Elements Animation */}
+        <div className="event-item e1">🎫</div>
+        <div className="event-item e2">🎉</div>
+        <div className="event-item e3">📅</div>
+        <div className="event-item e4">🎵</div>
+
+        {/* Left Side: Branding */}
         <div style={{
-          flex: 1,
-          padding: '4rem',
+          flex: 1.5,
+          padding: '80px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           position: 'relative',
-          overflow: 'hidden',
+          zIndex: 5
         }} className="hide-mobile">
-          {/* Background Effects */}
-          <div style={{
-            position: 'absolute', top: '10%', left: '-10%', width: '100%', height: '100%',
-            filter: 'blur(80px)', animation: 'floatGradient 12s infinite ease-in-out'
-          }} />
-          <div style={{
-            position: 'absolute', bottom: '-10%', right: '-10%', width: '100%', height: '100%',
-            background: 'radial-gradient(circle at 0% 100%, rgba(0, 212, 170, 0.15) 0%, transparent 60%)',
-            filter: 'blur(80px)', animation: 'floatGradient 15s infinite ease-in-out reverse'
-          }} />
 
-          <div style={{ position: 'relative', zIndex: 2, animation: 'fadeInScale 1s var(--ease-out)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{
-                width: '70px', height: '70px', borderRadius: '20px',
-                background: 'var(--gradient-main)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '2rem', boxShadow: 'var(--shadow-glow)',
-                border: '1px solid rgba(255, 255, 255, 0.2)'
-              }}>🎭</div>
-
-              <h1 style={{ fontSize: '4.5rem', fontWeight: '950', color: 'white', lineHeight: 0.95, letterSpacing: '-3px' }}>
-                <span style={{ background: 'var(--gradient-cool)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Welcome back </span>
-              </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
+            <div className="logo-pulse-container" style={{
+              width: '64px', height: '64px', background: 'white',
+              borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 10px 30px rgba(67, 56, 202, 0.15)',
+              position: 'relative',
+              animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+            }}>
+              <img src="/logo.png" alt="Icon" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+              <div className="pulse-ring"></div>
             </div>
+            <h1 style={{ fontSize: '4.5rem', fontWeight: 900, color: '#312E81', margin: 0, letterSpacing: '-2px' }}>
+              <span className="text-reveal">Welcome </span>{" "}
+              <span className="text-reveal" style={{ animationDelay: '0.2s' }}>back</span>
+            </h1>
+          </div>
 
-            <p style={{ fontSize: '1.3rem', color: 'var(--text-secondary)', maxWidth: '500px', lineHeight: 1.5, marginBottom: '3rem', fontWeight: 300 }}>
-              Access your events dashboard and monitor your global impact in real-time.
-            </p>
+          <p style={{ fontSize: '1.2rem', color: '#64748B', maxWidth: '500px', marginBottom: '60px', lineHeight: 1.6, animation: 'fadeInUp 1s ease-out 0.4s both' }}>
+            Access your events dashboard and monitor your global impact in real-time.
+          </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-              {[
-                { icon: '🎫', text: 'Smart Sync', desc: 'Real-time booking' },
-                { icon: '📊', text: 'Insight AI', desc: 'Growth analytics' },
-                { icon: '🌐', text: 'Global Reach', desc: 'Connect with audiences worldwide' },
-                { icon: '�', text: '24/7 Support', desc: 'Dedicated assistance whenever you need help' },
-              ].map((item, i) => (
-                <div key={i} style={{
-                  display: 'flex', gap: '12px', alignItems: 'center',
-                  background: 'var(--glass-bg)', padding: '1rem',
-                  borderRadius: '16px', border: '1px solid var(--glass-border)',
-                  backdropFilter: 'blur(30px)'
-                }}>
-                  <div style={{ fontSize: '1.2rem' }}>{item.icon}</div>
-                  <div>
-                    <h4 style={{ color: 'white', margin: 0, fontSize: '0.9rem', fontWeight: 800 }}>{item.text}</h4>
-                    <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.75rem' }}>{item.desc}</p>
-                  </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', maxWidth: '700px' }}>
+            {[
+              { icon: <ThunderboltOutlined />, title: 'Smart Sync', desc: 'Real-time booking' },
+              { icon: <BarChartOutlined />, title: 'Insight AI', desc: 'Growth analytics' }
+            ].map((item, i) => (
+              <div key={i} className="feature-card" style={{ display: 'flex', gap: '16px', alignItems: 'center', background: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(10px)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(67, 56, 202, 0.1)', animation: `fadeInRight 0.8s ease-out ${0.5 + (i * 0.1)}s both` }}>
+                <div style={{ fontSize: '1.5rem', color: 'rgb(67, 56, 202)' }}>{item.icon}</div>
+                <div>
+                  <div style={{ fontWeight: 700, color: '#1B2A4E', fontSize: '0.95rem' }}>{item.title}</div>
+                  <div style={{ color: '#64748B', fontSize: '0.8rem' }}>{item.desc}</div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Right Pane: Login Form */}
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          position: 'relative',
-          padding: '2rem'
-        }} className="full-mobile">
-          {/* Subtle Form Mesh Background */}
-          <div style={{
-            position: 'absolute', inset: 0, opacity: 0.4,
+        {/* Right Side: Card */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+
+          <div className="rotating-square" style={{
+            position: 'absolute',
+            width: '500px',
+            height: '500px',
+            background: 'linear-gradient(45deg, rgba(67, 56, 202, 0.08), rgba(139, 92, 246, 0.08))',
+            borderRadius: '60px',
+            animation: 'rotate 20s linear infinite',
+            zIndex: 1
           }} />
 
-          <div className="auth-card" style={{
-            width: '100%', maxWidth: '440px', position: 'relative', zIndex: 2,
-            background: 'var(--card-bg)', backdropFilter: 'blur(40px)',
-            border: '1px solid var(--glass-border)', boxShadow: 'var(--shadow-lg)',
-            animation: 'fadeInScale 0.8s var(--ease-out)'
+          <div className="login-card breathe" style={{
+            width: '100%',
+            maxWidth: '440px',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
+            padding: '50px 40px',
+            borderRadius: '32px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.05)',
+            position: 'relative',
+            zIndex: 2,
+            animation: 'scaleUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)'
           }}>
-            <div style={{ marginBottom: '1.2rem', textAlign: 'center' }}>
-              <div style={{
-                width: '50px', height: '50px', borderRadius: '15px',
-                background: 'var(--gradient-main)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '1.5rem', margin: '0 auto 1.2rem', boxShadow: 'var(--shadow-glow)'
-              }}>🎭</div>
-              <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: 'white', letterSpacing: '-1.5px', marginBottom: '0.2rem' }}>Welcome Back</h2>
-              <AntText style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 300 }}>Authorize to access your ecosystem.</AntText>
+            <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+              <div className="logo-hover" style={{ width: '56px', height: '56px', background: 'white', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', position: 'relative', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                <img src="/logo.png" alt="Icon" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+                <div className="spinner-ring"></div>
+              </div>
+              <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: 600 }}>Authorize to access your ecosystem.</p>
             </div>
 
-            <Form
-              layout="vertical"
-              onFinish={onFinish}
-              requiredMark={false}
-              size="large"
-              className="premium-form"
-            >
-              <Form.Item
-                label="Email Address"
-                name="email"
-                rules={[{ required: true, message: 'Email required' }, { type: 'email' }]}
-              >
-                <Input placeholder="alex@hub.com" />
-              </Form.Item>
-              <Form.Item
-                label="Password"
-                name="password"
-                rules={[{ required: true, message: 'Password required' }]}
-              >
-                <Input placeholder="••••••••" type="password" />
+            <Form layout="vertical" onFinish={onFinish} size="large" requiredMark={false}>
+              <Form.Item label={<span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#94A3B8' }}>EMAIL ADDRESS</span>} name="email" rules={[{ required: true, message: 'Required' }, { type: 'email' }]}>
+                <Input prefix={<MailOutlined style={{ color: '#94A3B8', marginRight: '10px' }} />} placeholder="Enter your email" className="focus-glow" style={{ background: 'white', border: '1px solid #EDEDED', borderRadius: '10px' }} />
               </Form.Item>
 
-              <Form.Item style={{ marginBottom: '1.5rem' }}>
-                <Button type="primary" htmlType="submit" loading={loading} block className="submit-btn" style={{ background: 'var(--gradient-cool) !important' }}>
-                  Acknowledge & Sign In
+              <Form.Item label={<span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#94A3B8' }}>PASSWORD</span>} name="password" rules={[{ required: true, message: 'Required' }]}>
+                <Input.Password prefix={<LockOutlined style={{ color: '#94A3B8', marginRight: '10px' }} />} placeholder="••••••••" className="focus-glow" style={{ background: 'white', border: '1px solid #EDEDED', borderRadius: '10px' }} />
+              </Form.Item>
+
+              <Form.Item style={{ marginTop: '40px' }}>
+                <Button type="primary" htmlType="submit" loading={loading} block className="pulse-btn" style={{ height: '54px', borderRadius: '12px', background: 'linear-gradient(90deg, #1B2A4E 0%, #312E81 100%)', border: 'none', fontWeight: 800, fontSize: '0.9rem', color: 'white', letterSpacing: '1px' }}>
+                  SIGN IN TO DASHBOARD <ArrowRightOutlined style={{ marginLeft: '8px' }} />
                 </Button>
               </Form.Item>
             </Form>
 
-            <div style={{ textAlign: 'center' }}>
-              <AntText style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>New to the mission? </AntText>
-              <Link href="/signup" style={{ color: 'var(--secondary-color)', fontWeight: 700, fontSize: '0.85rem' }}>Create Account</Link>
+            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+              <span style={{ color: '#94A3B8', fontSize: '0.85rem' }}>New to the mission? </span>
+              <Link href="/signup" style={{ color: '#1B2A4E', fontWeight: 700, fontSize: '0.85rem' }}>Create Account</Link>
             </div>
           </div>
         </div>
       </div>
 
       <style jsx global>{`
-        .premium-form .ant-form-item-label {
-          padding-bottom: 4px !important;
-        }
-        .premium-form .ant-form-item-label label {
-          color: var(--text-secondary) !important;
-          font-size: 0.7rem !important;
-          font-weight: 700 !important;
-          text-transform: uppercase !important;
-          letter-spacing: 1px !important;
-          width: 100%;
-        }
-        .premium-form .ant-input, .premium-form .ant-input-password {
-          background: rgba(255, 255, 255, 0.03) !important;
-          border-color: var(--border-color) !important;
-          color: white !important;
-          border-radius: 12px !important;
-          height: 48px !important;
-        }
-        .premium-form .ant-input:focus, .premium-form .ant-input-focused {
-          border-color: var(--primary-color) !important;
-          background: rgba(124, 92, 252, 0.05) !important;
-          box-shadow: 0 0 0 4px var(--primary-glow) !important;
-        }
-        .premium-form .submit-btn {
-          height: 54px !important;
-          border-radius: 14px !important;
-          background: var(--gradient-cool) !important;
-          border: none !important;
-          font-weight: 800 !important;
-          text-transform: uppercase !important;
-          letter-spacing: 1.5px !important;
-          box-shadow: var(--shadow-glow) !important;
-        }
-        
-        @keyframes fadeInScale {
-          from { opacity: 0; transform: scale(0.98); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        
-        @keyframes floatGradient {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(40px, -40px) scale(1.1); }
+        body { margin: 0; padding: 0; overflow: hidden; }
+        .hide-mobile {
+          @media (max-width: 1024px) { display: none !important; }
         }
 
-        @media (max-width: 1024px) {
-          .hide-mobile { display: none !important; }
-          .full-mobile { flex: 1 !important; }
+        /* RE-ADDED: Round Glass Pearls Animation */
+        .glass-orb {
+          position: absolute;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.3);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.4);
+          z-index: 1;
+          animation: floatOrb 20s infinite ease-in-out;
+        }
+        .o1 { width: 150px; height: 150px; top: 10%; right: 15%; animation-duration: 25s; }
+        .o2 { width: 100px; height: 100px; bottom: 15%; left: 10%; animation-duration: 18s; animation-delay: -5s; }
+        .o3 { width: 70px; height: 70px; top: 40%; left: 35%; animation-duration: 22s; }
+
+        @keyframes floatOrb {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(50px, -50px) scale(1.1); }
+        }
+
+        /* Decorative Spinning Circles */
+        .spinning-circle {
+          position: absolute;
+          border-radius: 50%;
+          border: 1px dashed rgba(67, 56, 202, 0.15);
+          z-index: 0;
+          animation: rotate 60s infinite linear;
+        }
+        .sc1 { width: 1000px; height: 1000px; top: -20%; left: -20%; }
+        .sc2 { width: 700px; height: 700px; bottom: -10%; right: -10%; animation-direction: reverse; }
+
+        .spinner-ring {
+          position: absolute;
+          width: 70px;
+          height: 70px;
+          border: 2px solid transparent;
+          border-top-color: rgba(67, 56, 202, 0.5);
+          border-radius: 50%;
+          animation: rotate 3s infinite linear;
+        }
+
+        .pulse-ring {
+          position: absolute;
+          top: 0; left: 0; right: 0; bottom: 0;
+          border: 4px solid rgba(67, 56, 202, 0.2);
+          border-radius: 18px;
+          animation: ringPulse 2s infinite ease-out;
+        }
+        @keyframes ringPulse {
+          0% { transform: scale(1); opacity: 1; }
+          100% { transform: scale(1.8); opacity: 0; }
+        }
+
+        .glow-light {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(120px);
+          z-index: 0;
+          opacity: 0.15;
+          animation: orbit 25s infinite linear;
+        }
+        .g1 { width: 600px; height: 600px; background: rgba(67, 56, 202, 0.4); top: -200px; left: -200px; }
+        .g2 { width: 500px; height: 500px; background: rgba(139, 92, 246, 0.3); bottom: -150px; right: 5%; animation-direction: reverse; }
+        @keyframes orbit {
+          from { transform: rotate(0deg) translateX(50px) rotate(0deg); }
+          to { transform: rotate(360deg) translateX(50px) rotate(-360deg); }
+        }
+
+        .text-reveal {
+          display: inline-block;
+          animation: revealUp 0.8s cubic-bezier(0.19, 1, 0.22, 1) both;
+        }
+        @keyframes revealUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .breathe {
+          animation: breatheEffect 6s infinite ease-in-out;
+        }
+        @keyframes breatheEffect {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-8px) scale(1.002); }
+        }
+
+        .focus-glow:focus, .ant-input-affix-wrapper-focused {
+          box-shadow: 0 0 0 4px rgba(67, 56, 202, 0.1) !important;
+          border-color: rgb(67, 56, 202) !important;
+        }
+
+        @keyframes rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes popIn {
+          from { opacity: 0; transform: scale(0.5); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleUp {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes pulse {
+          0% { box-shadow: 0 0 0 0 rgba(49, 46, 129, 0.4); }
+          70% { box-shadow: 0 0 0 10px rgba(49, 46, 129, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(49, 46, 129, 0); }
+        }
+        .pulse-btn:hover { animation: pulse 1.5s infinite; }
+
+        .event-item {
+          position: absolute;
+          font-size: 2rem;
+          opacity: 0.15;
+          animation: floatItem 15s infinite linear;
+          z-index: 0;
+          user-select: none;
+        }
+        .e1 { top: 10%; left: 5%; }
+        .e2 { top: 20%; left: 40%; animation-delay: -5s; }
+        .e3 { top: 60%; left: 10%; animation-delay: -2s; }
+        .e4 { top: 70%; left: 45%; }
+
+        @keyframes floatItem {
+          0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+          10% { opacity: 0.15; }
+          90% { opacity: 0.15; }
+          100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
         }
       `}</style>
     </ConfigProvider>
