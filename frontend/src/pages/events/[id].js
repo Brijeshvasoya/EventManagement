@@ -376,7 +376,7 @@ export default function EventDetailsPage() {
                       type="primary"
                       icon={<DownloadOutlined />}
                       onClick={exportToExcel}
-                      style={{ borderRadius: '8px', background: 'rgba(0, 212, 170, 0.1)', color: 'var(--secondary-color)', border: '1px solid rgba(0, 212, 170, 0.2)' }}
+                      style={{ borderRadius: '8px', background: 'rgba(0, 212, 170, 0.1)', color: '#ffff', border: '1px solid rgba(0, 212, 170, 0.2)' }}
                     >
                       Export Guest List
                     </Button>
