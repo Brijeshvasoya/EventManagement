@@ -1,31 +1,30 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { CREATE_EVENT, GET_MY_VENDORS } from '@/features/events/graphql/queries';
-import { Select, ConfigProvider, theme } from 'antd';
+import { Select, ConfigProvider, theme, Form, Input, InputNumber, Button, Divider, Typography, Space, Avatar } from 'antd';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import {
+  PlusOutlined, DeleteOutlined, CalendarOutlined, EnvironmentOutlined,
+  FileTextOutlined, PictureOutlined, RocketOutlined, DollarOutlined,
+  TeamOutlined, ThunderboltOutlined, CheckCircleOutlined, InfoCircleOutlined
+} from '@ant-design/icons';
+
+const { Title, Text } = Typography;
 
 export default function CreateEvent() {
   const { user } = useAuth();
   const router = useRouter();
-
-  const [form, setForm] = useState({
-    title: '', description: '', date: '', location: '', capacity: 100, eventType: 'OTHER', imageUrl: ''
-  });
-
-  const [ticketTypes, setTicketTypes] = useState([
-    { name: 'REGULAR', price: 50, capacity: 100 }
-  ]);
+  const [form] = Form.useForm();
 
   const [createEvent, { loading }] = useMutation(CREATE_EVENT);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiImageLoading, setAiImageLoading] = useState(false);
-  const [vendorIds, setVendorIds] = useState([]);
   const [imageFile, setImageFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState('');
 
   const { data: vendorData, loading: vendorLoading } = useQuery(GET_MY_VENDORS, {
     fetchPolicy: 'cache-and-network',
@@ -34,9 +33,7 @@ export default function CreateEvent() {
 
   if (!user || user.role === 'USER') {
     return (
-      <div style={{
-        padding: '80px 20px', textAlign: 'center', color: '#6b6b80'
-      }}>
+      <div style={{ padding: '80px 20px', textAlign: 'center', color: '#6b6b80' }}>
         <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔒</div>
         <p style={{ fontSize: '1.1rem', marginBottom: '16px' }}>Access Denied. You must be an Event Organizer.</p>
         <Link href="/" style={{ color: '#7c5cfc', fontWeight: 600, textDecoration: 'none' }}>← Go Back</Link>
@@ -45,110 +42,95 @@ export default function CreateEvent() {
   }
 
   const handleAIGenerate = async () => {
-    if (!form.title) return toast.error("Please enter an event title first!");
+    const title = form.getFieldValue('title');
+    const eventType = form.getFieldValue('eventType');
+    if (!title) return toast.error("Please enter an event title first!");
     setAiLoading(true);
     try {
-      // For now, assuming a helper or proxy on backend for internal AI tool
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/ai/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify({ title: form.title, eventType: form.eventType })
+        body: JSON.stringify({ title, eventType })
       });
       const data = await res.json();
       if (data.description) {
-        setForm({ ...form, description: data.description });
+        form.setFieldsValue({ description: data.description });
         toast.success("AI Content Generated! ✨");
       }
     } catch (err) {
-      toast.error("AI service is currently unavailable.");
+      toast.error("AI service error.");
     } finally {
       setAiLoading(false);
     }
   };
 
   const handleAIImageGenerate = async () => {
-    if (!form.title) return toast.error("Please enter an event title first!");
+    const title = form.getFieldValue('title');
+    const eventType = form.getFieldValue('eventType');
+    if (!title) return toast.error("Please enter an event title first!");
     setAiImageLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/ai/generate-image`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify({ title: form.title, eventType: form.eventType })
+        body: JSON.stringify({ title, eventType })
       });
       const data = await res.json();
       if (data.imageUrl) {
-        setForm({ ...form, imageUrl: data.imageUrl });
+        setPreviewImage(data.imageUrl);
         toast.success("AI Poster Generated! 🎨");
       }
     } catch (err) {
-      toast.error("AI image service is currently unavailable.");
+      toast.error("AI image service error.");
     } finally {
       setAiImageLoading(false);
     }
   };
 
-  // --- Deferred Image Logic (Cloudinary upload on publish) ---
   const handleImageUpload = (e) => {
-    e.preventDefault();
-    const file = e.dataTransfer ? e.dataTransfer.files[0] : e.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-        setImageFile(file);
-        const reader = new FileReader();
-        reader.onloadend = () => setForm({ ...form, imageUrl: reader.result }); // Temporary proxy
-        reader.readAsDataURL(file);
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setPreviewImage(reader.result);
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleTicketChange = (index, field, value) => {
-    const newTickets = [...ticketTypes];
-    newTickets[index][field] = field === 'name' ? value : Number(value);
-    setTicketTypes(newTickets);
-  };
+  const onFinish = async (values) => {
+    let finalImageUrl = previewImage;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    let finalImageUrl = form.imageUrl;
-    
-    // If we have a local file, upload it *now* at publish time!
     if (imageFile) {
-        const formData = new FormData();
-        formData.append('image', imageFile);
-        toast.loading('Uploading media to Cloudinary...', { id: 'publish' });
-        try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/upload`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-                body: formData
-            });
-            const data = await res.json();
-            if (data.url) {
-                finalImageUrl = data.url;
-                toast.success('Media secured!', { id: 'publish' });
-            } else {
-                throw new Error("Missing URL from upload handler.");
-            }
-        } catch (err) {
-            toast.error('Image upload failed. Cannot publish.', { id: 'publish' });
-            return; // Stop publish
-        }
-    } else {
-        toast.loading('Publishing Event...', { id: 'publish' });
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      toast.loading('Uploading media...', { id: 'publish' });
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/upload`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+          body: formData
+        });
+        const data = await res.json();
+        if (data.url) finalImageUrl = data.url;
+      } catch (err) {
+        toast.error('Upload failed.', { id: 'publish' });
+        return;
+      }
     }
 
     try {
-      const totalCapacity = ticketTypes.reduce((acc, curr) => acc + curr.capacity, 0);
+      toast.loading('Publishing Event...', { id: 'publish' });
+      const totalCapacity = values.ticketTypes.reduce((acc, curr) => acc + (curr.capacity || 0), 0);
       await createEvent({
         variables: {
           input: {
-            ...form,
+            ...values,
             imageUrl: finalImageUrl,
-            capacity: totalCapacity,
-            ticketTypes,
-            vendorIds
+            capacity: totalCapacity
           }
         }
       });
-      toast.success('Event Published Successfully!', { id: 'publish' });
+      toast.success('Event Published! 🚀', { id: 'publish' });
       router.push('/my-events');
     } catch (err) {
       toast.error(err.message, { id: 'publish' });
@@ -158,355 +140,254 @@ export default function CreateEvent() {
   return (
     <ConfigProvider
       theme={{
-        algorithm: theme.defaultAlgorithm,
         token: {
-          colorPrimary: '#E845E4',
+          colorPrimary: 'rgb(67, 56, 202)',
           borderRadius: 16,
-          colorBgContainer: '#FFFFFF',
-          colorBorder: '#E5E7EB',
+          fontFamily: "'Inter', sans-serif",
         }
       }}
     >
-            <Head><title>Post New Event | EventHub</title></Head>
-      <div className="form-card hover-bounce" style={{
-        maxWidth: '800px',
-        margin: '2rem auto',
-        background: 'var(--card-bg)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid var(--glass-border)',
-        boxShadow: 'var(--shadow-md)'
-      }}>
-        <div style={{ marginBottom: '2rem' }}>
-          <div style={{
-            display: 'inline-block',
-            padding: '5px 12px',
-            background: 'rgba(131, 56, 236, 0.1)',
-            border: '1px solid rgba(131, 56, 236, 0.2)',
-            borderRadius: '100px',
-            color: 'var(--primary-color)',
-            fontSize: '0.7rem',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '1.5px',
-            marginBottom: '16px'
-          }}>
-            📝 New Event
+      <Head><title>Create Event | EventHub</title></Head>
+
+      <div>
+
+        {/* Top Header Card (Matching Profile - Compact) */}
+        <div style={{
+          background: 'white',
+          borderRadius: '24px',
+          padding: '24px 32px',
+          marginBottom: '24px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px',
+          border: '1px solid rgba(67, 56, 202, 0.08)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <div style={{ position: 'relative' }}>
+              <Avatar size={70} icon={<RocketOutlined />} style={{
+                background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 100%)',
+                fontSize: '28px',
+                boxShadow: '0 8px 16px rgba(27, 42, 78, 0.15)'
+              }} />
+              <div style={{
+                position: 'absolute', bottom: 2, right: 2,
+                width: '18px', height: '18px', background: '#10B981',
+                borderRadius: '50%', border: '3px solid white'
+              }}></div>
+            </div>
+            <div>
+              <Title level={3} style={{ margin: 0, fontWeight: 900, color: '#1B2A4E', letterSpacing: '-0.5px' }}>Design Your Event</Title>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+                <span style={{ color: '#64748B', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                  <ThunderboltOutlined style={{ color: 'rgb(67, 56, 202)' }} /> Organizer Tools
+                </span>
+              </div>
+            </div>
           </div>
-          <h2 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-primary)', fontWeight: 800, fontSize: '1.8rem', letterSpacing: '-0.5px' }}>Create a New Event</h2>
-          <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>Publish your rich media event to the platform.</p>
+          <Button
+            type="primary"
+            onClick={() => form.submit()}
+            loading={loading}
+            icon={<CheckCircleOutlined />}
+            style={{
+              height: '48px',
+              borderRadius: '12px',
+              fontWeight: 800,
+              padding: '0 24px',
+              background: 'linear-gradient(90deg, #1B2A4E 0%, #312E81 100%)',
+              border: 'none',
+              boxShadow: '0 8px 16px rgba(27, 42, 78, 0.12)'
+            }}
+          >
+            PUBLISH EVENT
+          </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="grid-2">
-            <div>
-              <label>Event Title *</label>
-              <input placeholder="e.g. Next.js Developer Conference 2024" required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
-            </div>
-            <div>
-              <label>Event Type *</label>
-              <Select
-                mode="tags"
-                value={Array.isArray(form.eventType) ? form.eventType : [form.eventType]}
-                onChange={val => setForm({ ...form, eventType: Array.isArray(val) ? val[val.length - 1] : val })}
-                style={{ width: '100%', padding: "7px" }}
-                className="premium-select-compact"
-                styles={{ popup: { root: { background: '#1a1a2e', border: '1px solid #312e81' } } }}
-              >
-                <Select.Option value="WEDDING">Wedding</Select.Option>
-                <Select.Option value="CORPORATE">Corporate</Select.Option>
-                <Select.Option value="BIRTHDAY">Birthday</Select.Option>
-                <Select.Option value="SEMINAR">Seminar / Tech</Select.Option>
-                <Select.Option value="OTHER">Other</Select.Option>
-              </Select>
-            </div>
-          </div>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={onFinish}
+          requiredMark={false}
+          size="middle"
+          initialValues={{
+            eventType: 'OTHER',
+            ticketTypes: [{ name: 'REGULAR', price: 50, capacity: 100 }]
+          }}
+        >
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '20px', alignItems: 'stretch' }}>
 
-          {/* Drag and Drop Box */}
-          <div>
-            <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <span>Event Cover Image *</span>
-              <button
-                type="button"
-                onClick={handleAIImageGenerate}
-                disabled={aiImageLoading}
-                className="ai-btn"
-              >
-                {aiImageLoading ? '✨ Generating...' : '✨ Generate with AI'}
-              </button>
-            </label>
-            <div
-              onDragOver={e => e.preventDefault()}
-              onDrop={handleImageUpload}
-              className="drop-zone"
-              style={{
-                borderColor: form.imageUrl ? 'rgba(0, 212, 170, 0.3)' : undefined,
-                background: form.imageUrl ? 'rgba(0, 212, 170, 0.03)' : undefined
-              }}
-            >
-              {form.imageUrl ? (
-                <div style={{ position: 'relative' }}>
-                  <img
-                    src={form.imageUrl}
-                    alt="Preview"
-                    crossOrigin="anonymous"
-                    referrerPolicy="no-referrer"
-                    style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '12px' }}
-                  />
-                  <div
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setForm({ ...form, imageUrl: '' });
-                      if (typeof setImageFile !== 'undefined') setImageFile(null);
-                    }}
-                    style={{
-                      position: 'absolute',
-                      top: '10px',
-                      right: '10px',
-                      width: '32px',
-                      height: '32px',
-                      background: 'rgba(255, 0, 110, 0.9)',
-                      color: 'white',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 12px rgba(255,0,110,0.4)',
-                      transition: 'all 0.2s',
-                    }}
-                    title="Remove Image"
-                    onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                    onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                  >
-                    ✕
-                  </div>
-                </div>
-              ) : (
-                <div style={{ padding: '3rem', textAlign: 'center', color: '#6b6b80' }}>
-                  <div style={{ fontSize: '2.5rem', marginBottom: '12px', opacity: 0.5 }}>📸</div>
-                  <p style={{ margin: '0 0 8px 0' }}>Drag and drop an image here</p>
-                  <p style={{ margin: '0 0 12px 0', fontSize: '0.85rem', color: '#4a4a5a' }}>or</p>
-                  <input type="file" accept="image/*" onChange={handleImageUpload} style={{
-                    display: 'block', width: '100%',
-                    color: '#a0a0b8',
-                    fontSize: '0.9rem'
-                  }} />
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <span>Description *</span>
-              <button
-                type="button"
-                onClick={handleAIGenerate}
-                disabled={aiLoading}
-                className="ai-btn"
-              >
-                {aiLoading ? '✨ Generating...' : '✨ Generate with AI'}
-              </button>
-            </label>
-            <textarea placeholder="Describe what attendees can expect..." required value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={6} />
-          </div>
-
-          <div className="grid-2">
-            <div>
-              <label>Date & Time *</label>
-              <input type="datetime-local" required value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
-            </div>
-            <div>
-              <label>Location / Venue *</label>
-              <input placeholder="e.g. Moscone Center" required value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} />
-            </div>
-          </div>
-
-          {/* Dynamic Ticket Types */}
-          <div style={{
-            marginTop: '1.5rem',
-            borderTop: '1px solid var(--glass-border)',
-            paddingTop: '1.5rem'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-              <div>
-                <h3 style={{ margin: 0, color: 'var(--text-primary)', fontWeight: 700, fontSize: '1.1rem' }}>Ticket Tiers</h3>
-                <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Configure pricing for different ticket levels</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setTicketTypes([...ticketTypes, { name: '', price: 0, capacity: 50 }])}
-                className="btn-outline hover-bounce"
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                <PlusOutlined /> Add Tier
-              </button>
-            </div>
-
-            {ticketTypes.map((ticket, idx) => (
-              <div key={idx} className="ticket-tier-row" style={{
-                background: 'rgba(255,255,255,0.02)',
-                padding: '16px',
-                borderRadius: '14px',
-                marginBottom: '12px',
-                border: '1px solid rgba(255,255,255,0.04)',
-                alignItems: 'end'
+            {/* Left Column: Details (Compact) */}
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div style={{
+                background: 'white',
+                borderRadius: '24px',
+                padding: '24px 32px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+                border: '1px solid rgba(67, 56, 202, 0.08)',
+                flex: 1
               }}>
-                <div>
-                  <label style={{ fontSize: '0.8rem' }}>Ticket Name</label>
-                  <input placeholder="e.g. VIP, Early Bird" value={ticket.name} onChange={e => handleTicketChange(idx, 'name', e.target.value)} required />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                  <span style={{ color: '#1B2A4E', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.5px' }}>EVENT OVERVIEW</span>
+                  <div style={{ flex: 1, height: '1px', background: '#F1F5F9' }}></div>
                 </div>
-                <div>
-                  <label style={{ fontSize: '0.8rem' }}>Price ($)</label>
-                  <input type="number" min="0" step="0.01" value={ticket.price} onChange={e => handleTicketChange(idx, 'price', e.target.value)} required />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.8rem' }}>Capacity</label>
-                  <input type="number" min="1" value={ticket.capacity} onChange={e => handleTicketChange(idx, 'capacity', e.target.value)} required />
-                </div>
-                {ticketTypes.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setTicketTypes(ticketTypes.filter((_, i) => i !== idx))}
-                    style={{
-                      background: 'rgba(255, 77, 106, 0.08)',
-                      border: '1px solid rgba(255, 77, 106, 0.15)',
-                      color: '#ff4d6a',
-                      borderRadius: '10px',
-                      padding: '10px 12px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      marginBottom: '2px',
-                      fontFamily: 'inherit'
-                    }}
+
+                <Form.Item label="EVENT TITLE" name="title" rules={[{ required: true }]} style={{ marginBottom: '16px' }}>
+                  <Input prefix={<FileTextOutlined style={{ color: '#94A3B8', marginRight: '4px' }} />} placeholder="e.g. Next.js Conf 2024" style={{ borderRadius: '10px' }} />
+                </Form.Item>
+
+                <Form.Item label="EVENT CATEGORY" name="eventType" rules={[{ required: true }]} style={{ marginBottom: '16px' }}>
+                  <Select style={{ borderRadius: '10px' }}>
+                    <Select.Option value="WEDDING">💍 Wedding</Select.Option>
+                    <Select.Option value="CORPORATE">🏢 Corporate</Select.Option>
+                    <Select.Option value="BIRTHDAY">🎂 Birthday</Select.Option>
+                    <Select.Option value="SEMINAR">🎓 Seminar / Tech</Select.Option>
+                    <Select.Option value="OTHER">🌟 Other</Select.Option>
+                  </Select>
+                </Form.Item>
+
+                <div style={{ position: 'relative' }}>
+                  <Form.Item label="DESCRIPTION" name="description" rules={[{ required: true }]} style={{ marginBottom: '16px' }}>
+                    <Input.TextArea placeholder="Experience details..." rows={3} style={{ borderRadius: '10px' }} />
+                  </Form.Item>
+                  <Button
+                    type="text"
+                    onClick={handleAIGenerate}
+                    loading={aiLoading}
+                    style={{ position: 'absolute', top: 0, right: 0, fontWeight: 800, color: 'rgb(67, 56, 202)', fontSize: '0.65rem' }}
                   >
-                    <DeleteOutlined />
-                  </button>
-                )}
+                    ✨ AI ASSIST
+                  </Button>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px', marginBottom: '24px' }}>
+                  <span style={{ color: '#1B2A4E', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.5px' }}>LOGISTICS</span>
+                  <div style={{ flex: 1, height: '1px', background: '#F1F5F9' }}></div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <Form.Item label="DATE & TIME" name="date" rules={[{ required: true }]} style={{ marginBottom: 0 }}>
+                    <Input type="datetime-local" style={{ borderRadius: '10px' }} />
+                  </Form.Item>
+                  <Form.Item label="LOCATION" name="location" rules={[{ required: true }]} style={{ marginBottom: 0 }}>
+                    <Input prefix={<EnvironmentOutlined style={{ color: '#94A3B8', marginRight: '4px' }} />} placeholder="Venue" style={{ borderRadius: '10px' }} />
+                  </Form.Item>
+                </div>
               </div>
-            ))}
-          </div>
+            </div>
 
-          <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem', marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '10px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '1.1rem' }}>Assign My Vendors</label>
-            <p style={{ margin: '-5px 0 15px 0', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Choose from vendors you have created to support this event.</p>
-            <Select
-              mode="multiple"
-              allowClear
-              style={{ width: '100%' }}
-              placeholder="Select vendors..."
-              value={vendorIds}
-              onChange={setVendorIds}
-              loading={vendorLoading}
-              dropdownStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)' }}
-              className="premium-select"
-            >
-              {vendorData?.myVendors?.map(v => (
-                <Select.Option key={v.id} value={v.id}>
-                  <span style={{ color: 'var(--text-primary)' }}>{v.name}</span> <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>— {v.category}</span>
-                </Select.Option>
-              ))}
-            </Select>
-          </div>
+            {/* Right Column: Media & Tickets (Compact) */}
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div style={{
+                background: 'white',
+                borderRadius: '24px',
+                padding: '24px 32px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+                border: '1px solid rgba(67, 56, 202, 0.08)',
+                flex: 1
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                  <span style={{ color: '#1B2A4E', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.5px' }}>MEDIA</span>
+                  <div style={{ flex: 1, height: '1px', background: '#F1F5F9' }}></div>
+                  <Button type="text" onClick={handleAIImageGenerate} loading={aiImageLoading} style={{ fontWeight: 800, color: 'rgb(67, 56, 202)', fontSize: '0.65rem' }}>
+                    🎨 AI POSTER
+                  </Button>
+                </div>
 
-          <button type="submit" disabled={loading} className="btn-primary mt-2" style={{
-            padding: '1rem', fontSize: '1.05rem', width: '100%', height: '54px'
-          }}>
-            {loading ? (
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <span style={{
-                  width: '16px', height: '16px',
-                  border: '2px solid rgba(255,255,255,0.3)',
-                  borderTopColor: 'white',
-                  borderRadius: '50%',
-                  animation: 'spin 0.6s linear infinite',
-                  display: 'inline-block'
-                }} />
-                Publishing...
-              </span>
-            ) : '🚀 Publish Event'}
-          </button>
-        </form>
+                <div style={{
+                  border: '2px dashed #E2E8F0', borderRadius: '16px', padding: '16px', textAlign: 'center', background: '#F8FAFC',
+                  minHeight: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden'
+                }}>
+                  {previewImage ? (
+                    <div style={{ position: 'relative' }}>
+                      <img src={previewImage} style={{ width: '100%', maxHeight: '140px', objectFit: 'cover', borderRadius: '12px' }} />
+                      <Button
+                        type="primary" danger size="small"
+                        style={{ position: 'absolute', top: 8, right: 8, borderRadius: '6px', fontWeight: 800, fontSize: '0.7rem' }}
+                        onClick={() => { setPreviewImage(''); setImageFile(null); }}
+                      >
+                        CHANGE
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <PictureOutlined style={{ fontSize: '1.8rem', color: '#CBD5E1', marginBottom: '8px' }} />
+                      <input type="file" accept="image/*" onChange={handleImageUpload} id="media-upload" style={{ display: 'none' }} />
+                      <label htmlFor="media-upload">
+                        <Button type="default" size="small" style={{ borderRadius: '8px', fontWeight: 800, color: '#1B2A4E', fontSize: '0.75rem' }}>UPLOAD IMAGE</Button>
+                      </label>
+                    </>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                  <span style={{ color: '#1B2A4E', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.5px' }}>TICKETING & NETWORK</span>
+                  <div style={{ flex: 1, height: '1px', background: '#F1F5F9' }}></div>
+                </div>
+
+                <Form.List name="ticketTypes">
+                  {(fields, { add, remove }) => (
+                    <>
+                      {fields.map(({ key, name, ...restField }) => (
+                        <div key={key} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '8px', marginBottom: '12px', alignItems: 'end', background: '#F8FAFC', padding: '12px', borderRadius: '12px', border: '1px solid #F1F5F9' }}>
+                          <Form.Item {...restField} name={[name, 'name']} label="TIER" style={{ marginBottom: 0 }}>
+                            <Input placeholder="VIP" style={{ borderRadius: '8px', fontSize: '0.85rem' }} />
+                          </Form.Item>
+                          <Form.Item {...restField} name={[name, 'price']} label="PRICE" style={{ marginBottom: 0 }}>
+                            <InputNumber min={0} style={{ width: '100%', borderRadius: '8px', fontSize: '0.85rem' }} />
+                          </Form.Item>
+                          <Form.Item {...restField} name={[name, 'capacity']} label="QTY" style={{ marginBottom: 0 }}>
+                            <InputNumber min={1} style={{ width: '100%', borderRadius: '8px', fontSize: '0.85rem' }} />
+                          </Form.Item>
+                          {fields.length > 1 && (
+                            <Button type="text" danger icon={<DeleteOutlined />} onClick={() => remove(name)} style={{ marginBottom: '2px' }} />
+                          )}
+                        </div>
+                      ))}
+                      <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />} style={{ borderRadius: '10px', height: '40px', marginTop: '4px', fontWeight: 700, color: '#64748B', fontSize: '0.8rem' }}>
+                        ADD NEW TIER
+                      </Button>
+                    </>
+                  )}
+                </Form.List>
+
+                <Form.Item label="ASSIGN VENDORS" name="vendorIds" style={{ marginTop: '20px', marginBottom: 0 }}>
+                  <Select mode="multiple" placeholder="Link partners" loading={vendorLoading} style={{ borderRadius: '10px' }}>
+                    {vendorData?.myVendors?.map(v => (
+                      <Select.Option key={v.id} value={v.id}>{v.name}</Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </div>
+            </div>
+
+          </div>
+        </Form>
       </div>
 
-      <style jsx>{`
-        .ticket-tier-row {
-          display: grid;
-          grid-template-columns: 1.5fr 1fr 1fr auto;
-          gap: 12px;
+      <style jsx global>{`
+        .ant-form-item-label label {
+          font-weight: 800 !important;
+          font-size: 0.75rem !important;
+          color: #94A3B8 !important;
+          letter-spacing: 0.5px !important;
+          text-transform: uppercase !important;
         }
-        @media (max-width: 600px) {
-          .ticket-tier-row {
-             grid-template-columns: 1fr 1fr;
-          }
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        .ai-btn {
-          background: rgba(124, 92, 252, 0.1);
-          border: 1px solid rgba(124, 92, 252, 0.3);
-          color: #7c5cfc;
-          padding: 6px 14px;
-          border-radius: 8px;
-          font-size: 0.8rem;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          backdrop-filter: blur(10px);
-        }
-        .ai-btn:hover {
-          background: #7c5cfc;
-          color: white;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(124, 92, 252, 0.4);
-        }
-        .ai-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-        .premium-select :global(.ant-select-selector),
-        .premium-select-compact :global(.ant-select-selector) {
-          background: rgba(255, 255, 255, 0.03) !important;
-          border-color: rgba(255, 255, 255, 0.08) !important;
+        .ant-input, .ant-input-number, .ant-select-selector, .ant-input-password {
           border-radius: 12px !important;
-          color: #f0f0f5 !important;
-          display: flex !important;
-          align-items: center !important;
+          border-color: #E2E8F0 !important;
+          background: #F8FAFC !important;
+          transition: all 0.2s ease !important;
         }
-        .premium-select :global(.ant-select-selector) {
-          min-height: 52px !important;
+        .ant-input:focus, .ant-input-focused, .ant-select-selector:focus, .ant-input-number:focus {
+          border-color: rgb(67, 56, 202) !important;
+          box-shadow: 0 0 0 4px rgba(67, 56, 202, 0.08) !important;
+          background: white !important;
         }
-        .premium-select-compact :global(.ant-select-selector) {
-          height: 52px !important; /* Match standard input height exactly */
-        }
-        .premium-select :global(.ant-select-selection-item),
-        .premium-select-compact :global(.ant-select-selection-item) {
-          color: #f0f0f5 !important;
-          font-weight: 500 !important;
-          line-height: 50px !important; /* Center text vertically in single select */
-        }
-        /* Multiple selection tags */
-        .premium-select.ant-select-multiple :global(.ant-select-selection-item) {
-          background: rgba(124, 92, 252, 0.15) !important;
-          border: 1px solid rgba(124, 92, 252, 0.3) !important;
-          color: #a78bfa !important;
-          border-radius: 6px !important;
-          line-height: 24px !important;
-          margin-top: 4px !important;
-        }
-        .premium-select :global(.ant-select-selection-placeholder),
-        .premium-select-compact :global(.ant-select-selection-placeholder) {
-          color: #4a4a5a !important;
-          line-height: 50px !important;
-        }
-        .premium-select :global(.ant-select-arrow),
-        .premium-select-compact :global(.ant-select-arrow) {
-          color: #6b6b80 !important;
+        .ant-divider-inner-text {
+           background: white !important;
         }
       `}</style>
     </ConfigProvider>

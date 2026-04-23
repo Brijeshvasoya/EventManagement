@@ -188,21 +188,28 @@ const resolvers = {
   User: {
     createdAt: (parent) => parent.createdAt ? (typeof parent.createdAt === 'string' ? parent.createdAt : parent.createdAt.toISOString()) : null,
     loyaltyPoints: async (parent) => {
-      const Booking = require('../models/Booking');
-      // Use parent._id for Mongoose query consistency
-      const userId = parent._id || parent.id;
-      const count = await Booking.countDocuments({ user: userId, status: 'CONFIRMED' });
-      
-      const storedPoints = parent.loyaltyPoints || 0;
-      const hasRedeemed = parent.redeemedRewards && parent.redeemedRewards.length > 0;
-      
-      // If user has never redeemed, we can safely fallback to (count * 100) 
-      // ensuring existing bookings are credited. Once they redeem, we trust the storedPoints.
-      if (!hasRedeemed) {
+      try {
+        const Booking = require('../models/Booking');
+        const userId = parent._id || parent.id;
+        
+        // Count any booking that isn't cancelled
+        const count = await Booking.countDocuments({ 
+          user: userId,
+          status: { $ne: 'CANCELLED' } 
+        });
+        
+        const storedPoints = parent.loyaltyPoints || 0;
+        const hasRedeemed = parent.redeemedRewards && parent.redeemedRewards.length > 0;
+        
+        // If 0 points and no redemptions, definitely fallback to count
+        if (storedPoints === 0 && !hasRedeemed) {
+          return count * 100;
+        }
+        
         return Math.max(storedPoints, count * 100);
+      } catch (e) {
+        return parent.loyaltyPoints || 0;
       }
-      
-      return storedPoints;
     },
     redeemedRewards: (parent) => parent.redeemedRewards || [],
     rating: async (parent) => {
