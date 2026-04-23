@@ -95,7 +95,6 @@ const startServer = async () => {
   app.get('/api/tickets/download/:bookingId', async (req, res) => {
     try {
       const { bookingId } = req.params;
-      console.log(`📡 Attempting ticket download for Booking ID: ${bookingId}`);
 
       const booking = await Booking.findById(bookingId).populate('user event');
       if (!booking) {
@@ -103,7 +102,6 @@ const startServer = async () => {
         return res.status(404).send('Ticket Download Failed: Booking not found.');
       }
 
-      console.log(`📄 Generating PDF for ${booking.user.name} - ${booking.event.title}`);
       const pdfBuffer = await generateTicketPDF(booking.user, booking, booking.event);
 
       const fileName = `Ticket_${booking.event.title.replace(/[^a-zA-Z0-9]/g, '_')}_${bookingId.slice(-6)}.pdf`;
@@ -111,8 +109,7 @@ const startServer = async () => {
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
       res.setHeader('Content-Length', pdfBuffer.length);
-      
-      console.log(`✅ Sending PDF: ${fileName} (${pdfBuffer.length} bytes)`);
+
       res.send(pdfBuffer);
     } catch (error) {
       console.error('❌ Download error:', error);
@@ -128,7 +125,7 @@ const startServer = async () => {
       const { bookingId } = req.params;
       const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000';
       const downloadUrl = `${BACKEND_URL}/api/tickets/download/${bookingId}`;
-      
+
       const qrBuffer = await QRCode.toBuffer(downloadUrl, {
         errorCorrectionLevel: 'H',
         margin: 1,
@@ -136,7 +133,7 @@ const startServer = async () => {
       });
 
       res.setHeader('Content-Type', 'image/png');
-      res.setHeader('Cache-Control', 'public, max-age=31536000'); 
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
       res.send(qrBuffer);
     } catch (error) {
 

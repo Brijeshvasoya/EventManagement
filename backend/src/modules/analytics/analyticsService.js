@@ -29,11 +29,11 @@ exports.getOrganizerAnalytics = async (user) => {
       const revenue = b.amountPaid || 0;
       totalRevenue += revenue;
       confirmedBookingsCount += 1;
-      
+
       // Update monthly breakdown
       if (monthlyStats[monthName]) {
         monthlyStats[monthName].c += revenue;
-        monthlyStats[monthName].p += (revenue * 0.2); // 20% Profit margin as requested
+        monthlyStats[monthName].p += (revenue * 0.8); // 20% Profit margin as requested
       }
     } else if (b.status === 'CANCELLED') {
       cancelledTickets += qty;

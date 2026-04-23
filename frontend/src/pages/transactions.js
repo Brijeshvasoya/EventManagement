@@ -112,7 +112,7 @@ export default function Transactions() {
         </Col>
         <Col xs={24} md={12}>
           <Card variant="borderless" style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-            <Statistic title={<span style={{ fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Pases Sold</span>} value={stats.ticketsSold} prefix={<TagOutlined />} styles={{ content: { color: '#F047E7', fontWeight: 900, fontSize: '2.5rem' } }} />
+            <Statistic title={<span style={{ fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Pases Sold</span>} value={stats.ticketsSold} prefix={<TagOutlined />} styles={{ content: { color: 'rgb(67, 56, 202)', fontWeight: 900, fontSize: '2.5rem' } }} />
           </Card>
         </Col>
       </Row>

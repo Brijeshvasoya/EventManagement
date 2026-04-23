@@ -5,12 +5,18 @@
   /* EVENTHUB Light Theme Palette */
   --bg-color: #F8F9FB;
   /* Main content background */
-  --bg-secondary: #F6F4FD;
+  --bg-secondary: linear-gradient(135deg,
+      rgba(67, 56, 202, 0.05) 0%,
+      rgba(67, 56, 202, 0.1) 50%,
+      rgba(67, 56, 202, 0.2) 100%);
   /* Sidebar background */
   --bg-tertiary: #FFFFFF;
   --card-bg: #FFFFFF;
   --card-bg-solid: #FFFFFF;
-  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-bg: linear-gradient(135deg,
+      rgba(67, 56, 202, 0.05) 0%,
+      rgba(67, 56, 202, 0.1) 50%,
+      rgba(67, 56, 202, 0.2) 100%);
   --glass-border: #E5E7EB;
 
   --text-primary: #1F2937;
@@ -19,21 +25,21 @@
   --border-color: #E5E7EB;
 
   /* Accent Colors */
-  --primary-color: #E845E4;
-  /* Vibrant Magenta/Pink */
-  --primary-hover: #D537D2;
-  --primary-glow: rgba(232, 69, 228, 0.2);
+  --primary-color: rgb(67, 56, 202);
+  /* Vibrant Blue/Indigo */
+  --primary-hover: rgb(49, 46, 129);
+  --primary-glow: rgba(67, 56, 202, 0.2);
   --secondary-color: #1A1A40;
   /* Deep Navy for contrast */
-  --accent-pink: #E845E4;
+  --accent-pink: rgb(67, 56, 202);
   --accent-orange: #fb923c;
   --accent-blue: #38bdf8;
   --accent-purple: #9b8cf1;
 
   /* Gradients */
-  --gradient-main: linear-gradient(135deg, #FF6BEA 0%, #D537D2 100%);
-  --gradient-hover: linear-gradient(135deg, #E845E4 0%, #BC2BBA 100%);
-  --gradient-pink: linear-gradient(135deg, #FF6BEA 0%, #D537D2 100%);
+  --gradient-main: linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 50%, rgb(67, 56, 202) 100%);
+  --gradient-hover: linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%);
+  --gradient-pink: linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(67, 56, 202) 100%);
   --gradient-warm: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
   --gradient-cool: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
   --gradient-dark: linear-gradient(135deg, #1A1A40 0%, #2b2d42 100%);
@@ -43,8 +49,8 @@
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.06);
-  --shadow-hover: 0 14px 28px rgba(232, 69, 228, 0.15), 0 10px 10px rgba(0, 0, 0, 0.04);
-  --shadow-glow: 0 0 20px rgba(232, 69, 228, 0.25);
+  --shadow-hover: 0 14px 28px rgba(67, 56, 202, 0.15), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 20px rgba(67, 56, 202, 0.25);
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.03);
 
   /* Status */
@@ -791,11 +797,11 @@ button {
 
   0%,
   100% {
-    box-shadow: 0 0 25px rgba(255, 0, 110, 0.15);
+    box-shadow: 0 0 25px rgba(67, 56, 202, 0.15);
   }
 
   50% {
-    box-shadow: 0 0 50px rgba(131, 56, 236, 0.35);
+    box-shadow: 0 0 50px rgba(49, 46, 129, 0.35);
   }
 }
 

@@ -238,27 +238,27 @@ export default function Dashboard() {
             dataSource={notificationData?.myNotifications || []}
             locale={{ emptyText: <Empty description="No notifications found" /> }}
             renderItem={(item) => (
-              <div 
-                key={item.id} 
-                style={{ 
-                  background: item.read ? '#FFFFFF' : '#F0E7FF', 
-                  borderRadius: '16px', 
-                  padding: '16px', 
-                  marginBottom: '12px', 
-                  border: '1px solid', 
-                  borderColor: item.read ? '#E5E7EB' : '#D8B4FE',
-                  boxShadow: item.read ? 'none' : '0 4px 12px rgba(131, 56, 236, 0.05)',
+              <div
+                key={item.id}
+                style={{
+                  background: item.read ? '#FFFFFF' : 'rgba(67, 56, 202, 0.08)',
+                  borderRadius: '16px',
+                  padding: '16px',
+                  marginBottom: '12px',
+                  border: '1px solid',
+                  borderColor: item.read ? '#E5E7EB' : 'rgba(67, 56, 202, 0.2)',
+                  boxShadow: item.read ? 'none' : '0 4px 12px rgba(67, 56, 202, 0.05)',
                   transition: 'all 0.3s ease'
                 }}
               >
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <div style={{ 
-                    width: '40px', 
-                    height: '40px', 
-                    borderRadius: '12px', 
-                    background: item.read ? '#F3F4F6' : 'var(--gradient-main)', 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '12px',
+                    background: item.read ? '#F3F4F6' : 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
                     justifyContent: 'center',
                     color: item.read ? '#9CA3AF' : 'white',
                     flexShrink: 0
@@ -273,9 +273,9 @@ export default function Dashboard() {
                       {new Date(parseInt(item.createdAt) || item.createdAt).toLocaleString()}
                     </div>
                     {!item.read && (
-                      <Button 
-                        size="small" 
-                        icon={<CheckOutlined />} 
+                      <Button
+                        size="small"
+                        icon={<CheckOutlined />}
                         onClick={() => handleMarkRead(item.id)}
                         style={{ borderRadius: '100px', fontWeight: 600, fontSize: '0.75rem', background: 'white', color: 'var(--primary-color)', border: '1px solid var(--primary-color)' }}
                       >
@@ -298,10 +298,10 @@ export default function Dashboard() {
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             <div style={{ display: 'flex', gap: '12px' }}>
               <Badge count={unreadCountData?.unreadNotificationCount || 0} offset={[-2, 6]}>
-                <div 
-                  className="hover-bounce" 
+                <div
+                  className="hover-bounce"
                   onClick={handleOpenDrawer}
-                  style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#F047E7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(240, 71, 231, 0.3)' }}
+                  style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 50%, rgb(67, 56, 202) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.3)' }}
                 >
                   <BellOutlined style={{ fontSize: '20px' }} />
                 </div>
@@ -349,7 +349,7 @@ export default function Dashboard() {
                 {/* TOP KPI CARDS ROW */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
                   <Card styles={{ body: { padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' } }} style={{ borderRadius: '20px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#FFDDFB', color: '#F047E7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>📅</div>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(67, 56, 202, 0.1)', color: 'rgb(67, 56, 202)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>📅</div>
                     <div>
                       <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>Upcoming Events</div>
                       <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{myEventsData?.myEvents.length || 0}</div>
@@ -357,7 +357,7 @@ export default function Dashboard() {
                   </Card>
 
                   <Card styles={{ body: { padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' } }} style={{ borderRadius: '20px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#FFDDFB', color: '#F047E7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>☑️</div>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(67, 56, 202, 0.1)', color: 'rgb(67, 56, 202)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>☑️</div>
                     <div>
                       <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>Total Bookings</div>
                       <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{analyticsData?.myAnalytics?.confirmedBookingsCount || 0}</div>
@@ -365,7 +365,7 @@ export default function Dashboard() {
                   </Card>
 
                   <Card styles={{ body: { padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' } }} style={{ borderRadius: '20px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#FFDDFB', color: '#F047E7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🎟️</div>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(67, 56, 202, 0.1)', color: 'rgb(67, 56, 202)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🎟️</div>
                     <div>
                       <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>Tickets Sold</div>
                       <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{ticketsSold}</div>
@@ -409,7 +409,6 @@ export default function Dashboard() {
                   <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                       <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Sales Revenue</h3>
-                      <Tag style={{ borderRadius: '100px', border: 'none', background: '#F3F4F6', color: '#4B5563', padding: '4px 12px', fontWeight: 600 }}>YTD</Tag>
                     </div>
                     <div style={{ marginBottom: '24px' }}>
                       <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Total Revenue</div>
@@ -421,13 +420,13 @@ export default function Dashboard() {
                     <div style={{ height: '220px', minWidth: 0 }}>
                       <ResponsiveContainer width="100%" height="100%" debounce={100}>
                         {/* Injecting real data for current month, filling historical conservatively */}
-                        <BarChart data={[{ n: 'Jan', c: totalRevenue > 0 ? Math.floor(totalRevenue * 0.2) : 1000, p: 0 }, { n: 'Feb', c: totalRevenue > 0 ? Math.floor(totalRevenue * 0.3) : 2000, p: 0 }, { n: 'Mar', c: totalRevenue > 0 ? Math.floor(totalRevenue * 0.5) : 3000, p: 0 }, { n: 'Apr', c: totalRevenue, p: totalRevenue * 0.6 }]}>
+                        <BarChart data={analyticsData?.myAnalytics?.monthlyData || []}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                           <XAxis dataKey="n" stroke="#9CA3AF" axisLine={false} tickLine={false} fontSize={12} dy={10} />
                           <YAxis stroke="#9CA3AF" axisLine={false} tickLine={false} fontSize={12} tickFormatter={(v) => `${(v / 1000)}k`} />
                           <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
-                          <Bar dataKey="c" fill="#F047E7" radius={[6, 6, 6, 6]} barSize={12} name="Total Rev ($)" />
-                          <Bar dataKey="p" fill="#E8D5FA" radius={[6, 6, 6, 6]} barSize={12} name="Profit Est ($)" />
+                          <Bar dataKey="c" fill="rgb(67, 56, 202)" radius={[6, 6, 6, 6]} barSize={12} name="Total Rev ($)" />
+                          <Bar dataKey="p" fill="rgba(67, 56, 202, 0.15)" radius={[6, 6, 6, 6]} barSize={12} name="Profit Est ($)" />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -444,20 +443,20 @@ export default function Dashboard() {
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 600, color: '#1B2A4E' }}>
                         <span style={{ textTransform: 'capitalize' }}>{topCat1[0]}</span>
-                        <span><span style={{ color: '#F047E7', marginRight: '32px' }}>{Math.round((topCat1[1] / totalEvents) * 100)}%</span> {topCat1[1]} Events</span>
+                        <span><span style={{ color: 'rgb(67, 56, 202)', marginRight: '32px' }}>{Math.round((topCat1[1] / totalEvents) * 100)}%</span> {topCat1[1]} Events</span>
                       </div>
                       <div style={{ width: '100%', height: '8px', background: '#F3F4F6', borderRadius: '100px' }}>
-                        <div style={{ width: `${Math.round((topCat1[1] / totalEvents) * 100)}%`, height: '100%', background: '#F047E7', borderRadius: '100px' }} />
+                        <div style={{ width: `${Math.round((topCat1[1] / totalEvents) * 100)}%`, height: '100%', background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px' }} />
                       </div>
                     </div>
                     {topCat2[1] > 0 && (
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 600, color: '#1B2A4E' }}>
                           <span style={{ textTransform: 'capitalize' }}>{topCat2[0]}</span>
-                          <span><span style={{ color: '#F047E7', marginRight: '32px' }}>{Math.round((topCat2[1] / totalEvents) * 100)}%</span> {topCat2[1]} Events</span>
+                          <span><span style={{ color: 'rgb(67, 56, 202)', marginRight: '32px' }}>{Math.round((topCat2[1] / totalEvents) * 100)}%</span> {topCat2[1]} Events</span>
                         </div>
                         <div style={{ width: '100%', height: '8px', background: '#F3F4F6', borderRadius: '100px' }}>
-                          <div style={{ width: `${Math.round((topCat2[1] / totalEvents) * 100)}%`, height: '100%', background: '#F047E7', borderRadius: '100px' }} />
+                          <div style={{ width: `${Math.round((topCat2[1] / totalEvents) * 100)}%`, height: '100%', background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px' }} />
                         </div>
                       </div>
                     )}
@@ -479,7 +478,7 @@ export default function Dashboard() {
                       <div style={{ color: '#6B7280', fontSize: '0.85rem', marginBottom: '16px' }}>{e.location}</div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#9CA3AF', fontSize: '0.85rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CalendarOutlined /> {new Date(parseInt(e.date) || e.date).toLocaleDateString()}</div>
-                        <div style={{ color: '#F047E7', fontWeight: 800, fontSize: '1rem' }}>$ {e.ticketTypes?.[0]?.price || 30}</div>
+                        <div style={{ color: 'rgb(67, 56, 202)', fontWeight: 800, fontSize: '1rem' }}>$ {e.ticketTypes?.[0]?.price || 30}</div>
                       </div>
                     </div>
                   ))}
@@ -512,7 +511,7 @@ export default function Dashboard() {
                             <CalendarOutlined />
                             <span>{new Date(parseInt(myEventsData?.myEvents[0].date) || myEventsData?.myEvents[0].date).toLocaleDateString()}</span>
                           </div>
-                          <Button type="primary" onClick={() => router.push(`/events/${myEventsData?.myEvents[0].id}`)} style={{ background: '#F047E7', borderRadius: '100px', padding: '0 24px', fontWeight: 700, height: '40px', border: 'none', boxShadow: '0 4px 12px rgba(240, 71, 231, 0.3)' }}>View Details</Button>
+                          <Button type="primary" onClick={() => router.push(`/events/${myEventsData?.myEvents[0].id}`)} style={{ background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px', padding: '0 24px', fontWeight: 700, height: '40px', border: 'none', boxShadow: '0 4px 12px rgba(49, 46, 129, 0.3)' }}>View Details</Button>
                         </div>
                       </div>
                     </Card>
@@ -530,7 +529,7 @@ export default function Dashboard() {
                               <CalendarOutlined />
                               <span>{new Date(parseInt(myEventsData?.myEvents[1]?.date) || myEventsData?.myEvents[1]?.date).toLocaleDateString()}</span>
                             </div>
-                            <Button type="primary" onClick={() => router.push(`/events/${myEventsData?.myEvents[1]?.id}`)} style={{ background: '#F047E7', borderRadius: '100px', padding: '0 24px', fontWeight: 700, height: '40px', border: 'none', boxShadow: '0 4px 12px rgba(240, 71, 231, 0.3)' }}>View Details</Button>
+                            <Button type="primary" onClick={() => router.push(`/events/${myEventsData?.myEvents[1]?.id}`)} style={{ background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px', padding: '0 24px', fontWeight: 700, height: '40px', border: 'none', boxShadow: '0 4px 12px rgba(49, 46, 129, 0.3)' }}>View Details</Button>
                           </div>
                         </div>
                       </Card>
@@ -554,13 +553,13 @@ export default function Dashboard() {
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '3.5rem', fontWeight: 900, lineHeight: 1 }}>{bookings.length}</div>
-                <div style={{ color: '#F047E7', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '2px', marginTop: '4px' }}>Active Passes</div>
+                <div style={{ color: 'rgb(67, 56, 202)', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '2px', marginTop: '4px' }}>Active Passes</div>
               </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.4rem' }}>Recent Bookings</h3>
-              <Button type="text" onClick={() => router.push('/browse')} style={{ color: '#F047E7', fontWeight: 700 }}>Browse Events</Button>
+              <Button type="text" onClick={() => router.push('/browse')} style={{ color: 'rgb(67, 56, 202)', fontWeight: 700 }}>Browse Events</Button>
             </div>
 
             {bookings.length === 0 ? (
@@ -568,7 +567,7 @@ export default function Dashboard() {
                 <div style={{ fontSize: '4rem', marginBottom: '16px', opacity: 0.5 }}>🎫</div>
                 <h3 style={{ color: '#1B2A4E', fontWeight: 800, fontSize: '1.5rem', marginBottom: '8px' }}>No passes found</h3>
                 <p style={{ color: '#6B7280', fontWeight: 600, fontSize: '1rem', marginBottom: '24px' }}>You have not booked any event passes yet. Ready to experience something new?</p>
-                <Button type="primary" onClick={() => router.push('/browse')} style={{ background: '#F047E7', borderRadius: '100px', padding: '0 32px', fontWeight: 700, height: '48px', border: 'none', boxShadow: '0 4px 12px rgba(240, 71, 231, 0.3)' }}>Explore Trending Events</Button>
+                <Button type="primary" onClick={() => router.push('/browse')} style={{ background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px', padding: '0 32px', fontWeight: 700, height: '48px', border: 'none', boxShadow: '0 4px 12px rgba(49, 46, 129, 0.3)' }}>Explore Trending Events</Button>
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))', gap: '24px' }}>
@@ -579,7 +578,7 @@ export default function Dashboard() {
                         <p style={{ margin: 0, fontWeight: 800, color: '#9CA3AF', letterSpacing: '1px', fontSize: '0.75rem', textTransform: 'uppercase' }}>VIP Pass</p>
                         <h3 style={{ margin: '4px 0 0 0', color: 'white', fontSize: '1.3rem', fontWeight: 900 }}>{b.event.title}</h3>
                       </div>
-                      <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F047E7', fontSize: '1.2rem' }}>
+                      <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(49, 46, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgb(67, 56, 202)', fontSize: '1.2rem' }}>
                         <CrownOutlined />
                       </div>
                     </div>
@@ -595,7 +594,7 @@ export default function Dashboard() {
                           <span style={{ color: '#4B5563', fontWeight: 600, fontSize: '0.9rem' }}>{b.event.location}</span>
                         </div>
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                          <Tag style={{ borderRadius: '100px', border: 'none', background: '#FFF1FA', color: '#F047E7', fontWeight: 700, margin: 0, padding: '4px 12px' }}>{b.ticketType}</Tag>
+                          <Tag style={{ borderRadius: '100px', border: 'none', background: 'rgba(67, 56, 202, 0.08)', color: 'rgb(67, 56, 202)', fontWeight: 700, margin: 0, padding: '4px 12px' }}>{b.ticketType}</Tag>
                           <Tag style={{ borderRadius: '100px', border: 'none', background: '#F3F4F6', color: '#4B5563', fontWeight: 700, padding: '4px 12px' }}>Qty: {b.quantity}</Tag>
                         </div>
                       </div>

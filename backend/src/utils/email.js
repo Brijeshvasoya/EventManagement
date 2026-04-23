@@ -27,7 +27,6 @@ exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
       day: 'numeric',
     });
 
-    console.log(`📤 Sending email via Resend... [From: ${FROM_EMAIL}, To: ${recipient}]`);
 
     const verifyQrBuffer = await QRCode.toBuffer(verifyUrl);
 
@@ -135,7 +134,6 @@ View your ticket: ${ticketUrl}
       throw new Error(errorMsg);
     }
 
-    console.log(`✅ Ticket email sent to ${recipient}${isTestRedirect ? ' (Redirected Test Mail)' : ''}`);
   } catch (error) {
     const isSandbox = error.message && (error.message.toLowerCase().includes('testing emails') || error.message.toLowerCase().includes('sandbox'));
 

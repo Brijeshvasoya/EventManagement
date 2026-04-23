@@ -16,10 +16,6 @@ export default function CheckoutSuccess() {
 
     const finalizeBooking = async () => {
       if (!eventId) return;
-      console.log("eventId", eventId);
-      console.log("ticketType", ticketType);
-      console.log("quantity", quantity);
-      console.log("sessionId", sessionId);
       processed.current = true;
 
       try {
@@ -58,11 +54,11 @@ export default function CheckoutSuccess() {
   return (
     <>
       <Head><title>Payment Verified | EventHub</title></Head>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
         flexDirection: 'column',
         position: 'relative'
       }}>
@@ -106,10 +102,10 @@ export default function CheckoutSuccess() {
           }}>
             ✓
           </div>
-          
-          <h1 style={{ 
-            color: '#f0f0f5', 
-            fontWeight: 800, 
+
+          <h1 style={{
+            color: '#f0f0f5',
+            fontWeight: 800,
             fontSize: '2.2rem',
             letterSpacing: '-1px',
             marginBottom: '12px'
@@ -117,7 +113,7 @@ export default function CheckoutSuccess() {
           <p style={{ color: '#6b6b80', marginTop: '0', maxWidth: '400px', lineHeight: 1.6, fontSize: '1rem' }}>
             Your tickets are being securely provisioned on our servers via Stripe Hooks.
           </p>
-          
+
           {/* Loading indicator */}
           <div style={{ marginTop: '2.5rem' }}>
             <div style={{

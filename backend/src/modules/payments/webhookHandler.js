@@ -32,8 +32,7 @@ exports.stripeWebhook = async (req, res) => {
         amountPaid: session.amount_total / 100,
         stripePaymentId: session.id,
         paymentIntentId: session.payment_intent // Capture the PI ID
-      }, { id: userId, role: 'USER' }); 
-      console.log(`✅ Webhook: Success - Ticket booked for User ${userId}`);
+      }, { id: userId, role: 'USER' });
     } catch (e) {
       console.error('❌ Webhook: Booking error -', e.message);
     }
@@ -43,10 +42,9 @@ exports.stripeWebhook = async (req, res) => {
   if (event.type === 'payment_intent.payment_failed') {
     const intent = event.data.object;
     console.warn(`⚠️ Webhook: Payment Failed for Intent ${intent.id} - Reason: ${intent.last_payment_error?.message}`);
-    
+
     try {
       await bookingService.updatePaymentStatus(intent.id, 'CANCELLED', 'FAILED');
-      console.log(`📉 Webhook: Updated booking status to FAILED for Intent ${intent.id}`);
     } catch (e) {
       console.error('❌ Webhook: Update error -', e.message);
     }
@@ -60,7 +58,6 @@ exports.stripeWebhook = async (req, res) => {
     try {
       // Find by payment_intent which is usually what we store
       await bookingService.updatePaymentStatus(charge.payment_intent, 'CANCELLED', 'REFUNDED');
-      console.log(`🔄 Webhook: Updated booking status to REFUNDED for PI ${charge.payment_intent}`);
     } catch (e) {
       console.error('❌ Webhook: Refund update error -', e.message);
     }
@@ -69,8 +66,7 @@ exports.stripeWebhook = async (req, res) => {
   // 4. Expiry case: Checkout Session Expired
   if (event.type === 'checkout.session.expired') {
     const session = event.data.object;
-    console.log(`⏳ Webhook: Session Expired - User abandoned the checkout for Event ${session.metadata?.eventId}`);
-    
+
     try {
       await bookingService.updatePaymentStatus(session.id, 'CANCELLED', 'FAILED');
     } catch (e) {

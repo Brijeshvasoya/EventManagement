@@ -27,7 +27,7 @@ const bookingService = {
 
     if (booking) {
       if (booking.status === 'CONFIRMED') return booking;
-      
+
       booking.status = 'CONFIRMED';
       booking.paymentStatus = 'PAID';
       booking.paymentIntentId = paymentIntentId;
@@ -72,7 +72,7 @@ const bookingService = {
         if (fullUser) {
           // Generate the PDF buffer
           const pdfBuffer = await generateTicketPDF(fullUser, booking, event);
-          
+
           // Send email with the attachment
           await sendTicketEmail(fullUser, booking, event, pdfBuffer);
         } else {
@@ -108,7 +108,7 @@ const bookingService = {
           // Calculate refund amount (75% of amountPaid)
           // Stripe uses cents for amounts, so if amountPaid is in USD, we multiply by 100
           const refundAmount = Math.round(booking.amountPaid * 0.75 * 100);
-          
+
           if (refundAmount > 0) {
             await stripe.refunds.create({
               payment_intent: paymentIntentId,
@@ -116,7 +116,6 @@ const bookingService = {
               reason: 'requested_by_customer'
             });
             booking.paymentStatus = 'REFUNDED';
-            console.log(`✅ Partial Refund (75%) successful for booking ID: ${bookingId}. Amount: $${booking.amountPaid * 0.75}`);
           } else {
             console.log(`ℹ️ No refund processed for booking ID: ${bookingId} (Amount was $0)`);
           }
@@ -143,10 +142,10 @@ const bookingService = {
     // Check if user is the organizer of the event
     const event = await Event.findById(eventId);
     if (!event) throw new Error('Event not found');
-    
+
     // Only the organizer or an admin should see the attendee list
     if (event.organizer.toString() !== user.id && user.role !== 'ADMIN') {
-      return null; 
+      return null;
     }
 
     return Booking.find({ event: eventId }).sort({ createdAt: -1 });
@@ -155,7 +154,7 @@ const bookingService = {
   verifyTicket: async (bookingId) => {
     const booking = await Booking.findById(bookingId).populate('user').populate('event');
     if (!booking) throw new Error('Invalid ticket: Booking not found.');
-    
+
     if (booking.status === 'CHECKED_IN') {
       throw new Error(`Already checked in: Ticket was scanned on ${new Date(booking.updatedAt).toLocaleTimeString()}.`);
     }
@@ -167,7 +166,7 @@ const bookingService = {
     // DATE VALIDATION: Only allow check-in on the day of the event
     const eventDate = new Date(parseInt(booking.event.date) || booking.event.date);
     const today = new Date();
-    
+
     // Compare YYYY-MM-DD
     if (eventDate.toDateString() !== today.toDateString()) {
       throw new Error(`Access Denied: This ticket is valid for ${eventDate.toLocaleDateString()}. Verification is only permitted on the scheduled day of the event.`);
@@ -193,7 +192,7 @@ const bookingService = {
 
     if (status) booking.status = status;
     if (paymentStatus) booking.paymentStatus = paymentStatus;
-    
+
     await booking.save();
     return booking;
   }

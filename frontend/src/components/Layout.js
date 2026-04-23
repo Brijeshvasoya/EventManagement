@@ -55,8 +55,8 @@ export default function AppLayout({ children }) {
           padding: isMobile ? '16px 20px' : '14px 20px',
           margin: '4px 0',
           borderRadius: '12px',
-          background: isActive ? '#FFEBF9' : 'transparent',
-          color: isActive ? '#E845E4' : '#6B7280',
+          background: isActive ? 'rgba(67, 56, 202, 0.08)' : 'transparent',
+          color: isActive ? 'rgb(67, 56, 202)' : '#6B7280',
           fontWeight: isActive ? 700 : 500,
           fontSize: isMobile ? '1.1rem' : '1rem',
           position: 'relative',
@@ -78,7 +78,7 @@ export default function AppLayout({ children }) {
         >
           {/* Active Left Border Indicator */}
           {isActive && (
-            <div style={{ position: 'absolute', left: '-16px', top: '10%', height: '80%', width: '4px', background: '#E845E4', borderRadius: '0 4px 4px 0' }} />
+            <div style={{ position: 'absolute', left: '-16px', top: '10%', height: '80%', width: '4px', background: 'rgb(67, 56, 202)', borderRadius: '0 4px 4px 0' }} />
           )}
           <span style={{ fontSize: isMobile ? '1.4rem' : '1.3rem', pointerEvents: 'none' }}>{item.icon}</span>
           <span style={{ pointerEvents: 'none' }}>{item.label}</span>
@@ -92,7 +92,7 @@ export default function AppLayout({ children }) {
       theme={{
         algorithm: theme.defaultAlgorithm,
         token: {
-          colorPrimary: '#E845E4',
+          colorPrimary: 'rgb(67, 56, 202)',
           fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
           borderRadius: 12,
           controlHeight: 44,
@@ -141,7 +141,7 @@ export default function AppLayout({ children }) {
           </nav>
 
           {/* User Bottom Profile */}
-          <div style={{ padding: '24px', borderTop: '1px solid var(--glass-border)', background: 'var(--glass-bg)' }}>
+          <div style={{ padding: '24px', borderTop: '1px solid var(--glass-border)', background: 'transparent' }}>
             {user ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -152,8 +152,8 @@ export default function AppLayout({ children }) {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <Button type="primary" ghost icon={<SettingOutlined />} onClick={() => router.push('/profile')} style={{ flex: 1, borderRadius: '12px', borderColor: 'var(--glass-border)', color: 'var(--text-primary)' }} />
-                  <Button danger type="primary" icon={<LogoutOutlined />} onClick={logout} style={{ flex: 1, borderRadius: '12px', background: 'rgba(255, 0, 110, 0.1)', color: '#ff006e', border: 'none' }} />
+                  <Button type="primary" icon={<SettingOutlined style={{ color: 'white' }} />} onClick={() => router.push('/profile')} style={{ flex: 1, borderRadius: '12px', background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 100%)', border: 'none' }} />
+                  <Button danger type="primary" icon={<LogoutOutlined />} onClick={logout} style={{ flex: 1, borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: 'none' }} />
                 </div>
               </div>
             ) : (
@@ -207,7 +207,7 @@ export default function AppLayout({ children }) {
                   </div>
                 </div>
                 <Button size="large" block icon={<SettingOutlined />} onClick={() => { setMobileMenuOpen(false); router.push('/profile'); }} style={{ borderRadius: '14px', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>Profile Settings</Button>
-                <Button size="large" danger block icon={<LogoutOutlined />} onClick={() => { setMobileMenuOpen(false); logout(); }} style={{ borderRadius: '14px', background: 'rgba(255, 0, 110, 0.1)', color: '#ff006e', border: 'none' }}>Logout</Button>
+                <Button size="large" danger block icon={<LogoutOutlined />} onClick={() => { setMobileMenuOpen(false); logout(); }} style={{ borderRadius: '14px', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: 'none' }}>Logout</Button>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

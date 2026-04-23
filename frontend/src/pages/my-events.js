@@ -165,7 +165,7 @@ export default function MyEvents() {
           <p style={{ margin: 0, color: 'rgba(255,255,255,0.7)', fontSize: '1.1rem' }}>Manage all the experiences you are bringing to life.</p>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <Button type="primary" onClick={() => router.push('/events/create')} icon={<PlusOutlined />} style={{ background: '#F047E7', border: 'none', height: '48px', borderRadius: '100px', fontWeight: 700, padding: '0 32px', boxShadow: '0 4px 12px rgba(240, 71, 231, 0.3)' }}>
+          <Button type="primary" onClick={() => router.push('/events/create')} icon={<PlusOutlined />} style={{ background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 50%, rgb(67, 56, 202) 100%)', border: 'none', height: '48px', borderRadius: '100px', fontWeight: 700, padding: '0 32px', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.3)' }}>
             Create New Event
           </Button>
         </div>
@@ -180,7 +180,7 @@ export default function MyEvents() {
           <div style={{ fontSize: '4rem', marginBottom: '16px', opacity: 0.5 }}>🎪</div>
           <h3 style={{ color: '#1B2A4E', fontWeight: 800, fontSize: '1.5rem', marginBottom: '8px' }}>No events hosted yet</h3>
           <p style={{ color: '#6B7280', fontWeight: 600, fontSize: '1rem', marginBottom: '24px' }}>Ready to create your first unforgettable experience?</p>
-          <Button type="primary" onClick={() => router.push('/events/create')} style={{ background: '#F047E7', borderRadius: '100px', padding: '0 32px', fontWeight: 700, height: '48px', border: 'none' }}>Start Creating</Button>
+          <Button type="primary" onClick={() => router.push('/events/create')} style={{ background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px', padding: '0 32px', fontWeight: 700, height: '48px', border: 'none' }}>Start Creating</Button>
         </div>
       ) : (
         <Row gutter={[24, 24]}>
@@ -209,7 +209,7 @@ export default function MyEvents() {
                         <Button icon={<EyeOutlined />} shape="circle" onClick={() => router.push(`/events/${event.id}`)} style={{ background: '#F8F9FB', border: '1px solid #E5E7EB', color: '#6B7280' }} />
                       </Tooltip>
                       <Tooltip title="Edit Event">
-                        <Button icon={<EditOutlined />} shape="circle" onClick={(e) => handleEditOpen(event, e)} style={{ background: '#Fdf2fe', border: '1px solid #F047E7', color: '#F047E7' }} />
+                        <Button icon={<EditOutlined />} shape="circle" onClick={(e) => handleEditOpen(event, e)} style={{ background: 'rgba(67, 56, 202, 0.05)', border: '1px solid rgb(67, 56, 202)', color: 'rgb(67, 56, 202)' }} />
                       </Tooltip>
                       <Popconfirm title="Are you sure you want to delete this event?" onConfirm={(e) => handleDelete(event.id, e)} onCancel={e => e.stopPropagation()}>
                         <Button icon={<DeleteOutlined />} shape="circle" onClick={e => e.stopPropagation()} danger style={{ background: '#FEF2F2', border: '1px solid #EF4444' }} />
@@ -255,7 +255,7 @@ export default function MyEvents() {
               <div style={{ marginBottom: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <label style={{ fontWeight: '700', color: '#4B5563', fontSize: '0.9rem' }}>Event Cover Image *</label>
-                      <Button type="text" size="small" onClick={handleAIImageGenerate} loading={aiImageLoading} style={{ color: '#F047E7', fontSize: '0.85rem', fontWeight: 800 }}>
+                      <Button type="text" size="small" onClick={handleAIImageGenerate} loading={aiImageLoading} style={{ color: 'rgb(67, 56, 202)', fontSize: '0.85rem', fontWeight: 800 }}>
                           {aiImageLoading ? '✨ Generating...' : '✨ Auto-Generate via AI'}
                       </Button>
                   </div>
@@ -337,7 +337,7 @@ export default function MyEvents() {
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid #F3F4F6', paddingTop: '24px' }}>
                   <Button size="large" onClick={() => setIsEditModalOpen(false)} style={{ borderRadius: '12px', fontWeight: 700 }}>Discard</Button>
-                  <Button type="primary" htmlType="submit" size="large" loading={updating} style={{ background: '#F047E7', borderRadius: '12px', fontWeight: 700, border: 'none', boxShadow: '0 4px 12px rgba(240, 71, 231, 0.3)' }}>
+                  <Button type="primary" htmlType="submit" size="large" loading={updating} style={{ background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '12px', fontWeight: 700, border: 'none', boxShadow: '0 4px 12px rgba(49, 46, 129, 0.3)' }}>
                       Save Changes
                   </Button>
               </div>
