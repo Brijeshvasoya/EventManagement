@@ -360,7 +360,7 @@ export default function Dashboard() {
                     <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#FFDDFB', color: '#F047E7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>☑️</div>
                     <div>
                       <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>Total Bookings</div>
-                      <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{bookings.length}</div>
+                      <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{analyticsData?.myAnalytics?.confirmedBookingsCount || 0}</div>
                     </div>
                   </Card>
 

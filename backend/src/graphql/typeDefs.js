@@ -6,7 +6,7 @@ const typeDefs = `#graphql
   type Vendor { id: ID! name: String! category: String! rating: Float cost: Float contactInfo: String availableDates: [String] organizer: User! events: [Event!] }
   type Notification { id: ID! recipient: User! message: String! type: String! read: Boolean! booking: Booking event: Event createdAt: String! }
   type AuthPayload { token: String! user: User! }
-  type AnalyticsStats { totalRevenue: Float! ticketsSold: Int! cancelledTickets: Int! }
+  type AnalyticsStats { totalRevenue: Float! ticketsSold: Int! cancelledTickets: Int! confirmedBookingsCount: Int! }
   
   input TicketTypeInput { name: String! price: Float! capacity: Int! }
   input CreateEventInput { title: String! description: String! date: String! location: String! capacity: Int imageUrl: String eventType: String ticketTypes: [TicketTypeInput] vendorIds: [ID] }

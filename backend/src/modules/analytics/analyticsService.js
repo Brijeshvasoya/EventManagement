@@ -11,16 +11,18 @@ exports.getOrganizerAnalytics = async (user) => {
   let totalRevenue = 0;
   let ticketsSold = 0;
   let cancelledTickets = 0;
+  let confirmedBookingsCount = 0;
 
   bookings.forEach(b => {
     const qty = b.quantity || 1;
-    if (b.status === 'CONFIRMED' || b.status === 'CHECKED_IN') {
+    if ((b.status === 'CONFIRMED' || b.status === 'CHECKED_IN') && b.paymentStatus === 'PAID') {
       ticketsSold += qty;
       totalRevenue += (b.amountPaid || 0);
+      confirmedBookingsCount += 1;
     } else if (b.status === 'CANCELLED') {
       cancelledTickets += qty;
     }
   });
 
-  return { totalRevenue, ticketsSold, cancelledTickets };
+  return { totalRevenue, ticketsSold, cancelledTickets, confirmedBookingsCount };
 };
