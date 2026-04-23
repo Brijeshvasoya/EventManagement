@@ -2,63 +2,65 @@
 
 /* ===== PREMIUM DESIGN SYSTEM ===== */
 :root {
-  /* Dark Premium Palette */
-  --bg-color: #0a0a0f;
-  --bg-secondary: #12121a;
-  --bg-tertiary: #1a1a2e;
-  --card-bg: rgba(22, 22, 35, 0.8);
-  --card-bg-solid: #16162b;
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.06);
+  /* EVENTHUB Light Theme Palette */
+  --bg-color: #F8F9FB;
+  /* Main content background */
+  --bg-secondary: #F6F4FD;
+  /* Sidebar background */
+  --bg-tertiary: #FFFFFF;
+  --card-bg: #FFFFFF;
+  --card-bg-solid: #FFFFFF;
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: #E5E7EB;
 
-  --text-primary: #f0f0f5;
-  --text-secondary: #a0a0b8;
-  --text-muted: #6b6b80;
-  --border-color: rgba(255, 255, 255, 0.08);
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --border-color: #E5E7EB;
 
   /* Accent Colors */
-  --primary-color: #7c5cfc;
-  --primary-hover: #6a4ce0;
-  --primary-glow: rgba(124, 92, 252, 0.25);
-  --secondary-color: #00d4aa;
-  --accent-pink: #ff6b9d;
-  --accent-orange: #ff8b3d;
-  --accent-blue: #4da6ff;
+  --primary-color: #E845E4;
+  /* Vibrant Magenta/Pink */
+  --primary-hover: #D537D2;
+  --primary-glow: rgba(232, 69, 228, 0.2);
+  --secondary-color: #1A1A40;
+  /* Deep Navy for contrast */
+  --accent-pink: #E845E4;
+  --accent-orange: #fb923c;
+  --accent-blue: #38bdf8;
+  --accent-purple: #9b8cf1;
 
   /* Gradients */
-  --gradient-main: linear-gradient(135deg, #7c5cfc 0%, #00d4aa 100%);
-  --gradient-hover: linear-gradient(135deg, #6a4ce0 0%, #00b890 100%);
-  --gradient-pink: linear-gradient(135deg, #ff6b9d 0%, #7c5cfc 100%);
-  --gradient-warm: linear-gradient(135deg, #ff8b3d 0%, #ff6b9d 100%);
-  --gradient-cool: linear-gradient(135deg, #4da6ff 0%, #7c5cfc 100%);
-  --gradient-dark: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #252545 100%);
-  --gradient-glass: linear-gradient(135deg, rgba(124, 92, 252, 0.08) 0%, rgba(0, 212, 170, 0.05) 100%);
-  --gradient-mesh: radial-gradient(at 40% 20%, rgba(124, 92, 252, 0.12) 0px, transparent 50%),
-                    radial-gradient(at 80% 0%, rgba(0, 212, 170, 0.08) 0px, transparent 50%),
-                    radial-gradient(at 0% 50%, rgba(255, 107, 157, 0.06) 0px, transparent 50%);
+  --gradient-main: linear-gradient(135deg, #FF6BEA 0%, #D537D2 100%);
+  --gradient-hover: linear-gradient(135deg, #E845E4 0%, #BC2BBA 100%);
+  --gradient-pink: linear-gradient(135deg, #FF6BEA 0%, #D537D2 100%);
+  --gradient-warm: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  --gradient-cool: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+  --gradient-dark: linear-gradient(135deg, #1A1A40 0%, #2b2d42 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(232, 69, 228, 0.05) 0%, rgba(26, 26, 64, 0.02) 100%);
 
   /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
-  --shadow-hover: 0 24px 48px rgba(124, 92, 252, 0.15), 0 8px 16px rgba(0, 0, 0, 0.3);
-  --shadow-glow: 0 0 40px rgba(124, 92, 252, 0.2);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 14px 28px rgba(232, 69, 228, 0.15), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 20px rgba(232, 69, 228, 0.25);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.03);
 
   /* Status */
-  --success: #00d4aa;
-  --success-bg: rgba(0, 212, 170, 0.12);
-  --danger: #ff4d6a;
-  --danger-bg: rgba(255, 77, 106, 0.12);
-  --warning: #ff8b3d;
-  --warning-bg: rgba(255, 139, 61, 0.12);
+  --success: #10B981;
+  --success-bg: #D1FAE5;
+  --danger: #EF4444;
+  --danger-bg: #FEE2E2;
+  --warning: #F59E0B;
+  --warning-bg: #FEF3C7;
 
   /* Spacing & Radius */
   --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
-  --radius-2xl: 36px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
 
   /* Transitions */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -86,17 +88,10 @@ body {
   line-height: 1.6;
 }
 
-/* Animated noise texture overlay on body */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: var(--gradient-mesh);
-  pointer-events: none;
-  z-index: 0;
+/* body base style unchanged - just remove the radial mesh body::after entirely for clean design */
+/* Remove noise texture */
+body::after {
+  display: none;
 }
 
 ::selection {
@@ -741,8 +736,9 @@ button {
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -752,8 +748,9 @@ button {
 @keyframes scaleIn {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -761,17 +758,22 @@ button {
 }
 
 @keyframes floatOrb {
-  0%, 100% {
-    transform: translate(0, 0);
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
   }
+
   25% {
-    transform: translate(20px, -30px);
+    transform: translate(25px, -35px) scale(1.05);
   }
+
   50% {
-    transform: translate(-15px, 20px);
+    transform: translate(-20px, 25px) scale(0.95);
   }
+
   75% {
-    transform: translate(25px, 10px);
+    transform: translate(30px, 15px) scale(1.02);
   }
 }
 
@@ -779,17 +781,21 @@ button {
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(124, 92, 252, 0.15);
+
+  0%,
+  100% {
+    box-shadow: 0 0 25px rgba(255, 0, 110, 0.15);
   }
+
   50% {
-    box-shadow: 0 0 40px rgba(124, 92, 252, 0.25);
+    box-shadow: 0 0 50px rgba(131, 56, 236, 0.35);
   }
 }
 
@@ -797,9 +803,11 @@ button {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -808,26 +816,69 @@ button {
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(15px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.event-card,
-.booking-card {
-  animation: fadeInUp 0.6s var(--ease-out) forwards;
-  opacity: 0;
+/* Common Interactive Classes */
+.hover-bounce {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.event-card:nth-child(1) { animation-delay: 0.05s; }
-.event-card:nth-child(2) { animation-delay: 0.1s; }
-.event-card:nth-child(3) { animation-delay: 0.15s; }
-.event-card:nth-child(4) { animation-delay: 0.2s; }
-.event-card:nth-child(5) { animation-delay: 0.25s; }
-.event-card:nth-child(6) { animation-delay: 0.3s; }
+.hover-bounce:hover {
+  transform: translateY(-8px) scale(1.02);
+}
+
+.event-card,
+.booking-card {
+  animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.event-card:hover,
+.booking-card:hover {
+  transform: translateY(-10px) scale(1.01);
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.event-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.event-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.event-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.event-card:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.event-card:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+.event-card:nth-child(6) {
+  animation-delay: 0.3s;
+}
+
+.event-card:nth-child(7) {
+  animation-delay: 0.35s;
+}
+
+.event-card:nth-child(8) {
+  animation-delay: 0.4s;
+}
 
 /* ===== APP LAYOUT SYSTEM ===== */
 .app-layout {
@@ -1028,11 +1079,11 @@ button {
   border-top-color: var(--border-color) !important;
 }
 
-.ant-card-actions > li {
+.ant-card-actions>li {
   color: var(--text-secondary) !important;
 }
 
-.ant-card-actions > li:not(:last-child) {
+.ant-card-actions>li:not(:last-child) {
   border-inline-end-color: var(--border-color) !important;
 }
 
@@ -1106,8 +1157,8 @@ button {
   color: var(--text-primary) !important;
 }
 
-.ant-table-thead > tr > th,
-.ant-table-thead > tr > td {
+.ant-table-thead>tr>th,
+.ant-table-thead>tr>td {
   background: rgba(124, 92, 252, 0.06) !important;
   color: var(--text-secondary) !important;
   border-bottom-color: var(--border-color) !important;
@@ -1117,12 +1168,12 @@ button {
   letter-spacing: 0.5px !important;
 }
 
-.ant-table-tbody > tr > td {
+.ant-table-tbody>tr>td {
   border-bottom-color: var(--border-color) !important;
   color: var(--text-primary) !important;
 }
 
-.ant-table-tbody > tr:hover > td {
+.ant-table-tbody>tr:hover>td {
   background: rgba(124, 92, 252, 0.04) !important;
 }
 
@@ -1473,7 +1524,7 @@ textarea.ant-input {
 }
 
 /* Form Labels */
-.ant-form-item-label > label {
+.ant-form-item-label>label {
   color: var(--text-secondary) !important;
 }
 
@@ -1543,25 +1594,28 @@ textarea.ant-input {
   .ant-layout-sider {
     display: none !important;
   }
+
   .mobile-only-header {
     display: flex !important;
   }
+
   .page-content {
     margin: 16px !important;
   }
+
   /* Fix Grid columns breaking on mobile */
-  .page-content > div > div > div[style*="display: grid"] {
+  .page-content>div>div>div[style*="display: grid"] {
     grid-template-columns: 1fr !important;
   }
-  
+
   /* Fix Details modal grid on mobile */
   div[style*="display: grid"][style*="gridTemplateColumns: repeat(4"] {
     grid-template-columns: 1fr 1fr !important;
   }
-  
+
   /* PDF Template hiding on mobile */
   [id^="ticket-rich-template"] {
-     display: none !important;
+    display: none !important;
   }
 }
 
@@ -1583,29 +1637,29 @@ textarea.ant-input {
     padding: 1.5rem;
     border-radius: var(--radius-xl);
   }
-  
+
   .mobile-pad-reduce {
     padding: 16px !important;
   }
-  
+
   h1 {
     font-size: 2.2rem !important;
   }
-  
+
   .dashboard-hero {
     padding: 2rem 1.5rem !important;
   }
-  
+
   .dashboard-hero h1 {
     font-size: 2.2rem !important;
   }
-  
+
   .booking-card {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
-  
+
   /* Modal responsive wrapper */
   .ant-modal {
     max-width: 95vw !important;
@@ -1613,68 +1667,68 @@ textarea.ant-input {
     top: 5% !important;
     padding-bottom: 20px !important;
   }
-  
+
   .ant-modal-content {
     border-radius: 20px !important;
     padding: 16px !important;
   }
-  
+
   .ant-modal-body {
     padding: 12px 0 !important;
   }
-  
+
   /* Catch generic inline padding on modals */
   .ant-modal div[style*="padding: 32px 40px 40px"],
   .ant-modal div[style*="padding: 40px"],
   .ant-modal div[style*="padding: 24px"] {
     padding: 16px !important;
   }
-  
+
   /* Targeted Browse Modal Classes */
   .modal-banner-img {
     height: 200px !important;
   }
-  
+
   .modal-header-flex {
     flex-direction: column !important;
     gap: 16px !important;
   }
-  
+
   .modal-info-grid {
     grid-template-columns: 1fr 1fr !important;
   }
-  
+
   .modal-content-padding {
     padding: 20px !important;
   }
-  
+
   /* Modal Title & Typography sizing */
   .ant-modal h1 {
     font-size: 1.6rem !important;
     line-height: 1.2 !important;
     margin-bottom: 12px !important;
   }
-  
+
   .ant-modal h2 {
     font-size: 1.4rem !important;
   }
-  
+
   /* Shrink hardcoded tall hero images inside modals */
   .ant-modal img[style*="height: 400px"],
   .ant-modal img[style*="height: '400px'"] {
     height: 200px !important;
   }
-  
+
   /* Ticket booking modal adjustments */
   .ant-modal .booking-card {
     padding: 16px !important;
   }
-  
+
   /* Ensure responsive grids don't overflow on small devices by forcing 1 column */
   div[style*="grid-template-columns: repeat(auto-fill"] {
     grid-template-columns: 1fr !important;
   }
-  
+
   /* Modal Content Grid Adjustments */
   div[style*="grid-template-columns: 1.2fr 1fr"] {
     grid-template-columns: 1fr !important;

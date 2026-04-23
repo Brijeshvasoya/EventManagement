@@ -25,6 +25,7 @@ export default function CreateEvent() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiImageLoading, setAiImageLoading] = useState(false);
   const [vendorIds, setVendorIds] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
 
   const { data: vendorData, loading: vendorLoading } = useQuery(GET_MY_VENDORS, {
     fetchPolicy: 'cache-and-network',
@@ -86,33 +87,15 @@ export default function CreateEvent() {
     }
   };
 
-  // --- Multi-Cloud Image Logic (Cloudinary) ---
-  const handleImageUpload = async (e) => {
+  // --- Deferred Image Logic (Cloudinary upload on publish) ---
+  const handleImageUpload = (e) => {
     e.preventDefault();
     const file = e.dataTransfer ? e.dataTransfer.files[0] : e.target.files[0];
     if (file && file.type.startsWith('image/')) {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      toast.loading('Uploading to Secure Cloud...', { id: 'upload' });
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/upload`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-          body: formData
-        });
-        const data = await res.json();
-        if (data.url) {
-          setForm({ ...form, imageUrl: data.url });
-          toast.success('Media secured on Cloudinary! 🌐', { id: 'upload' });
-        }
-      } catch (err) {
-        toast.error('Cloud upload failed. Using local preview.', { id: 'upload' });
-        // Fallback to base64 for UX if server upload fails
+        setImageFile(file);
         const reader = new FileReader();
-        reader.onloadend = () => setForm({ ...form, imageUrl: reader.result });
+        reader.onloadend = () => setForm({ ...form, imageUrl: reader.result }); // Temporary proxy
         reader.readAsDataURL(file);
-      }
     }
   };
 
@@ -124,54 +107,83 @@ export default function CreateEvent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    let finalImageUrl = form.imageUrl;
+    
+    // If we have a local file, upload it *now* at publish time!
+    if (imageFile) {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        toast.loading('Uploading media to Cloudinary...', { id: 'publish' });
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                body: formData
+            });
+            const data = await res.json();
+            if (data.url) {
+                finalImageUrl = data.url;
+                toast.success('Media secured!', { id: 'publish' });
+            } else {
+                throw new Error("Missing URL from upload handler.");
+            }
+        } catch (err) {
+            toast.error('Image upload failed. Cannot publish.', { id: 'publish' });
+            return; // Stop publish
+        }
+    } else {
+        toast.loading('Publishing Event...', { id: 'publish' });
+    }
+
     try {
       const totalCapacity = ticketTypes.reduce((acc, curr) => acc + curr.capacity, 0);
       await createEvent({
         variables: {
           input: {
             ...form,
+            imageUrl: finalImageUrl,
             capacity: totalCapacity,
             ticketTypes,
             vendorIds
           }
         }
       });
-      toast.success('Event Published Successfully!');
-      router.push('/');
+      toast.success('Event Published Successfully!', { id: 'publish' });
+      router.push('/my-events');
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message, { id: 'publish' });
     }
   };
 
   return (
     <ConfigProvider
       theme={{
-        algorithm: theme.darkAlgorithm,
+        algorithm: theme.defaultAlgorithm,
         token: {
-          colorPrimary: '#7c5cfc',
+          colorPrimary: '#E845E4',
           borderRadius: 16,
-          colorBgContainer: 'rgba(22, 22, 35, 0.8)',
-          colorBorder: 'rgba(255, 255, 255, 0.08)',
+          colorBgContainer: '#FFFFFF',
+          colorBorder: '#E5E7EB',
         }
       }}
     >
-      <Head><title>Post New Event | EventHub</title></Head>
-      <div className="form-card" style={{
+            <Head><title>Post New Event | EventHub</title></Head>
+      <div className="form-card hover-bounce" style={{
         maxWidth: '800px',
         margin: '2rem auto',
-        background: 'rgba(22, 22, 35, 0.8)',
+        background: 'var(--card-bg)',
         backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        boxShadow: '0 16px 48px rgba(0,0,0,0.3)'
+        border: '1px solid var(--glass-border)',
+        boxShadow: 'var(--shadow-md)'
       }}>
         <div style={{ marginBottom: '2rem' }}>
           <div style={{
             display: 'inline-block',
             padding: '5px 12px',
-            background: 'rgba(0, 212, 170, 0.08)',
-            border: '1px solid rgba(0, 212, 170, 0.15)',
+            background: 'rgba(131, 56, 236, 0.1)',
+            border: '1px solid rgba(131, 56, 236, 0.2)',
             borderRadius: '100px',
-            color: '#00d4aa',
+            color: 'var(--primary-color)',
             fontSize: '0.7rem',
             fontWeight: 700,
             textTransform: 'uppercase',
@@ -180,8 +192,8 @@ export default function CreateEvent() {
           }}>
             📝 New Event
           </div>
-          <h2 style={{ margin: '0 0 0.5rem 0', color: '#f0f0f5', fontWeight: 800, fontSize: '1.8rem', letterSpacing: '-0.5px' }}>Create a New Event</h2>
-          <p style={{ color: '#6b6b80', margin: 0, fontSize: '0.95rem' }}>Publish your rich media event to the platform.</p>
+          <h2 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-primary)', fontWeight: 800, fontSize: '1.8rem', letterSpacing: '-0.5px' }}>Create a New Event</h2>
+          <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>Publish your rich media event to the platform.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -232,13 +244,44 @@ export default function CreateEvent() {
               }}
             >
               {form.imageUrl ? (
-                <img
-                  src={form.imageUrl}
-                  alt="Preview"
-                  crossOrigin="anonymous"
-                  referrerPolicy="no-referrer"
-                  style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '12px' }}
-                />
+                <div style={{ position: 'relative' }}>
+                  <img
+                    src={form.imageUrl}
+                    alt="Preview"
+                    crossOrigin="anonymous"
+                    referrerPolicy="no-referrer"
+                    style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '12px' }}
+                  />
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setForm({ ...form, imageUrl: '' });
+                      if (typeof setImageFile !== 'undefined') setImageFile(null);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: '10px',
+                      right: '10px',
+                      width: '32px',
+                      height: '32px',
+                      background: 'rgba(255, 0, 110, 0.9)',
+                      color: 'white',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 12px rgba(255,0,110,0.4)',
+                      transition: 'all 0.2s',
+                    }}
+                    title="Remove Image"
+                    onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                    onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  >
+                    ✕
+                  </div>
+                </div>
               ) : (
                 <div style={{ padding: '3rem', textAlign: 'center', color: '#6b6b80' }}>
                   <div style={{ fontSize: '2.5rem', marginBottom: '12px', opacity: 0.5 }}>📸</div>
@@ -283,18 +326,18 @@ export default function CreateEvent() {
           {/* Dynamic Ticket Types */}
           <div style={{
             marginTop: '1.5rem',
-            borderTop: '1px solid rgba(255,255,255,0.06)',
+            borderTop: '1px solid var(--glass-border)',
             paddingTop: '1.5rem'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
               <div>
-                <h3 style={{ margin: 0, color: '#f0f0f5', fontWeight: 700, fontSize: '1.1rem' }}>Ticket Tiers</h3>
-                <p style={{ margin: '4px 0 0 0', color: '#6b6b80', fontSize: '0.8rem' }}>Configure pricing for different ticket levels</p>
+                <h3 style={{ margin: 0, color: 'var(--text-primary)', fontWeight: 700, fontSize: '1.1rem' }}>Ticket Tiers</h3>
+                <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Configure pricing for different ticket levels</p>
               </div>
               <button
                 type="button"
                 onClick={() => setTicketTypes([...ticketTypes, { name: '', price: 0, capacity: 50 }])}
-                className="btn-outline"
+                className="btn-outline hover-bounce"
                 style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
                 <PlusOutlined /> Add Tier
@@ -345,9 +388,9 @@ export default function CreateEvent() {
             ))}
           </div>
 
-          <div style={{ marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1.5rem', marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '10px', color: '#f0f0f5', fontWeight: 700, fontSize: '1.1rem' }}>Assign My Vendors</label>
-            <p style={{ margin: '-5px 0 15px 0', color: '#6b6b80', fontSize: '0.8rem' }}>Choose from vendors you have created to support this event.</p>
+          <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem', marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '10px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '1.1rem' }}>Assign My Vendors</label>
+            <p style={{ margin: '-5px 0 15px 0', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Choose from vendors you have created to support this event.</p>
             <Select
               mode="multiple"
               allowClear
@@ -356,12 +399,12 @@ export default function CreateEvent() {
               value={vendorIds}
               onChange={setVendorIds}
               loading={vendorLoading}
-              dropdownStyle={{ background: '#1a1a2e', border: '1px solid #312e81' }}
+              dropdownStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)' }}
               className="premium-select"
             >
               {vendorData?.myVendors?.map(v => (
                 <Select.Option key={v.id} value={v.id}>
-                  <span style={{ color: '#f0f0f5' }}>{v.name}</span> <span style={{ color: '#6b6b80', fontSize: '0.8rem' }}>— {v.category}</span>
+                  <span style={{ color: 'var(--text-primary)' }}>{v.name}</span> <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>— {v.category}</span>
                 </Select.Option>
               ))}
             </Select>

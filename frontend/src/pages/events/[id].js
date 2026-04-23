@@ -1,13 +1,16 @@
+import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { useQuery } from '@apollo/client/react';
-import { GET_EVENT_DETAILS } from '@/features/events/graphql/queries';
+import { useQuery, useMutation } from '@apollo/client/react';
+import { GET_EVENT_DETAILS, GET_MY_BOOKINGS, CANCEL_BOOKING, CREATE_CHECKOUT_SESSION } from '@/features/events/graphql/queries';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import toast from 'react-hot-toast';
 import {
   Card, Tag, Button, Spin, Descriptions, Divider,
-  Table, Row, Col, Statistic, Empty, Typography, Space, Tooltip
+  Table, Row, Col, Statistic, Empty, Typography, Space, Tooltip,
+  Select, InputNumber, Popconfirm
 } from 'antd';
 import {
   CalendarOutlined, EnvironmentOutlined, TeamOutlined,
@@ -24,21 +27,30 @@ export default function EventDetailsPage() {
   const { id } = router.query;
   const { user, loading: authLoading } = useAuth();
 
-  const { data, loading, error } = useQuery(GET_EVENT_DETAILS, {
+  const { data, loading, error, refetch: refetchEvent } = useQuery(GET_EVENT_DETAILS, {
     variables: { id },
     skip: !id || authLoading
   });
+
+  const { data: bookingData, refetch: refetchBookings } = useQuery(GET_MY_BOOKINGS, {
+    fetchPolicy: 'network-only',
+    skip: !user
+  });
+
+  const [bookingOptions, setBookingOptions] = useState({ ticketType: '', quantity: 1 });
+  const [createCheckout, { loading: sessionLoading }] = useMutation(CREATE_CHECKOUT_SESSION);
+  const [cancelBooking] = useMutation(CANCEL_BOOKING);
 
   if (authLoading || loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '16px' }}>
       <div style={{
         width: '48px', height: '48px',
         borderRadius: '12px',
-        background: 'linear-gradient(135deg, #7c5cfc 0%, #00d4aa 100%)',
+        background: 'var(--gradient-main)',
         animation: 'pulse-glow 2s ease-in-out infinite',
-        boxShadow: '0 8px 24px rgba(124, 92, 252, 0.3)'
+        boxShadow: 'var(--shadow-glow)'
       }} />
-      <span style={{ color: '#a0a0b8', fontWeight: 500 }}>Loading Event Details...</span>
+      <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Loading Event Details...</span>
     </div>
   );
   if (error) return <div style={{ padding: '2rem' }}><Empty description="Error loading event details" /></div>;
@@ -47,12 +59,39 @@ export default function EventDetailsPage() {
   if (!event) return <div style={{ padding: '2rem' }}><Empty description="Event not found" /></div>;
 
   const isOwner = user?.id === event.organizer?.id || user?.role === 'ADMIN';
-  if (!isOwner) return (
-    <div style={{ padding: '2rem', textAlign: 'center' }}>
-      <AntTitle level={3} style={{ color: '#f0f0f5' }}>Unauthorized Access</AntTitle>
-      <Button onClick={() => router.push('/browse')}>Back to Browse</Button>
-    </div>
-  );
+
+  const myBookings = bookingData?.myBookings || [];
+  const myBookedEventIds = myBookings.map(b => b.event.id);
+  const isBooked = myBookedEventIds.includes(event.id);
+
+  const handleCheckout = async () => {
+    try {
+      const ticketTypeToUse = bookingOptions.ticketType || event.ticketTypes?.[0]?.name;
+      const { data } = await createCheckout({
+        variables: {
+          eventId: event.id,
+          ticketType: ticketTypeToUse,
+          quantity: bookingOptions.quantity
+        }
+      });
+      window.location.href = data.createCheckoutSession;
+    } catch (e) {
+      toast.error(e.message);
+    }
+  };
+
+  const handleCancel = async () => {
+    const booking = myBookings.find(b => b.event.id === event.id);
+    if (!booking) return;
+    try {
+      await cancelBooking({ variables: { id: booking.id } });
+      toast.success('Reservation cancelled successfully');
+      refetchBookings();
+      refetchEvent();
+    } catch (e) {
+      toast.error(e.message);
+    }
+  };
 
   const totalRevenue = event.attendees?.reduce((acc, curr) => acc + (curr.status === 'CONFIRMED' || curr.status === 'CHECKED_IN' ? curr.amountPaid : 0), 0) || 0;
   const totalTickets = event.attendees?.reduce((acc, curr) => acc + (curr.status === 'CONFIRMED' || curr.status === 'CHECKED_IN' ? curr.quantity : 0), 0) || 0;
@@ -63,8 +102,8 @@ export default function EventDetailsPage() {
       key: 'user',
       render: (_, record) => (
         <Space orientation="vertical" size={0}>
-          <AntText strong style={{ color: '#f0f0f5' }}><UserOutlined /> {record.user.name}</AntText>
-          <AntText style={{ fontSize: '12px', color: '#6b6b80' }}><MailOutlined /> {record.user.email}</AntText>
+          <AntText strong style={{ color: 'var(--text-primary)' }}><UserOutlined /> {record.user.name}</AntText>
+          <AntText style={{ fontSize: '12px', color: 'var(--text-muted)' }}><MailOutlined /> {record.user.email}</AntText>
         </Space>
       )
     },
@@ -89,19 +128,19 @@ export default function EventDetailsPage() {
       dataIndex: 'quantity',
       key: 'quantity',
       align: 'center',
-      render: (qty) => <AntText strong style={{ color: '#f0f0f5' }}>{qty}</AntText>
+      render: (qty) => <AntText strong style={{ color: 'var(--text-primary)' }}>{qty}</AntText>
     },
     {
       title: 'Paid',
       dataIndex: 'amountPaid',
       key: 'amountPaid',
-      render: (amt) => <AntText strong style={{ color: '#00d4aa' }}>${amt}</AntText>
+      render: (amt) => <AntText strong style={{ color: 'var(--secondary-color)' }}>${amt}</AntText>
     },
     {
       title: 'Booked On',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date) => <span style={{ color: '#a0a0b8' }}>{dayjs(parseInt(date) || date).format('MMM D, YYYY')}</span>
+      render: (date) => <span style={{ color: 'var(--text-secondary)' }}>{dayjs(parseInt(date) || date).format('MMM D, YYYY')}</span>
     }
   ];
 
@@ -110,7 +149,7 @@ export default function EventDetailsPage() {
       title: 'Vendor Name',
       dataIndex: 'name',
       key: 'name',
-      render: (text) => <AntText strong style={{ color: '#f0f0f5' }}>{text}</AntText>
+      render: (text) => <AntText strong style={{ color: 'var(--text-primary)' }}>{text}</AntText>
     },
     {
       title: 'Category',
@@ -122,13 +161,13 @@ export default function EventDetailsPage() {
       title: 'Cost',
       dataIndex: 'cost',
       key: 'cost',
-      render: (amt) => <AntText strong style={{ color: '#7c5cfc' }}>${amt}</AntText>
+      render: (amt) => <AntText strong style={{ color: 'var(--primary-color)' }}>${amt}</AntText>
     },
     {
       title: 'Contact',
       dataIndex: 'contactInfo',
       key: 'contactInfo',
-      render: (info) => <span style={{ color: '#a0a0b8' }}>{info}</span>
+      render: (info) => <span style={{ color: 'var(--text-secondary)' }}>{info}</span>
     }
   ];
 
@@ -170,7 +209,7 @@ export default function EventDetailsPage() {
   };
 
   return (
-    <div className="mobile-pad-reduce" style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
+    <div className="mobile-pad-reduce" style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
       <Head><title>{event.title} | Organizer Dashboard</title></Head>
       <Row gutter={[32, 32]}>
         {/* Left Side: Event Info */}
@@ -183,125 +222,205 @@ export default function EventDetailsPage() {
                   position: 'absolute',
                   bottom: 0, left: 0, right: 0,
                   height: '50%',
-                  background: 'linear-gradient(to top, rgba(22, 22, 43, 1) 0%, transparent 100%)'
+                  background: 'linear-gradient(to top, var(--card-bg) 0%, transparent 100%)'
                 }} />
               </div>
             }
+            className="hover-bounce"
             style={{
               borderRadius: '24px',
               overflow: 'hidden',
-              background: 'rgba(22, 22, 35, 0.8)',
-              border: '1px solid rgba(255,255,255,0.06)',
+              background: 'var(--card-bg)',
+              border: '1px solid var(--glass-border)',
               backdropFilter: 'blur(20px)',
-              boxShadow: '0 16px 48px rgba(0,0,0,0.3)'
+              boxShadow: 'var(--shadow-md)'
             }}
           >
-            <AntTitle level={2} style={{ marginBottom: '8px', color: '#f0f0f5', letterSpacing: '-0.5px' }}>{event.title}</AntTitle>
+            <AntTitle level={2} style={{ marginBottom: '8px', color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>{event.title}</AntTitle>
             <Tag color="blue" style={{ marginBottom: '20px' }}>{event.eventType}</Tag>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
               {[
-                { icon: <CalendarOutlined style={{ color: '#7c5cfc' }} />, label: 'Date & Time', value: dayjs(parseInt(event.date) || event.date).format('MMMM D, YYYY h:mm A') },
-                { icon: <EnvironmentOutlined style={{ color: '#00d4aa' }} />, label: 'Venue', value: event.location },
+                { icon: <CalendarOutlined style={{ color: 'var(--primary-color)' }} />, label: 'Date & Time', value: dayjs(parseInt(event.date) || event.date).format('MMMM D, YYYY h:mm A') },
+                { icon: <EnvironmentOutlined style={{ color: 'var(--secondary-color)' }} />, label: 'Venue', value: event.location },
                 { icon: <TeamOutlined style={{ color: '#ff8b3d' }} />, label: 'Capacity', value: `${event.bookedCount} / ${event.capacity} Guests` }
               ].map((item, i) => (
-                <div key={i} style={{
+                <div className="hover-bounce" key={i} style={{
                   padding: '14px',
-                  background: 'rgba(255,255,255,0.02)',
+                  background: 'var(--glass-bg)',
                   borderRadius: '12px',
-                  border: '1px solid rgba(255,255,255,0.04)'
+                  border: '1px solid var(--glass-border)'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', fontSize: '0.75rem', color: '#6b6b80', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     {item.icon} {item.label}
                   </div>
-                  <div style={{ color: '#f0f0f5', fontWeight: 600, fontSize: '0.9rem' }}>{item.value}</div>
+                  <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.9rem' }}>{item.value}</div>
                 </div>
               ))}
             </div>
 
-            <Divider titlePlacement="left" style={{ color: '#6b6b80' }}>Description</Divider>
-            <AntText style={{ lineHeight: '1.7', color: '#a0a0b8' }}>{event.description}</AntText>
+            <Divider titlePlacement="left" style={{ color: 'var(--text-muted)' }}>Description</Divider>
+            <AntText style={{ lineHeight: '1.7', color: 'var(--text-secondary)' }}>{event.description}</AntText>
           </Card>
         </Col>
 
-        {/* Right Side: Stats & Lists */}
+        {/* Right Side: Stats & Lists / Booking UI */}
         <Col xs={24} lg={16}>
-          <Row gutter={[16, 16]} style={{ marginBottom: '2rem' }}>
-            {[
-              { title: 'Total Revenue', value: totalRevenue, precision: 2, prefix: <DollarCircleOutlined style={{ color: '#00d4aa' }} />, color: '#00d4aa' },
-              { title: 'Tickets Sold', value: totalTickets, prefix: <TeamOutlined style={{ color: '#7c5cfc' }} />, color: '#7c5cfc' },
-              { title: 'Vendors', value: event.vendors?.length || 0, prefix: <ShopOutlined style={{ color: '#ff8b3d' }} />, color: '#ff8b3d' }
-            ].map((stat, i) => (
-              <Col xs={24} sm={12} md={8} key={i}>
-                <Card style={{
-                  borderRadius: '20px',
-                  textAlign: 'center',
-                  background: 'rgba(22, 22, 35, 0.8)',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                  backdropFilter: 'blur(20px)'
-                }}>
-                  <Statistic
-                    title={stat.title}
-                    value={stat.value}
-                    precision={stat.precision}
-                    prefix={stat.prefix}
-                    styles={{ content: { color: stat.color, fontWeight: 800 } }}
-                  />
-                </Card>
-              </Col>
-            ))}
-          </Row>
-
-          <Card
-            title={
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                <span style={{ color: '#f0f0f5' }}><TeamOutlined /> Attendees & Bookings</span>
-                <Button
-                  type="primary"
-                  icon={<DownloadOutlined />}
-                  onClick={exportToExcel}
-                  style={{ borderRadius: '8px', background: 'rgba(0, 212, 170, 0.1)', color: '#00d4aa', border: '1px solid rgba(0, 212, 170, 0.2)' }}
-                >
-                  Export Guest List
-                </Button>
+          {!isOwner ? (
+            <Card
+              className="hover-bounce"
+              title={<span style={{ color: 'var(--text-primary)' }}>🎫 Get Your Tickets</span>}
+              style={{
+                borderRadius: '24px',
+                background: 'var(--card-bg)',
+                border: '1px solid var(--glass-border)',
+                backdropFilter: 'blur(20px)',
+                boxShadow: 'var(--shadow-md)'
+              }}
+            >
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Choose Ticket Tier</label>
+                <Select
+                  style={{ width: '100%', height: '45px' }}
+                  value={bookingOptions.ticketType || event.ticketTypes?.[0]?.name}
+                  onChange={(val) => setBookingOptions({ ...bookingOptions, ticketType: val })}
+                  options={event.ticketTypes?.map(t => ({ label: `${t.name} - $${t.price}`, value: t.name }))}
+                />
               </div>
-            }
-            style={{
-              borderRadius: '24px',
-              marginBottom: '2rem',
-              background: 'rgba(22, 22, 35, 0.8)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              backdropFilter: 'blur(20px)'
-            }}
-          >
-            <Table
-              dataSource={event.attendees}
-              columns={attendeeColumns}
-              rowKey="id"
-              scroll={{ x: 600 }}
-              pagination={{ pageSize: 5 }}
-              locale={{ emptyText: <Empty description="No bookings yet" /> }}
-            />
-          </Card>
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Quantity</label>
+                <InputNumber
+                  min={1} max={10}
+                  style={{ width: '100%', height: '45px', lineHeight: '45px' }}
+                  value={bookingOptions.quantity}
+                  onChange={(val) => setBookingOptions({ ...bookingOptions, quantity: val })}
+                />
+              </div>
+              <Divider style={{ borderColor: 'var(--glass-border)' }} />
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '16px 20px',
+                background: 'rgba(131, 56, 236, 0.06)',
+                borderRadius: '14px',
+                border: '1px solid rgba(131, 56, 236, 0.1)',
+                marginBottom: '24px'
+              }}>
+                <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>Estimated Total:</span>
+                <span style={{ fontSize: '1.8rem', fontWeight: '900', background: 'var(--gradient-main)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  ${(event.ticketTypes?.find(t => t.name === (bookingOptions.ticketType || event.ticketTypes?.[0]?.name))?.price || 0) * bookingOptions.quantity}
+                </span>
+              </div>
 
-          <Card
-            title={<AntTitle level={4} style={{ margin: 0, color: '#f0f0f5' }}><ShopOutlined /> Event Vendors</AntTitle>}
-            style={{
-              borderRadius: '24px',
-              background: 'rgba(22, 22, 35, 0.8)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              backdropFilter: 'blur(20px)'
-            }}
-          >
-            <Table
-              dataSource={event.vendors}
-              columns={vendorColumns}
-              rowKey="id"
-              scroll={{ x: 600 }}
-              pagination={false}
-              locale={{ emptyText: <Empty description="No vendors assigned to this event" /> }}
-            />
-          </Card>
+              {isBooked ? (
+                <>
+                  <Tag color="green" style={{ fontSize: '1rem', padding: '12px 20px', borderRadius: '12px', display: 'block', textAlign: 'center', marginBottom: '16px' }}>
+                    <CheckCircleOutlined /> You have booked a ticket for this event
+                  </Tag>
+                  {new Date(parseInt(event.date) || event.date) >= new Date() && (
+                    <Popconfirm title="Are you sure you want to cancel?" onConfirm={handleCancel}>
+                      <Button danger icon={<CloseCircleOutlined />} size="large" block style={{ borderRadius: '12px', height: '50px' }}>Cancel Reservation</Button>
+                    </Popconfirm>
+                  )}
+                </>
+              ) : (
+                new Date(parseInt(event.date) || event.date) >= new Date() ? (
+                  <Button
+                    type="primary"
+                    size="large"
+                    loading={sessionLoading}
+                    onClick={handleCheckout}
+                    block
+                    style={{ borderRadius: '12px', height: '54px', fontWeight: 'bold' }}
+                  >
+                    Proceed to Secure Payment
+                  </Button>
+                ) : (
+                  <Button disabled block size="large" style={{ borderRadius: '12px', height: '54px' }}>Event has passed</Button>
+                )
+              )}
+            </Card>
+          ) : (
+            <>
+              <Row gutter={[16, 16]} style={{ marginBottom: '2rem' }}>
+                {[
+                  { title: 'Total Revenue', value: totalRevenue, precision: 2, prefix: <DollarCircleOutlined style={{ color: 'var(--secondary-color)' }} />, color: 'var(--secondary-color)' },
+                  { title: 'Tickets Sold', value: totalTickets, prefix: <TeamOutlined style={{ color: 'var(--primary-color)' }} />, color: 'var(--primary-color)' },
+                  { title: 'Vendors', value: event.vendors?.length || 0, prefix: <ShopOutlined style={{ color: '#ff8b3d' }} />, color: '#ff8b3d' }
+                ].map((stat, i) => (
+                  <Col xs={24} sm={12} md={8} key={i}>
+                    <Card className="hover-bounce" style={{
+                      borderRadius: '20px',
+                      textAlign: 'center',
+                      background: 'var(--card-bg)',
+                      border: '1px solid var(--glass-border)',
+                      backdropFilter: 'blur(20px)'
+                    }}>
+                      <Statistic
+                        title={stat.title}
+                        value={stat.value}
+                        precision={stat.precision}
+                        prefix={stat.prefix}
+                        styles={{ content: { color: stat.color, fontWeight: 800 } }}
+                      />
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+
+              <Card
+                className="hover-bounce"
+                title={
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                    <span style={{ color: 'var(--text-primary)' }}><TeamOutlined /> Attendees & Bookings</span>
+                    <Button
+                      type="primary"
+                      icon={<DownloadOutlined />}
+                      onClick={exportToExcel}
+                      style={{ borderRadius: '8px', background: 'rgba(0, 212, 170, 0.1)', color: 'var(--secondary-color)', border: '1px solid rgba(0, 212, 170, 0.2)' }}
+                    >
+                      Export Guest List
+                    </Button>
+                  </div>
+                }
+                style={{
+                  borderRadius: '24px',
+                  marginBottom: '2rem',
+                  background: 'var(--card-bg)',
+                  border: '1px solid var(--glass-border)',
+                  backdropFilter: 'blur(20px)'
+                }}
+              >
+                <Table
+                  dataSource={event.attendees}
+                  columns={attendeeColumns}
+                  rowKey="id"
+                  scroll={{ x: 600 }}
+                  pagination={{ pageSize: 5 }}
+                  locale={{ emptyText: <Empty description="No bookings yet" /> }}
+                />
+              </Card>
+
+              <Card
+                className="hover-bounce"
+                title={<AntTitle level={4} style={{ margin: 0, color: 'var(--text-primary)' }}><ShopOutlined /> Event Vendors</AntTitle>}
+                style={{
+                  borderRadius: '24px',
+                  background: 'var(--card-bg)',
+                  border: '1px solid var(--glass-border)',
+                  backdropFilter: 'blur(20px)'
+                }}
+              >
+                <Table
+                  dataSource={event.vendors}
+                  columns={vendorColumns}
+                  rowKey="id"
+                  scroll={{ x: 600 }}
+                  pagination={false}
+                  locale={{ emptyText: <Empty description="No vendors assigned to this event" /> }}
+                />
+              </Card>
+            </>
+          )}
         </Col>
       </Row>
     </div>

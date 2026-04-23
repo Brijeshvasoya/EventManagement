@@ -32,15 +32,15 @@ export default function VendorManagement() {
       <div style={{
         width: '48px', height: '48px',
         borderRadius: '12px',
-        background: 'linear-gradient(135deg, #7c5cfc 0%, #00d4aa 100%)',
+        background: 'var(--gradient-main)',
         animation: 'pulse-glow 2s ease-in-out infinite',
-        boxShadow: '0 8px 24px rgba(124, 92, 252, 0.3)'
+        boxShadow: 'var(--shadow-glow)'
       }} />
-      <span style={{ color: '#a0a0b8', fontWeight: 500 }}>Loading...</span>
+      <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Loading...</span>
     </div>
   );
   if (!user || (user.role !== 'ORGANIZER' && user.role !== 'ADMIN')) return (
-    <div style={{ textAlign: 'center', marginTop: '100px', color: '#6b6b80' }}>
+    <div style={{ textAlign: 'center', marginTop: '100px', color: 'var(--text-muted)' }}>
       <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔒</div>
       Unauthorized Access
     </div>
@@ -92,7 +92,7 @@ export default function VendorManagement() {
       title: 'Vendor Name',
       dataIndex: 'name',
       key: 'name',
-      render: (text) => <span style={{ fontWeight: 'bold', color: '#f0f0f5' }}>{text}</span>,
+      render: (text) => <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>{text}</span>,
     },
     {
       title: 'Category',
@@ -118,13 +118,13 @@ export default function VendorManagement() {
       title: 'Cost (USD)',
       dataIndex: 'cost',
       key: 'cost',
-      render: (cost) => <span style={{ color: '#00d4aa', fontWeight: 'bold' }}>${cost}</span>,
+      render: (cost) => <span style={{ color: 'var(--secondary-color)', fontWeight: 'bold' }}>${cost}</span>,
     },
     {
       title: 'Contact Info',
       dataIndex: 'contactInfo',
       key: 'contactInfo',
-      render: (info) => <span style={{ color: '#a0a0b8' }}>{info}</span>,
+      render: (info) => <span style={{ color: 'var(--text-secondary)' }}>{info}</span>,
     },
     {
       title: 'Actions',
@@ -141,7 +141,7 @@ export default function VendorManagement() {
   ];
 
   return (
-    <div className="mobile-pad-reduce" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="mobile-pad-reduce" style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
       <Head><title>Vendor Management | EventHub</title></Head>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '16px' }}>
@@ -161,10 +161,10 @@ export default function VendorManagement() {
           }}>
             🏪 Vendor Hub
           </div>
-          <h1 style={{ fontSize: '2rem', fontWeight: '800', color: '#f0f0f5', margin: 0, letterSpacing: '-0.5px' }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.5px' }}>
             Vendor Management
           </h1>
-          <p style={{ color: '#6b6b80', margin: '4px 0 0 0', fontSize: '0.9rem' }}>
+          <p style={{ color: 'var(--text-muted)', margin: '4px 0 0 0', fontSize: '0.9rem' }}>
             Manage your event vendors and service providers
           </p>
         </div>
@@ -179,13 +179,13 @@ export default function VendorManagement() {
         </Button>
       </div>
 
-      <div style={{
-        background: 'rgba(22, 22, 35, 0.8)',
+      <div className="hover-bounce" style={{
+        background: 'var(--card-bg)',
         borderRadius: '24px',
         overflow: 'hidden',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid var(--glass-border)',
         backdropFilter: 'blur(20px)',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
+        boxShadow: 'var(--shadow-md)'
       }}>
         <Table
           dataSource={data?.myVendors || []}
@@ -199,7 +199,7 @@ export default function VendorManagement() {
 
       <Modal
         title={
-          <span style={{ color: '#f0f0f5', fontWeight: 700 }}>
+          <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
             {editingVendor ? '✏️ Edit Vendor' : '➕ Add New Vendor'}
           </span>
         }

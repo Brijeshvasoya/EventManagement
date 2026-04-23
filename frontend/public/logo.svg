@@ -1,0 +1,18 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="256" height="256" rx="64" fill="url(#paint0_linear_logo)"/>
+<path opacity="0.3" d="M128 44L212 92.5V189.5L128 238L44 189.5V92.5L128 44Z" fill="white"/>
+<path d="M128 72L182 103V165L128 196L74 165V103L128 72Z" fill="white"/>
+<path d="M128 98L162 117V155L128 174L94 155V117L128 98Z" fill="url(#paint1_linear_logo)"/>
+<circle cx="128" cy="136" r="16" fill="white"/>
+<defs>
+<linearGradient id="paint0_linear_logo" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+<stop stop-color="#1B2A4E"/>
+<stop offset="0.5" stop-color="#312E81"/>
+<stop offset="1" stop-color="#4338CA"/>
+</linearGradient>
+<linearGradient id="paint1_linear_logo" x1="94" y1="98" x2="162" y2="174" gradientUnits="userSpaceOnUse">
+<stop stop-color="#E845E4"/>
+<stop offset="1" stop-color="#7C3AED"/>
+</linearGradient>
+</defs>
+</svg>

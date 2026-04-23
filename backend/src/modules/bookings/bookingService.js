@@ -5,6 +5,7 @@ const { sendTicketEmail } = require('../../utils/email');
 const { generateTicketPDF } = require('../../utils/pdfGenerator');
 const User = require('../../models/User');
 const { requireAuth } = require('../../utils/authGuard');
+const notificationService = require('../notifications/notificationService');
 
 const bookingService = {
   getMyBookings: async (user) => {
@@ -17,11 +18,12 @@ const bookingService = {
     // Extract ID string if an object was passed accidentally
     const cleanEventId = typeof eventId === 'object' ? (eventId._id || eventId.id) : eventId;
 
-    const event = await Event.findById(cleanEventId);
+    const event = await Event.findById(cleanEventId).populate('organizer');
     if (!event) throw new Error('Event not found');
 
     // Prevent double processing the same payment session
     let booking = await Booking.findOne({ stripePaymentId });
+    let isNewBooking = false;
 
     if (booking) {
       if (booking.status === 'CONFIRMED') return booking;
@@ -32,6 +34,7 @@ const bookingService = {
       if (amountPaid) booking.amountPaid = amountPaid;
       await booking.save();
     } else {
+      isNewBooking = true;
       booking = await Booking.create({
         event: cleanEventId,
         user: user.id,
@@ -45,8 +48,25 @@ const bookingService = {
       });
     }
 
+    // Notify Organizer
+    if (event.organizer) {
+      try {
+        const userName = user.name || (await User.findById(user.id)).name || 'A user';
+        await notificationService.createNotification({
+          recipient: event.organizer._id,
+          message: `${userName} has booked ${booking.quantity} ticket(s) for your event "${event.title}"`,
+          type: 'BOOKING_CONFIRMED',
+          bookingId: booking._id,
+          eventId: event._id
+        });
+      } catch (err) {
+        console.error('Failed to create notification for organizer:', err.message);
+      }
+    }
+
     // ASYNC EMAIL RECEIPT: Fetch full user if needed & generate PDF attachment
     (async () => {
+
       try {
         const fullUser = (user.email && user.name) ? user : await User.findById(user.id || user);
         if (fullUser) {

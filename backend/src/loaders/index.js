@@ -12,5 +12,11 @@ module.exports = () => ({
     const events = await Event.find({ _id: { $in: eventIds } });
     const eventMap = events.reduce((acc, event) => ({ ...acc, [event.id]: event }), {});
     return eventIds.map(id => eventMap[id] || null);
+  }),
+  bookingLoader: new DataLoader(async (bookingIds) => {
+    const Booking = require('../models/Booking');
+    const bookings = await Booking.find({ _id: { $in: bookingIds } });
+    const bookingMap = bookings.reduce((acc, booking) => ({ ...acc, [booking.id]: booking }), {});
+    return bookingIds.map(id => bookingMap[id] || null);
   })
 });

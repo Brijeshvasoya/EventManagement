@@ -94,7 +94,17 @@ export const GET_MY_VENDORS = gql`
 export const GET_MY_EVENTS = gql`
   query GetMyEvents {
     myEvents {
-      id title date
+      id title date location capacity imageUrl description eventType status bookedCount
+      ticketTypes { name price capacity }
+      attendees { 
+        id 
+        user { name email } 
+        quantity 
+        amountPaid 
+        ticketType 
+        status 
+        createdAt 
+      }
     }
   }
 `;
@@ -131,5 +141,33 @@ export const VERIFY_TICKET = gql`
       user { name }
       event { title }
     }
+  }
+`;
+
+export const GET_MY_NOTIFICATIONS = gql`
+  query GetMyNotifications {
+    myNotifications {
+      id message type read createdAt
+      booking { id ticketType quantity }
+      event { id title }
+    }
+  }
+`;
+
+export const UNREAD_NOTIFICATION_COUNT = gql`
+  query GetUnreadNotificationCount {
+    unreadNotificationCount
+  }
+`;
+
+export const MARK_NOTIFICATION_AS_READ = gql`
+  mutation MarkNotificationAsRead($id: ID!) {
+    markNotificationAsRead(id: $id) { id read }
+  }
+`;
+
+export const MARK_ALL_NOTIFICATIONS_AS_READ = gql`
+  mutation MarkAllNotificationsAsRead {
+    markAllNotificationsAsRead
   }
 `;

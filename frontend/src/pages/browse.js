@@ -1,31 +1,27 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_EVENTS, GET_MY_BOOKINGS, CANCEL_BOOKING, CREATE_CHECKOUT_SESSION, DELETE_EVENT, UPDATE_EVENT, GET_MY_VENDORS } from '@/features/events/graphql/queries';
+import { GET_EVENTS, GET_MY_BOOKINGS, DELETE_EVENT, UPDATE_EVENT, GET_MY_VENDORS } from '@/features/events/graphql/queries';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
-import { Tabs, Card, Tag, Badge, Button, Modal, Spin, Empty, Descriptions, Popconfirm, Select, InputNumber, Divider, Tooltip, Form, Input, DatePicker, Upload, Table, Typography } from 'antd';
-import { CalendarOutlined, EnvironmentOutlined, CheckCircleOutlined, CloseCircleOutlined, ShoppingCartOutlined, WalletOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, UploadOutlined, TeamOutlined, UserOutlined, MailOutlined, DollarCircleOutlined, ShopOutlined, EyeOutlined } from '@ant-design/icons';
+import { Tabs, Tag, Button, Modal, Spin, Empty, Popconfirm, Select, Tooltip, Form, Input, DatePicker, Upload } from 'antd';
+import { CalendarOutlined, EnvironmentOutlined, CheckCircleOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, EyeOutlined, ArrowRightOutlined, UploadOutlined } from '@ant-design/icons';
 import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-
 export default function Browse() {
     const router = useRouter();
     const { user } = useAuth();
     const [selectedEvent, setSelectedEvent] = useState(null);
-    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-    const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState('');
     const [editForm] = Form.useForm();
 
-    const [bookingOptions, setBookingOptions] = useState({ ticketType: '', quantity: 1 });
-
     const { data: eventData, loading: eventLoading, refetch: refetchEvents } = useQuery(GET_EVENTS, { fetchPolicy: 'cache-and-network' });
     const { data: bookingData, refetch: refetchBookings } = useQuery(GET_MY_BOOKINGS, {
-        fetchPolicy: 'network-only'
+        fetchPolicy: 'network-only',
+        skip: !user
     });
     const { data: vendorData, loading: vendorLoading } = useQuery(GET_MY_VENDORS, {
         skip: !user || user.role === 'USER'
@@ -33,10 +29,8 @@ export default function Browse() {
     const [editVendorIds, setEditVendorIds] = useState([]);
     const [aiImageLoading, setAiImageLoading] = useState(false);
 
-    const [cancel] = useMutation(CANCEL_BOOKING);
     const [deleteEvent] = useMutation(DELETE_EVENT);
     const [updateEvent, { loading: updating }] = useMutation(UPDATE_EVENT);
-    const [createCheckout, { loading: sessionLoading }] = useMutation(CREATE_CHECKOUT_SESSION);
 
     const handleAIImageGenerate = async () => {
         const title = editForm.getFieldValue('title');
@@ -67,11 +61,11 @@ export default function Browse() {
             <div style={{
                 width: '48px', height: '48px',
                 borderRadius: '12px',
-                background: 'linear-gradient(135deg, #7c5cfc 0%, #00d4aa 100%)',
+                background: 'var(--gradient-main)',
                 animation: 'pulse-glow 2s ease-in-out infinite',
-                boxShadow: '0 8px 24px rgba(124, 92, 252, 0.3)'
+                boxShadow: 'var(--shadow-glow)'
             }} />
-            <span style={{ color: '#a0a0b8', fontWeight: 500 }}>Discovering Events...</span>
+            <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Discovering Events...</span>
         </div>
     );
 
@@ -142,49 +136,8 @@ export default function Browse() {
         }
     };
 
-    const openBooking = (event) => {
-        const firstType = event.ticketTypes?.[0]?.name || 'Standard';
-        setSelectedEvent(event);
-        setBookingOptions({ ticketType: firstType, quantity: 1 });
-        setIsBookingModalOpen(true);
-        setIsDetailModalOpen(false);
-    };
-
-    const handleCheckout = async () => {
-        try {
-            const { data } = await createCheckout({
-                variables: {
-                    eventId: selectedEvent.id,
-                    ticketType: bookingOptions.ticketType,
-                    quantity: bookingOptions.quantity
-                }
-            });
-            window.location.href = data.createCheckoutSession;
-        } catch (e) {
-            toast.error(e.message);
-        }
-    };
-
-    const handleCancel = async (eventId) => {
-        const booking = myBookings.find(b => b.event.id === eventId);
-        if (!booking) return;
-        try {
-            await cancel({ variables: { id: booking.id } });
-            toast.success('Reservation cancelled successfully');
-            refetchBookings();
-            setIsDetailModalOpen(false);
-        } catch (e) {
-            toast.error(e.message);
-        }
-    };
-
-    const showDetails = (event, isOwner) => {
-        if (isOwner) {
-            router.push(`/events/${event.id}`);
-        } else {
-            setSelectedEvent(event);
-            setIsDetailModalOpen(true);
-        }
+    const showDetails = (event) => {
+        router.push(`/events/${event.id}`);
     };
 
     const EventGrid = ({ events, emptyMsg }) => (
@@ -192,127 +145,111 @@ export default function Browse() {
             <div style={{
                 padding: '5rem 2rem',
                 textAlign: 'center',
-                background: 'rgba(22, 22, 35, 0.5)',
+                background: 'var(--bg-secondary)',
                 borderRadius: '24px',
-                border: '2px dashed rgba(255,255,255,0.06)'
+                border: '2px dashed var(--glass-border)'
             }}>
                 <div style={{ fontSize: '3rem', marginBottom: '16px', opacity: 0.5 }}>🔍</div>
-                <p style={{ color: '#6b6b80', fontSize: '1.1rem', margin: 0 }}>{emptyMsg}</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{emptyMsg}</p>
             </div>
         ) : (
-            <div className="event-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '30px' }}>
+            <div className="event-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
                 {events.map((e, index) => {
                     const isBooked = myBookedEventIds.includes(e.id);
                     const isOwner = user?.id === e.organizer?.id || user?.role === 'ADMIN';
 
                     return (
-                        <Card
+                        <div
                             key={e.id}
-                            hoverable
-                            cover={
-                                <div onClick={() => showDetails(e, isOwner)} style={{
-                                    height: '220px',
-                                    position: 'relative',
-                                    overflow: 'hidden',
-                                    cursor: 'pointer'
-                                }}>
-                                    <img
-                                        src={e.imageUrl || '/event-placeholder.jpg'}
-                                        style={{
-                                            width: '100%', height: '100%', objectFit: 'cover',
-                                            transition: 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)'
-                                        }}
-                                        onMouseOver={ev => ev.currentTarget.style.transform = 'scale(1.05)'}
-                                        onMouseOut={ev => ev.currentTarget.style.transform = 'scale(1)'}
-                                    />
-                                    {/* Gradient overlay */}
-                                    <div style={{
-                                        position: 'absolute',
-                                        bottom: 0,
-                                        left: 0,
-                                        right: 0,
-                                        height: '50%',
-                                        background: 'linear-gradient(to top, rgba(10, 10, 15, 0.8) 0%, transparent 100%)',
-                                        pointerEvents: 'none'
-                                    }} />
-                                    {isBooked && (
-                                        <div style={{
-                                            position: 'absolute',
-                                            top: '14px',
-                                            right: '14px',
-                                            background: 'rgba(0, 212, 170, 0.15)',
-                                            backdropFilter: 'blur(10px)',
-                                            border: '1px solid rgba(0, 212, 170, 0.3)',
-                                            color: '#00d4aa',
-                                            padding: '6px 14px',
-                                            borderRadius: '100px',
-                                            fontWeight: 700,
-                                            fontSize: '0.75rem',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.5px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '5px'
-                                        }}>
-                                            <CheckCircleOutlined /> Booked
-                                        </div>
-                                    )}
-                                </div>
-                            }
-                            actions={isOwner ? [
-                                <Tooltip title="Event Analytics & Attendees" key="view">
-                                    <Link href={`/events/${e.id}`}>
-                                        <EyeOutlined style={{ color: '#00d4aa' }} />
-                                    </Link>
-                                </Tooltip>,
-                                <Tooltip title="Edit Event" key="edit">
-                                    <EditOutlined onClick={() => handleEditOpen(e)} style={{ color: '#7c5cfc' }} />
-                                </Tooltip>,
-                                <Popconfirm
-                                    key="delete"
-                                    title="Delete this event?"
-                                    description="This action cannot be undone."
-                                    onConfirm={() => handleDelete(e.id)}
-                                    okText="Yes"
-                                    cancelText="No"
-                                    icon={<ExclamationCircleOutlined style={{ color: '#ff4d6a' }} />}
-                                >
-                                    <Tooltip title="Delete Event"><DeleteOutlined style={{ color: '#ff4d6a' }} /></Tooltip>
-                                </Popconfirm>
-                            ] : []}
+                            className="hover-bounce premium-event-card"
+                            onClick={() => showDetails(e)}
                             style={{
+                                cursor: 'pointer',
                                 borderRadius: '24px',
                                 overflow: 'hidden',
-                                border: '1px solid rgba(255, 255, 255, 0.06)',
-                                background: 'rgba(22, 22, 35, 0.8)',
+                                border: '1px solid var(--glass-border)',
+                                background: 'var(--card-bg)',
                                 backdropFilter: 'blur(20px)',
                                 transition: 'all 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
                                 animation: `fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) ${index * 0.08}s forwards`,
-                                opacity: 0
+                                opacity: 0,
+                                display: 'flex',
+                                flexDirection: 'column'
                             }}
                         >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                <Tag color="blue" style={{ borderRadius: '8px', fontWeight: 600 }}>{e.eventType || 'Public'}</Tag>
-                                <span style={{
-                                    color: '#6b6b80',
-                                    fontSize: '0.8rem',
-                                    fontFamily: 'monospace',
-                                    background: 'rgba(255,255,255,0.03)',
-                                    padding: '2px 8px',
-                                    borderRadius: '6px'
-                                }}>#{e.id.slice(-6).toUpperCase()}</span>
-                            </div>
-                            <h3 style={{ fontSize: '1.35rem', fontWeight: '800', color: '#f0f0f5', marginBottom: '14px', lineHeight: 1.25 }}>{e.title}</h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', color: '#a0a0b8' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem' }}>
-                                    <CalendarOutlined style={{ color: '#7c5cfc' }} />
-                                    {new Date(parseInt(e.date) || e.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                            <div style={{ height: '220px', position: 'relative', overflow: 'hidden' }}>
+                                <img
+                                    src={e.imageUrl || '/event-placeholder.jpg'}
+                                    style={{
+                                        width: '100%', height: '100%', objectFit: 'cover',
+                                        transition: 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)'
+                                    }}
+                                    className="event-card-img"
+                                />
+                                <div style={{
+                                    position: 'absolute',
+                                    bottom: 0, left: 0, right: 0, height: '60%',
+                                    background: 'linear-gradient(to top, var(--card-bg) 0%, transparent 100%)',
+                                    pointerEvents: 'none'
+                                }} />
+
+                                <div style={{ position: 'absolute', top: '16px', left: '16px', display: 'flex', gap: '8px' }}>
+                                    <Tag color="blue" style={{ borderRadius: '8px', fontWeight: 700, margin: 0, backdropFilter: 'blur(10px)', background: 'rgba(0, 113, 255, 0.8)', border: 'none' }}>
+                                        {e.eventType || 'Public'}
+                                    </Tag>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem' }}>
-                                    <EnvironmentOutlined style={{ color: '#00d4aa' }} /> {e.location}
+
+                                {isBooked && (
+                                    <div style={{
+                                        position: 'absolute', top: '16px', right: '16px',
+                                        background: 'rgba(0, 212, 170, 0.2)', backdropFilter: 'blur(10px)', border: '1px solid rgba(0, 212, 170, 0.4)', color: '#00d4aa',
+                                        padding: '6px 14px', borderRadius: '100px', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px',
+                                        display: 'flex', alignItems: 'center', gap: '5px'
+                                    }}>
+                                        <CheckCircleOutlined /> Booked
+                                    </div>
+                                )}
+                            </div>
+
+                            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                                <h3 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 16px 0', lineHeight: 1.3 }}>{e.title}</h3>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.9rem' }}>
+                                        <CalendarOutlined style={{ color: 'var(--primary-color)', marginTop: '3px' }} />
+                                        <span style={{ lineHeight: 1.4 }}>{new Date(parseInt(e.date) || e.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.9rem' }}>
+                                        <EnvironmentOutlined style={{ color: 'var(--secondary-color)', marginTop: '3px' }} />
+                                        <span style={{ lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{e.location}</span>
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
+                                    <span style={{ color: 'var(--primary-color)', fontWeight: 800, fontSize: '1.1rem' }}>
+                                        {e.ticketTypes?.[0] ? `From $${Math.min(...e.ticketTypes.map(t => t.price))}` : 'Free'}
+                                    </span>
+
+                                    {isOwner ? (
+                                        <div style={{ display: 'flex', gap: '8px' }} onClick={ev => ev.stopPropagation()}>
+                                            <Tooltip title="Event Analytics">
+                                                <Button icon={<EyeOutlined />} shape="circle" style={{ background: 'var(--glass-bg)', borderColor: 'var(--glass-border)', color: 'var(--secondary-color)' }} onClick={() => showDetails(e)} />
+                                            </Tooltip>
+                                            <Tooltip title="Edit Event">
+                                                <Button icon={<EditOutlined />} shape="circle" style={{ background: 'var(--glass-bg)', borderColor: 'var(--glass-border)', color: 'var(--primary-color)' }} onClick={() => handleEditOpen(e)} />
+                                            </Tooltip>
+                                            <Popconfirm title="Delete this event?" onConfirm={() => handleDelete(e.id)}>
+                                                <Button icon={<DeleteOutlined />} shape="circle" danger style={{ background: 'var(--glass-bg)', borderColor: 'var(--glass-border)' }} />
+                                            </Popconfirm>
+                                        </div>
+                                    ) : (
+                                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            View Details <ArrowRightOutlined />
+                                        </span>
+                                    )}
                                 </div>
                             </div>
-                        </Card>
+                        </div>
                     );
                 })}
             </div>
@@ -343,44 +280,11 @@ export default function Browse() {
     return (
         <>
             <Head><title>Browse Events | EventHub</title></Head>
-            <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', minHeight: '100vh' }}>
+            <div style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
                 {/* Premium Hero */}
-                <div style={{
-                    textAlign: 'center',
-                    marginBottom: '4rem',
-                    marginTop: '2rem',
-                    position: 'relative'
-                }}>
-                    <div style={{
-                        display: 'inline-block',
-                        padding: '6px 16px',
-                        background: 'rgba(124, 92, 252, 0.1)',
-                        border: '1px solid rgba(124, 92, 252, 0.2)',
-                        borderRadius: '100px',
-                        color: '#7c5cfc',
-                        fontSize: '0.8rem',
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '1.5px',
-                        marginBottom: '1.5rem'
-                    }}>
-                        ✨ Discover Amazing Events
-                    </div>
-                    <h1 style={{
-                        fontSize: '3.8rem',
-                        fontWeight: '900',
-                        background: 'linear-gradient(135deg, #f0f0f5 0%, #a0a0b8 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        letterSpacing: '-2.5px',
-                        marginBottom: '1rem',
-                        lineHeight: 1.1
-                    }}>
-                        Explore Experiences
-                    </h1>
-                    <p style={{ fontSize: '1.15rem', color: '#6b6b80', maxWidth: '520px', margin: '0 auto', lineHeight: 1.6 }}>
-                        Find and join top-rated events curated for you.
-                    </p>
+                <div style={{ padding: '60px 40px', background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)', borderRadius: '32px', marginBottom: '40px', color: 'white', textAlign: 'center', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)' }}>
+                    <h1 style={{ margin: '0 0 16px 0', fontSize: '3.5rem', fontWeight: 900, letterSpacing: '-1px', color: 'white' }}>Explore Extraordinary Experiences</h1>
+                    <p style={{ margin: '0 auto', fontSize: '1.2rem', color: 'rgba(255,255,255,0.8)', maxWidth: '600px' }}>Find and join top-rated upcoming events curated exclusively for you.</p>
                 </div>
 
                 <Tabs
@@ -395,212 +299,7 @@ export default function Browse() {
                     style={{ marginBottom: '4rem' }}
                 />
 
-                {/* EVENT DETAIL MODAL */}
-                <Modal open={isDetailModalOpen} onCancel={() => setIsDetailModalOpen(false)} footer={null} width={800} centered styles={{ body: { padding: 0 } }} style={{ borderRadius: '32px', overflow: 'hidden' }}>
-                    {selectedEvent && (
-                        <div>
-                            <div style={{ position: 'relative' }}>
-                                <img className="modal-banner-img" src={selectedEvent.imageUrl || '/event-placeholder.jpg'} style={{ width: '100%', height: '320px', objectFit: 'cover' }} />
-                                <div style={{
-                                    position: 'absolute',
-                                    bottom: 0,
-                                    left: 0,
-                                    right: 0,
-                                    height: '60%',
-                                    background: 'linear-gradient(to top, #16162b 0%, transparent 100%)'
-                                }} />
-                            </div>
-                            <div className="modal-content-padding" style={{ padding: '32px 40px 40px' }}>
-                                <div className="modal-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-                                    <div>
-                                        <Tag color={new Date(parseInt(selectedEvent.date) || selectedEvent.date) < now ? "default" : "blue"} style={{ marginBottom: '12px' }}>
-                                            {new Date(parseInt(selectedEvent.date) || selectedEvent.date) < now ? "Completed" : selectedEvent.eventType}
-                                        </Tag>
-                                        <h2 style={{ fontSize: '2.2rem', fontWeight: '900', color: '#f0f0f5', margin: 0, letterSpacing: '-1px' }}>{selectedEvent.title}</h2>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexShrink: 0 }}>
-                                        {myBookedEventIds.includes(selectedEvent.id) ? (
-                                            <>
-                                                <Tag color="green" style={{ fontSize: '0.9rem', padding: '8px 16px', borderRadius: '10px' }}><CheckCircleOutlined /> Booked</Tag>
-                                                {new Date(parseInt(selectedEvent.date) || selectedEvent.date) >= now && (
-                                                    <Popconfirm title="Are you sure you want to cancel?" onConfirm={() => handleCancel(selectedEvent.id)}>
-                                                        <Button danger icon={<CloseCircleOutlined />} size="large" style={{ borderRadius: '12px' }}>Cancel</Button>
-                                                    </Popconfirm>
-                                                )}
-                                            </>
-                                        ) : (
-                                            /* Hide Reserve Spot button if user is the organizer, show analytics link instead */
-                                            user?.id === selectedEvent.organizer?.id ? (
-                                                <Button
-                                                    type="primary"
-                                                    size="large"
-                                                    icon={<EyeOutlined />}
-                                                    onClick={() => router.push(`/events/${selectedEvent.id}`)}
-                                                    style={{ borderRadius: '12px', height: '50px', padding: '0 32px', fontWeight: 'bold', background: 'linear-gradient(135deg, #00d4aa 0%, #00b890 100%)', border: 'none' }}
-                                                >
-                                                    Full Analytics
-                                                </Button>
-                                            ) : (
-                                                new Date(parseInt(selectedEvent.date) || selectedEvent.date) >= now && (
-                                                    <Button
-                                                        type="primary"
-                                                        size="large"
-                                                        onClick={() => openBooking(selectedEvent)}
-                                                        style={{ borderRadius: '12px', height: '50px', padding: '0 36px', fontWeight: 'bold' }}
-                                                    >
-                                                        Reserve Spot
-                                                    </Button>
-                                                )
-                                            )
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Info grid */}
-                                <div className="modal-info-grid" style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'repeat(4, 1fr)',
-                                    gap: '16px',
-                                    marginBottom: '32px'
-                                }}>
-                                    {[
-                                        { label: 'Date & Time', value: new Date(parseInt(selectedEvent.date) || selectedEvent.date).toLocaleString(), icon: <CalendarOutlined /> },
-                                        { label: 'Venue', value: selectedEvent.location, icon: <EnvironmentOutlined /> },
-                                        { label: 'Capacity', value: `${selectedEvent.capacity} Guests`, icon: <TeamOutlined /> },
-                                        { label: 'Status', value: 'Active', icon: <CheckCircleOutlined /> }
-                                    ].map((item, i) => (
-                                        <div key={i} style={{
-                                            padding: '16px',
-                                            background: 'rgba(255,255,255,0.03)',
-                                            borderRadius: '14px',
-                                            border: '1px solid rgba(255,255,255,0.06)'
-                                        }}>
-                                            <div style={{ color: '#7c5cfc', marginBottom: '8px', fontSize: '1rem' }}>{item.icon}</div>
-                                            <div style={{ color: '#6b6b80', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>{item.label}</div>
-                                            <div style={{ color: '#f0f0f5', fontWeight: 600, fontSize: '0.9rem' }}>{item.value}</div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div>
-                                    <h3 style={{ fontWeight: '800', marginBottom: '12px', color: '#f0f0f5' }}>Description</h3>
-                                    <p style={{ fontSize: '1rem', lineHeight: '1.8', color: '#a0a0b8' }}>{selectedEvent.description}</p>
-                                </div>
-
-                                {/* ATTENDEE LIST FOR ORGANIZER */}
-                                {(user?.id === selectedEvent.organizer?.id || user?.role === 'ADMIN') && (
-                                    <div style={{ marginTop: '40px' }}>
-                                        <Divider />
-                                        <h3 style={{ fontWeight: '800', fontSize: '1.3rem', marginBottom: '20px', color: '#f0f0f5' }}>
-                                            <TeamOutlined /> Attendee List
-                                        </h3>
-                                        <Table
-                                            dataSource={selectedEvent.attendees}
-                                            pagination={{ pageSize: 5 }}
-                                            rowKey="id"
-                                            scroll={{ x: 600 }}
-                                            columns={[
-                                                {
-                                                    title: 'User',
-                                                    key: 'user',
-                                                    render: (_, record) => (
-                                                        <div>
-                                                            <div style={{ fontWeight: 'bold', color: '#f0f0f5' }}><UserOutlined /> {record.user.name}</div>
-                                                            <div style={{ fontSize: '0.85rem', color: '#6b6b80' }}><MailOutlined /> {record.user.email}</div>
-                                                        </div>
-                                                    )
-                                                },
-                                                {
-                                                    title: 'Ticket Type',
-                                                    dataIndex: 'ticketType',
-                                                    key: 'ticketType',
-                                                    render: (type) => <Tag color="purple">{type}</Tag>
-                                                },
-                                                {
-                                                    title: 'Quantity',
-                                                    dataIndex: 'quantity',
-                                                    key: 'quantity',
-                                                    align: 'center',
-                                                    render: (qty) => <span style={{ fontWeight: 'bold', color: '#f0f0f5' }}>{qty}</span>
-                                                },
-                                                {
-                                                    title: 'Total Amount',
-                                                    dataIndex: 'amountPaid',
-                                                    key: 'amountPaid',
-                                                    render: (amt) => <span style={{ fontWeight: '800', color: '#00d4aa' }}><DollarCircleOutlined /> ${amt}</span>
-                                                }
-                                            ]}
-                                        />
-                                    </div>
-                                )}
-
-                                {/* VENDOR LIST FOR ORGANIZER */}
-                                {(user?.id === selectedEvent.organizer?.id || user?.role === 'ADMIN') && selectedEvent.vendors?.length > 0 && (
-                                    <div style={{ marginTop: '40px' }}>
-                                        <Divider />
-                                        <h3 style={{ fontWeight: '800', fontSize: '1.3rem', marginBottom: '20px', color: '#f0f0f5' }}>
-                                            <ShopOutlined /> Assigned Vendors
-                                        </h3>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
-                                            {selectedEvent.vendors.map(v => (
-                                                <Card key={v.id} size="small" style={{
-                                                    borderRadius: '16px',
-                                                    border: '1px solid rgba(255,255,255,0.06)',
-                                                    background: 'rgba(255,255,255,0.03)'
-                                                }}>
-                                                    <div style={{ fontWeight: 'bold', fontSize: '1rem', color: '#f0f0f5' }}>{v.name}</div>
-                                                    <Tag color="blue" style={{ marginTop: '6px' }}>{v.category}</Tag>
-                                                    <div style={{ marginTop: '8px', color: '#00d4aa', fontWeight: 'bold' }}>${v.cost}</div>
-                                                    {v.contactInfo && <div style={{ fontSize: '0.85rem', color: '#6b6b80', marginTop: '4px' }}>{v.contactInfo}</div>}
-                                                </Card>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </Modal>
-
-                {/* TICKET SELECTION MODAL */}
-                <Modal
-                    title={<span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><WalletOutlined /> Select Your Tickets</span>}
-                    open={isBookingModalOpen}
-                    onCancel={() => setIsBookingModalOpen(false)}
-                    footer={[
-                        <Button key="back" onClick={() => setIsBookingModalOpen(false)}>Cancel</Button>,
-                        <Button key="submit" type="primary" loading={sessionLoading} onClick={handleCheckout} style={{ height: '40px', borderRadius: '10px' }}>
-                            Proceed to Secure Payment
-                        </Button>
-                    ]}
-                    centered
-                >
-                    {selectedEvent && (
-                        <div style={{ padding: '20px 0' }}>
-                            <div style={{ marginBottom: '24px' }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#a0a0b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Choose Ticket Tier</label>
-                                <Select style={{ width: '100%', height: '45px' }} value={bookingOptions.ticketType} onChange={(val) => setBookingOptions({ ...bookingOptions, ticketType: val })} options={selectedEvent.ticketTypes.map(t => ({ label: `${t.name} - $${t.price}`, value: t.name }))} />
-                            </div>
-                            <div style={{ marginBottom: '24px' }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#a0a0b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Quantity</label>
-                                <InputNumber min={1} max={10} style={{ width: '100%', height: '45px', lineHeight: '45px' }} value={bookingOptions.quantity} onChange={(val) => setBookingOptions({ ...bookingOptions, quantity: val })} />
-                            </div>
-                            <Divider />
-                            <div style={{
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                padding: '16px 20px',
-                                background: 'rgba(124, 92, 252, 0.06)',
-                                borderRadius: '14px',
-                                border: '1px solid rgba(124, 92, 252, 0.1)'
-                            }}>
-                                <span style={{ fontSize: '1rem', color: '#a0a0b8' }}>Estimated Total:</span>
-                                <span style={{ fontSize: '1.8rem', fontWeight: '900', background: 'linear-gradient(135deg, #7c5cfc, #00d4aa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                                    ${(selectedEvent.ticketTypes.find(t => t.name === bookingOptions.ticketType)?.price || 0) * bookingOptions.quantity}
-                                </span>
-                            </div>
-                        </div>
-                    )}
-                </Modal>
+                {/* Modals removed, user is now redirected directly to events/[id].js */}
 
                 {/* EDIT EVENT MODAL - COMPACT NATIVE UI */}
                 <Modal

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Layout, Menu, Button, Avatar, Space, Typography, ConfigProvider, theme, Drawer } from 'antd';
-import { 
-  AppstoreOutlined, 
-  GlobalOutlined, 
+import { Button, Avatar, Typography, ConfigProvider, theme, Drawer, Dropdown } from 'antd';
+import {
+  AppstoreOutlined,
+  GlobalOutlined,
   PlusCircleOutlined,
   UserOutlined,
   LogoutOutlined,
@@ -11,13 +11,14 @@ import {
   UserAddOutlined,
   ShopOutlined,
   ThunderboltOutlined,
-  MenuOutlined
+  MenuOutlined,
+  CalendarOutlined,
+  DollarCircleOutlined
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 
-const { Sider, Content } = Layout;
 const { Text: AntText } = Typography;
 
 export default function AppLayout({ children }) {
@@ -29,252 +30,225 @@ export default function AppLayout({ children }) {
   if (['/login', '/signup'].includes(router.pathname)) return <>{children}</>;
 
   const menuItems = [
-    { key: '/dashboard', icon: <AppstoreOutlined />, label: <Link href="/dashboard">Dashboard</Link> },
-    { key: '/browse', icon: <GlobalOutlined />, label: <Link href="/browse">Browse Events</Link> },
+    { key: '/dashboard', icon: <AppstoreOutlined />, label: 'Dashboard' },
+    ...(!user || (user.role !== 'ORGANIZER' && user.role !== 'ADMIN') ? [
+      { key: '/browse', icon: <GlobalOutlined />, label: 'Browse Events' }
+    ] : []),
     ...(user?.role === 'ORGANIZER' || user?.role === 'ADMIN' ? [
-      { key: '/events/create', icon: <PlusCircleOutlined />, label: <Link href="/events/create">Create Event</Link> },
-      { key: '/vendors', icon: <ShopOutlined />, label: <Link href="/vendors">Vendors</Link> }
+      { key: '/my-events', icon: <CalendarOutlined />, label: 'My Events' },
+      { key: '/transactions', icon: <DollarCircleOutlined />, label: 'Transactions' },
+      { key: '/events/create', icon: <PlusCircleOutlined />, label: 'Create Event' },
+      { key: '/vendors', icon: <ShopOutlined />, label: 'Vendors' }
     ] : [])
   ];
 
-  // Set the default selected key to handle the root path
   const selectedKey = router.pathname === '/' ? '/dashboard' : router.pathname;
 
-  return (
-    <ConfigProvider 
-      theme={{ 
-        algorithm: theme.darkAlgorithm,
-        token: { 
-          colorPrimary: '#7c5cfc', 
-          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-          borderRadius: 14,
-          colorBgContainer: '#16162b',
-          colorBgElevated: '#1a1a2e',
-          colorBorder: 'rgba(255, 255, 255, 0.08)',
-          colorText: '#f0f0f5',
-          colorTextSecondary: '#a0a0b8',
-          colorBgLayout: '#0a0a0f',
-          controlHeight: 40,
-          fontSize: 14,
-        } 
-      }}
-    >
-      <Layout style={{ minHeight: '100vh', display: 'flex', flexDirection: 'row', background: '#0a0a0f' }}>
-        <Sider 
-          breakpoint="lg" 
-          collapsedWidth="0"
-          theme="dark"
-          style={{ 
-            background: 'rgba(22, 22, 43, 0.85)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            borderRight: '1px solid rgba(255, 255, 255, 0.06)',
-            height: '100vh', 
-            position: 'sticky', 
-            top: 0, 
-            left: 0, 
-            zIndex: 999,
-            boxShadow: '4px 0 24px rgba(0, 0, 0, 0.3)'
+  const NavItem = ({ item, isMobile = false }) => {
+    const isActive = selectedKey === item.key || (selectedKey.startsWith(item.key) && item.key !== '/');
+    return (
+      <Link href={item.key} style={{ textDecoration: 'none', width: '100%' }} onClick={() => isMobile && setMobileMenuOpen(false)}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '14px',
+          padding: isMobile ? '16px 20px' : '14px 20px',
+          margin: '4px 0',
+          borderRadius: '12px',
+          background: isActive ? '#FFEBF9' : 'transparent',
+          color: isActive ? '#E845E4' : '#6B7280',
+          fontWeight: isActive ? 700 : 500,
+          fontSize: isMobile ? '1.1rem' : '1rem',
+          position: 'relative',
+          transition: 'all 0.2s',
+          cursor: 'pointer',
+        }}
+          onMouseOver={e => {
+            if (!isActive) {
+              e.currentTarget.style.color = '#111827';
+              e.currentTarget.style.background = '#F3F4F6';
+            }
+          }}
+          onMouseOut={e => {
+            if (!isActive) {
+              e.currentTarget.style.color = '#6B7280';
+              e.currentTarget.style.background = 'transparent';
+            }
           }}
         >
-          {/* Logo Section */}
-          <div style={{ 
-            height: '72px', 
-            padding: '0 24px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '10px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.06)'
-          }}>
-            <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #7c5cfc 0%, #00d4aa 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(124, 92, 252, 0.4)'
-            }}>
-              <ThunderboltOutlined style={{ color: 'white', fontSize: '18px' }} />
-            </div>
-            <Typography.Title level={4} style={{ 
-              margin: 0, 
-              background: 'linear-gradient(135deg, #7c5cfc 0%, #00d4aa 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+          {/* Active Left Border Indicator */}
+          {isActive && (
+            <div style={{ position: 'absolute', left: '-16px', top: '10%', height: '80%', width: '4px', background: '#E845E4', borderRadius: '0 4px 4px 0' }} />
+          )}
+          <span style={{ fontSize: isMobile ? '1.4rem' : '1.3rem', pointerEvents: 'none' }}>{item.icon}</span>
+          <span style={{ pointerEvents: 'none' }}>{item.label}</span>
+        </div>
+      </Link>
+    );
+  };
+
+  return (
+    <ConfigProvider
+      theme={{
+        algorithm: theme.defaultAlgorithm,
+        token: {
+          colorPrimary: '#E845E4',
+          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+          borderRadius: 12,
+          controlHeight: 44,
+          fontSize: 14,
+          colorBgContainer: '#FFFFFF',
+          colorText: '#1F2937',
+          colorTextSecondary: '#6B7280',
+          colorBorder: '#E5E7EB',
+        }
+      }}
+    >
+      <div style={{ minHeight: '100vh', background: 'var(--bg-color)', display: 'flex', position: 'relative' }}>
+
+        {/* ULTRA-PREMIUM FLOATING SIDEBAR (Desktop) */}
+        <aside className="desktop-only" style={{
+          width: '260px',
+          height: 'calc(100vh - 40px)',
+          position: 'sticky',
+          top: '20px',
+          marginLeft: '20px',
+          background: 'var(--bg-secondary)',
+          borderRadius: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          zIndex: 100,
+          border: '1px solid rgba(0,0,0,0.02)'
+        }}>
+          {/* Logo Space */}
+          <div style={{ padding: '32px 24px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img src="/logo.png" alt="EventHub Logo" style={{ width: '44px', height: '44px', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+            <h2 style={{
+              margin: 0,
+              color: 'var(--text-primary)',
               fontWeight: 800,
               letterSpacing: '-0.5px',
-              fontSize: '1.3rem'
-            }}>EventHub</Typography.Title>
+              fontSize: '1.5rem'
+            }}>
+              EventHub
+            </h2>
           </div>
-          
-          {/* Navigation */}
-          <Menu 
-            theme="dark" 
-            mode="inline" 
-            selectedKeys={[selectedKey]} 
-            items={menuItems} 
-            style={{ 
-              borderRight: 0, 
-              marginTop: '16px',
-              padding: '0 8px',
-              background: 'transparent' 
-            }}
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          
-          {/* User Section */}
-          <div style={{ 
-            position: 'absolute', 
-            bottom: 0, 
-            width: '100%', 
-            padding: '20px 16px', 
-            borderTop: '1px solid rgba(255, 255, 255, 0.06)', 
-            background: 'rgba(10, 10, 15, 0.5)',
-            backdropFilter: 'blur(10px)'
-          }}>
+
+          {/* Navigation Items */}
+          <nav style={{ padding: '0 16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {menuItems.map(item => <NavItem key={item.key} item={item} />)}
+          </nav>
+
+          {/* User Bottom Profile */}
+          <div style={{ padding: '24px', borderTop: '1px solid var(--glass-border)', background: 'var(--glass-bg)' }}>
             {user ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '12px', 
-                  padding: '10px 12px',
-                  background: 'rgba(124, 92, 252, 0.06)',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(124, 92, 252, 0.1)',
-                  marginBottom: '8px'
-                }}>
-                  <Avatar 
-                    style={{ 
-                      background: 'linear-gradient(135deg, #7c5cfc 0%, #00d4aa 100%)',
-                      boxShadow: '0 4px 12px rgba(124, 92, 252, 0.3)',
-                      flexShrink: 0
-                    }} 
-                    icon={<UserOutlined />} 
-                  />
-                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                     <AntText strong style={{ fontSize: '13px', maxWidth: '120px', color: '#f0f0f5' }} ellipsis>{user.name}</AntText>
-                     <AntText style={{ 
-                       fontSize: '10px', 
-                       textTransform: 'uppercase', 
-                       letterSpacing: '1px',
-                       color: '#7c5cfc',
-                       fontWeight: 700
-                     }}>{user.role}</AntText>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Avatar size={44} style={{ background: 'var(--gradient-main)' }} icon={<UserOutlined />} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>{user.role}</div>
                   </div>
                 </div>
-                <Button 
-                  type="default" 
-                  block 
-                  icon={<SettingOutlined />} 
-                  onClick={() => router.push('/profile')}
-                  style={{ 
-                    borderRadius: '10px', 
-                    border: '1px solid rgba(255,255,255,0.06)',
-                    background: 'rgba(255,255,255,0.03)',
-                    color: '#a0a0b8',
-                    height: '36px',
-                    fontSize: '13px'
-                  }}
-                >Manage Profile</Button>
-                <Button 
-                  danger 
-                  block 
-                  icon={<LogoutOutlined />} 
-                  onClick={logout}
-                  style={{ 
-                    borderRadius: '10px',
-                    height: '36px',
-                    fontSize: '13px'
-                  }}
-                >Logout</Button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <Button type="primary" ghost icon={<SettingOutlined />} onClick={() => router.push('/profile')} style={{ flex: 1, borderRadius: '12px', borderColor: 'var(--glass-border)', color: 'var(--text-primary)' }} />
+                  <Button danger type="primary" icon={<LogoutOutlined />} onClick={logout} style={{ flex: 1, borderRadius: '12px', background: 'rgba(255, 0, 110, 0.1)', color: '#ff006e', border: 'none' }} />
+                </div>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                 <Button 
-                   type="default" 
-                   block 
-                   icon={<LoginOutlined />} 
-                   onClick={() => router.push('/login')}
-                   style={{ borderRadius: '10px', height: '38px' }}
-                 >Login</Button>
-                 <Button 
-                   type="primary" 
-                   block 
-                   icon={<UserAddOutlined />} 
-                   onClick={() => router.push('/signup')}
-                   style={{ borderRadius: '10px', height: '38px' }}
-                 >Sign Up</Button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Button type="primary" block onClick={() => router.push('/signup')} style={{ borderRadius: '12px', fontWeight: 700, height: '44px' }}>Get Started</Button>
+                <Button type="text" block onClick={() => router.push('/login')} style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Log In</Button>
               </div>
             )}
           </div>
-        </Sider>
+        </aside>
 
+        {/* MOBILE TOPBAR */}
+        <header className="mobile-only" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, height: '70px',
+          background: 'var(--card-bg)', backdropFilter: 'blur(30px)',
+          borderBottom: '1px solid var(--glass-border)', zIndex: 1000,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '0 20px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img src="/logo.png" alt="EventHub Logo" style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '8px' }} />
+            <h2 style={{ margin: 0, color: 'var(--text-primary)', fontWeight: 900, fontSize: '1.4rem' }}>EventHub</h2>
+          </div>
+          <Button type="text" icon={<MenuOutlined style={{ fontSize: '24px', color: 'var(--text-primary)' }} />} onClick={() => setMobileMenuOpen(true)} />
+        </header>
+
+        {/* MOBILE DRAWER */}
         <Drawer
-          title={<div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><ThunderboltOutlined style={{ color: '#7c5cfc' }} /> EventHub</div>}
-          placement="left"
+          title={<div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><img src="/logo.png" alt="logo" style={{ width: '28px', borderRadius: '8px' }}/> <span style={{ fontWeight: 800 }}>EventHub</span></div>}
+          placement="right"
           onClose={() => setMobileMenuOpen(false)}
           open={mobileMenuOpen}
-          styles={{ 
-            body: { padding: 0, display: 'flex', flexDirection: 'column', background: '#0a0a0f' },
-            header: { background: '#1a1a2e', borderBottom: '1px solid rgba(255,255,255,0.06)' }
+          styles={{
+            body: { padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--bg-color)' },
+            header: { background: 'var(--bg-secondary)', borderBottom: '1px solid var(--glass-border)' }
           }}
-          width={280}
+          size="default"
         >
-          <Menu 
-            theme="dark" 
-            mode="inline" 
-            selectedKeys={[selectedKey]} 
-            items={menuItems} 
-            style={{ borderRight: 0, background: 'transparent', padding: '16px 8px', flex: 1 }}
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          <div style={{ padding: '20px 16px', borderTop: '1px solid rgba(255, 255, 255, 0.06)', background: 'rgba(22, 22, 43, 0.85)' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {menuItems.map(item => <NavItem key={item.key} item={item} isMobile={true} />)}
+          </div>
+
+          <div style={{ padding: '24px 0 0 0', borderTop: '1px solid var(--glass-border)' }}>
             {user ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <Button block onClick={() => { setMobileMenuOpen(false); router.push('/profile'); }}>Profile</Button>
-                <Button danger block onClick={() => { setMobileMenuOpen(false); logout(); }}>Logout</Button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <Avatar size={48} style={{ background: 'var(--gradient-main)' }} icon={<UserOutlined />} />
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--text-primary)' }}>{user.name}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{user.role}</div>
+                  </div>
+                </div>
+                <Button size="large" block icon={<SettingOutlined />} onClick={() => { setMobileMenuOpen(false); router.push('/profile'); }} style={{ borderRadius: '14px', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>Profile Settings</Button>
+                <Button size="large" danger block icon={<LogoutOutlined />} onClick={() => { setMobileMenuOpen(false); logout(); }} style={{ borderRadius: '14px', background: 'rgba(255, 0, 110, 0.1)', color: '#ff006e', border: 'none' }}>Logout</Button>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <Button block onClick={() => { setMobileMenuOpen(false); router.push('/login'); }}>Login</Button>
-                <Button type="primary" block onClick={() => { setMobileMenuOpen(false); router.push('/signup'); }}>Sign Up</Button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <Button size="large" block icon={<LoginOutlined />} onClick={() => { setMobileMenuOpen(false); router.push('/login'); }} style={{ borderRadius: '14px', border: '1px solid var(--glass-border)', background: 'transparent', color: 'var(--text-primary)' }}>Login</Button>
+                <Button size="large" type="primary" block icon={<UserAddOutlined />} onClick={() => { setMobileMenuOpen(false); router.push('/signup'); }} style={{ borderRadius: '14px' }}>Sign Up</Button>
               </div>
             )}
           </div>
         </Drawer>
 
-        <Layout style={{ background: '#0a0a0f', width: '100%' }}>
-          {/* Mobile Header */}
-          <div className="mobile-only-header" style={{
-            display: 'none',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '16px 24px',
-            background: 'rgba(22, 22, 43, 0.85)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-            position: 'sticky',
-            top: 0,
-            zIndex: 99
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <ThunderboltOutlined style={{ color: '#7c5cfc', fontSize: '20px' }} />
-              <Typography.Title level={4} style={{ margin: 0, color: '#f0f0f5' }}>EventHub</Typography.Title>
-            </div>
-            <Button
-              type="text"
-              icon={<MenuOutlined style={{ fontSize: '20px', color: '#f0f0f5' }} />}
-              onClick={() => setMobileMenuOpen(true)}
-            />
-          </div>
+        {/* MAIN CONTENT AREA */}
+        <main className="page-content block-reveal" style={{
+          flex: 1,
+          padding: '24px 40px',
+          maxWidth: '100%',
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          {/* Mobile spacer */}
+          <div className="mobile-only" style={{ height: '70px', flexShrink: 0 }} />
+          {children}
+        </main>
+      </div>
 
-          <Content className="page-content" style={{ margin: '24px', overflow: 'initial' }}>
-            {children}
-          </Content>
-        </Layout>
-      </Layout>
+      <style jsx global>{`
+        /* Media Queries for Layout Responsiveness */
+        .desktop-only { display: flex !important; }
+        .mobile-only { display: none !important; }
+        
+        @media (max-width: 992px) {
+          .desktop-only { display: none !important; }
+          .mobile-only { display: flex !important; }
+          .page-content { padding: 24px !important; }
+        }
+        
+        /* Reveal Animation for Main Content */
+        .block-reveal {
+          animation: fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+      `}</style>
     </ConfigProvider>
   );
 }

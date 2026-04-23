@@ -4,6 +4,7 @@ const authService = require('../modules/auth/authService');
 const eventService = require('../modules/events/eventService');
 const bookingService = require('../modules/bookings/bookingService');
 const Vendor = require('../models/Vendor');
+const notificationService = require('../modules/notifications/notificationService');
 
 const stripeService = require('../modules/payments/stripeService');
 const analyticsService = require('../modules/analytics/analyticsService');
@@ -25,7 +26,9 @@ const resolvers = {
       return await Vendor.find({ organizer: user.id });
     },
     vendor: (_, { id }) => Vendor.findById(id),
-    myAnalytics: (_, __, { user }) => analyticsService.getOrganizerAnalytics(user)
+    myAnalytics: (_, __, { user }) => analyticsService.getOrganizerAnalytics(user),
+    myNotifications: (_, __, { user }) => notificationService.getNotifications(user),
+    unreadNotificationCount: (_, __, { user }) => notificationService.getUnreadCount(user)
   },
   Mutation: {
     register: (_, args) => authService.register(args),
@@ -89,7 +92,9 @@ const resolvers = {
     verifyTicket: (_, { bookingId }, { user }) => {
       if (!user) throw new GraphQLError('Unauthorized');
       return bookingService.verifyTicket(bookingId);
-    }
+    },
+    markNotificationAsRead: (_, { id }, { user }) => notificationService.markAsRead(id, user),
+    markAllNotificationsAsRead: (_, __, { user }) => notificationService.markAllAsRead(user)
   },
   Vendor: {
     organizer: (parent, _, { loaders }) => {
@@ -144,6 +149,20 @@ const resolvers = {
         return null; // fallback gracefully if qrcode fails
       }
     }
+  },
+  Notification: {
+    recipient: (parent, _, { loaders }) => {
+      const id = parent.recipient?._id ? parent.recipient._id.toString() : parent.recipient?.toString();
+      return id ? loaders.userLoader.load(id) : null;
+    },
+    booking: (parent, _, { loaders }) => {
+      const id = parent.booking?._id ? parent.booking._id.toString() : parent.booking?.toString();
+      return id ? loaders.bookingLoader.load(id) : null;
+    },
+    event: (parent, _, { loaders }) => {
+      const id = parent.event?._id ? parent.event._id.toString() : parent.event?.toString();
+      return id ? loaders.eventLoader.load(id) : null;
+    },
   }
 };
 module.exports = resolvers;
