@@ -194,19 +194,36 @@ export default function Browse() {
                                 }} />
 
                                 <div style={{ position: 'absolute', top: '16px', left: '16px', display: 'flex', gap: '8px' }}>
-                                    <Tag color="blue" style={{ borderRadius: '8px', fontWeight: 700, margin: 0, backdropFilter: 'blur(10px)', background: 'rgba(0, 113, 255, 0.8)', border: 'none' }}>
+                                    <div style={{ 
+                                        borderRadius: '8px', 
+                                        fontWeight: '900', 
+                                        margin: 0, 
+                                        backdropFilter: 'blur(10px)', 
+                                        background: 'rgba(14, 165, 233, 0.95)', 
+                                        color: 'white',
+                                        padding: '5px 12px',
+                                        fontSize: '0.75rem',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px',
+                                        lineHeight: 1,
+                                        boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
                                         {e.eventType || 'Public'}
-                                    </Tag>
+                                    </div>
                                 </div>
 
                                 {isBooked && (
                                     <div style={{
                                         position: 'absolute', top: '16px', right: '16px',
-                                        background: 'rgba(0, 212, 170, 0.2)', backdropFilter: 'blur(10px)', border: '1px solid rgba(0, 212, 170, 0.4)', color: '#00d4aa',
-                                        padding: '6px 14px', borderRadius: '100px', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px',
-                                        display: 'flex', alignItems: 'center', gap: '5px'
+                                        background: 'rgba(16, 185, 129, 0.9)', backdropFilter: 'blur(10px)', color: 'white',
+                                        padding: '6px 16px', borderRadius: '100px', fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px',
+                                        display: 'flex', alignItems: 'center', gap: '6px',
+                                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
                                     }}>
-                                        <CheckCircleOutlined /> Booked
+                                        <CheckCircleOutlined style={{ fontSize: '0.9rem' }} /> Booked
                                     </div>
                                 )}
                             </div>
@@ -227,7 +244,7 @@ export default function Browse() {
 
                                 <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
                                     <span style={{ color: 'var(--primary-color)', fontWeight: 800, fontSize: '1.1rem' }}>
-                                        {e.ticketTypes?.[0] ? `From $${Math.min(...e.ticketTypes.map(t => t.price))}` : 'Free'}
+                                        {e.ticketTypes?.[0] ? `From $${Math.min(...e.ticketTypes.map(t => t.price)).toLocaleString()}` : 'Free'}
                                     </span>
 
                                     {isOwner ? (

@@ -3,7 +3,7 @@ import { gql } from '@apollo/client';
 export const GET_ME = gql`
   query GetMe {
     me {
-      id name email role createdAt loyaltyPoints rating
+      id name email role createdAt loyaltyPoints rating redeemedRewards
     }
   }
 `;
@@ -65,7 +65,7 @@ export const GET_MY_BOOKINGS = gql`
   query GetMyBookings {
     myBookings {
       id status qrCode ticketType amountPaid quantity createdAt
-      event { id title date location capacity imageUrl description organizer { name } }
+      event { id title date location capacity imageUrl description eventType organizer { name } }
     }
   }
 `;
@@ -177,5 +177,12 @@ export const MARK_NOTIFICATION_AS_READ = gql`
 export const MARK_ALL_NOTIFICATIONS_AS_READ = gql`
   mutation MarkAllNotificationsAsRead {
     markAllNotificationsAsRead
+  }
+`;
+export const REDEEM_REWARD = gql`
+  mutation RedeemReward($rewardId: String!, $points: Int!) {
+    redeemReward(rewardId: $rewardId, points: $points) {
+      id loyaltyPoints redeemedRewards
+    }
   }
 `;

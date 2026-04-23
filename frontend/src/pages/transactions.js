@@ -75,7 +75,14 @@ export default function Transactions() {
       title: 'Amount',
       dataIndex: 'amountPaid',
       key: 'amountPaid',
-      render: (amt) => <span style={{ fontWeight: 800, color: '#10B981' }}>${amt}</span>
+      render: (amt, record) => (
+        <span style={{ 
+          fontWeight: 800, 
+          color: record.status === 'CANCELLED' ? '#EF4444' : '#10B981' 
+        }}>
+          ${Number(amt).toLocaleString()}
+        </span>
+      )
     },
     {
       title: 'Date',

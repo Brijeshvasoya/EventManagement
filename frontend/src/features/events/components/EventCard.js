@@ -152,7 +152,7 @@ const EventCard = React.memo(({ event, onBook, onDelete, onUpdate }) => {
              <Select size="large">
                {ticketTypes.map(t => (
                  <Select.Option key={t.name} value={t.name}>
-                   {t.name} - ${t.price}
+                   {t.name} - ${Number(t.price).toLocaleString()}
                  </Select.Option>
                ))}
              </Select>
@@ -167,7 +167,7 @@ const EventCard = React.memo(({ event, onBook, onDelete, onUpdate }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <span style={{ fontSize: '1.1rem', fontWeight: 600 }}>Total Amount:</span>
             <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4F46E5' }}>
-                ${((currentTicket?.price || 0) * selectedQuantity).toFixed(2)}
+                ${((currentTicket?.price || 0) * selectedQuantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
 

@@ -134,7 +134,7 @@ export default function EventDetailsPage() {
       title: 'Paid',
       dataIndex: 'amountPaid',
       key: 'amountPaid',
-      render: (amt) => <AntText strong style={{ color: 'var(--secondary-color)' }}>${amt}</AntText>
+      render: (amt) => <AntText strong style={{ color: 'var(--secondary-color)' }}>${Number(amt).toLocaleString()}</AntText>
     },
     {
       title: 'Booked On',
@@ -161,7 +161,7 @@ export default function EventDetailsPage() {
       title: 'Cost',
       dataIndex: 'cost',
       key: 'cost',
-      render: (amt) => <AntText strong style={{ color: 'var(--primary-color)' }}>${amt}</AntText>
+      render: (amt) => <AntText strong style={{ color: 'var(--primary-color)' }}>${Number(amt).toLocaleString()}</AntText>
     },
     {
       title: 'Contact',
@@ -193,7 +193,7 @@ export default function EventDetailsPage() {
         email: a.user.email,
         ticket: a.ticketType,
         qty: a.quantity,
-        paid: `$${a.amountPaid}`,
+        paid: `$${Number(a.amountPaid).toLocaleString()}`,
         status: a.status,
         date: dayjs(parseInt(a.createdAt) || a.createdAt).format('YYYY-MM-DD HH:mm')
       });
@@ -284,7 +284,7 @@ export default function EventDetailsPage() {
                   style={{ width: '100%', height: '45px' }}
                   value={bookingOptions.ticketType || event.ticketTypes?.[0]?.name}
                   onChange={(val) => setBookingOptions({ ...bookingOptions, ticketType: val })}
-                  options={event.ticketTypes?.map(t => ({ label: `${t.name} - $${t.price}`, value: t.name }))}
+                  options={event.ticketTypes?.map(t => ({ label: `${t.name} - $${Number(t.price).toLocaleString()}`, value: t.name }))}
                 />
               </div>
               <div style={{ marginBottom: '24px' }}>
@@ -307,7 +307,7 @@ export default function EventDetailsPage() {
               }}>
                 <span style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>Estimated Total:</span>
                 <span style={{ fontSize: '1.8rem', fontWeight: '900', background: 'var(--gradient-main)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                  ${(event.ticketTypes?.find(t => t.name === (bookingOptions.ticketType || event.ticketTypes?.[0]?.name))?.price || 0) * bookingOptions.quantity}
+                  ${((event.ticketTypes?.find(t => t.name === (bookingOptions.ticketType || event.ticketTypes?.[0]?.name))?.price || 0) * bookingOptions.quantity).toLocaleString()}
                 </span>
               </div>
 

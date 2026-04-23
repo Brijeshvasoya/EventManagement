@@ -94,7 +94,28 @@ const resolvers = {
       return bookingService.verifyTicket(bookingId);
     },
     markNotificationAsRead: (_, { id }, { user }) => notificationService.markAsRead(id, user),
-    markAllNotificationsAsRead: (_, __, { user }) => notificationService.markAllAsRead(user)
+    markAllNotificationsAsRead: (_, __, { user }) => notificationService.markAllAsRead(user),
+    redeemReward: async (_, { rewardId, points }, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      const User = require('../models/User');
+      const fullUser = await User.findById(user.id);
+      if (!fullUser) throw new GraphQLError('User not found');
+      if (fullUser.loyaltyPoints < points) throw new GraphQLError('Not enough loyalty points');
+      
+      fullUser.loyaltyPoints -= points;
+      if (!fullUser.redeemedRewards) fullUser.redeemedRewards = [];
+      fullUser.redeemedRewards.push(rewardId);
+      await fullUser.save();
+
+      // Create a notification for the user
+      await notificationService.createNotification({
+        recipient: user.id,
+        message: `Congratulations! You have redeemed "${rewardId}". Check your email for details.`,
+        type: 'REWARD_REDEEMED'
+      });
+
+      return fullUser;
+    }
   },
   Vendor: {
     organizer: (parent, _, { loaders }) => {
@@ -166,12 +187,8 @@ const resolvers = {
   },
   User: {
     createdAt: (parent) => parent.createdAt ? (typeof parent.createdAt === 'string' ? parent.createdAt : parent.createdAt.toISOString()) : null,
-    loyaltyPoints: async (parent) => {
-      if (parent.role !== 'USER') return null;
-      const Booking = require('../models/Booking');
-      const count = await Booking.countDocuments({ user: parent.id || parent._id, status: 'CONFIRMED' });
-      return count * 10;
-    },
+    loyaltyPoints: (parent) => parent.loyaltyPoints || 0,
+    redeemedRewards: (parent) => parent.redeemedRewards || [],
     rating: async (parent) => {
       if (parent.role !== 'ORGANIZER') return null;
       // Future: Calculate based on event reviews

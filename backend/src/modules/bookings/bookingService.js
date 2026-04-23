@@ -48,6 +48,11 @@ const bookingService = {
       });
     }
 
+    // Increment Loyalty Points (100 pts per booking)
+    if (isNewBooking || booking.status === 'CONFIRMED') {
+      await User.findByIdAndUpdate(user.id, { $inc: { loyaltyPoints: 100 } });
+    }
+
     // Notify Organizer
     if (event.organizer) {
       try {
@@ -129,6 +134,10 @@ const bookingService = {
 
     booking.status = 'CANCELLED';
     await booking.save();
+
+    // Deduct Loyalty Points on cancellation
+    await User.findByIdAndUpdate(user.id, { $inc: { loyaltyPoints: -100 } });
+
     return true;
   },
 

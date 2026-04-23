@@ -195,7 +195,23 @@ export default function MyEvents() {
                 <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                     <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.2rem', lineHeight: 1.3 }}>{event.title}</h3>
-                    <Tag color="cyan" style={{ border: 'none', borderRadius: '8px', fontWeight: 700, margin: 0 }}>{event.eventType}</Tag>
+                    <div style={{ 
+                      borderRadius: '6px', 
+                      fontWeight: '900', 
+                      padding: '5px 12px', 
+                      background: 'rgba(67, 56, 202, 0.95)', 
+                      color: 'white',
+                      fontSize: '0.75rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                      lineHeight: 1,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 4px 10px rgba(67, 56, 202, 0.15)'
+                    }}>
+                      {event.eventType}
+                    </div>
                   </div>
                   <p style={{ color: '#6B7280', margin: '0 0 16px 0', fontSize: '0.9rem', flex: 1 }}>{dayjs(parseInt(event.date) || event.date).format('MMM D, YYYY')}</p>
                   

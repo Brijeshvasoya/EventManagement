@@ -1,5 +1,5 @@
 const typeDefs = `#graphql
-  type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int rating: Float }
+  type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int rating: Float redeemedRewards: [String] }
   type TicketType { name: String! price: Float! capacity: Int! }
   type Event { id: ID! title: String! description: String! date: String! location: String! capacity: Int! imageUrl: String organizer: User! isBooked: Boolean eventType: String status: String ticketTypes: [TicketType] bookedCount: Int attendees: [Booking!] vendors: [Vendor!] }
   type Booking { id: ID! event: Event! user: User! status: String! createdAt: String! qrCode: String ticketType: String amountPaid: Float quantity: Int paymentStatus: String }
@@ -43,6 +43,7 @@ const typeDefs = `#graphql
     verifyTicket(bookingId: ID!): Booking!
     markNotificationAsRead(id: ID!): Notification!
     markAllNotificationsAsRead: Boolean!
+    redeemReward(rewardId: String!, points: Int!): User!
   }
 `;
 module.exports = typeDefs;
