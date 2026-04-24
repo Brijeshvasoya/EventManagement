@@ -291,7 +291,7 @@ const bookingService = {
   getPublicBookingForFeedback: async (bookingId) => {
     const booking = await Booking.findById(bookingId).populate('event');
     if (!booking) throw new Error('Booking not found');
-    if (booking.status !== 'CHECKED_IN') throw new Error(`Feedback not allowed. Current booking status: ${booking.status}`);
+    if (booking.status !== 'CHECKED_IN') throw new Error("You can submit feedback only after you have checked in to the event.");
 
     // Populate organizer name for display
     const Event = require('../../models/Event'); // ensure populated

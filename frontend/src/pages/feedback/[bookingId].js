@@ -34,7 +34,7 @@ export default function FeedbackPage() {
   const { bookingId } = router.query;
   const [success, setSuccess] = useState(false);
 
-  const { data, loading: querying } = useQuery(GET_BOOKING_DETAILS, {
+  const { data, loading: querying, error } = useQuery(GET_BOOKING_DETAILS, {
     variables: { id: bookingId },
     skip: !bookingId,
   });
@@ -42,6 +42,10 @@ export default function FeedbackPage() {
   const [submitFeedback, { loading: submitting }] = useMutation(SUBMIT_FEEDBACK);
 
   const booking = data?.feedbackInfo;
+
+  if (error) {
+    toast.error(error.message);
+  }
 
   const onFinish = async (values) => {
     try {
