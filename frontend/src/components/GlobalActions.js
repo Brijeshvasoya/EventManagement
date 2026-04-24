@@ -24,13 +24,24 @@ export function GlobalActionsProvider({ children }) {
 
   const unreadCount = notificationData?.myNotifications?.filter(n => !n.read).length || 0;
 
-  useQuery(GET_ME, {
+  const { data: meData } = useQuery(GET_ME, {
     skip: !user,
     fetchPolicy: 'cache-and-network',
-    onCompleted: (data) => {
-      if (data.me && data.me.name !== user?.name) setUser({ ...user, ...data.me });
-    }
+    pollInterval: 60000 // Refresh user data every minute
   });
+
+  useEffect(() => {
+    if (meData?.me) {
+      const needsUpdate = 
+        meData.me.name !== user?.name || 
+        meData.me.loyaltyPoints !== user?.loyaltyPoints ||
+        meData.me.redeemedRewards?.length !== user?.redeemedRewards?.length;
+        
+      if (needsUpdate) {
+        setUser({ ...user, ...meData.me });
+      }
+    }
+  }, [meData, user, setUser]);
 
   const [updateProfile, { loading: updating }] = useMutation(UPDATE_PROFILE);
   const [markRead] = useMutation(MARK_NOTIFICATION_AS_READ);
