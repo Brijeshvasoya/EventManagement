@@ -146,3 +146,47 @@ View your ticket: ${ticketUrl}
     }
   }
 };
+
+exports.sendPasswordResetEmail = async (email, name, token) => {
+  const recipient = (process.env.RESEND_TEST_RECIPIENT || email).trim();
+  const FROM_EMAIL = (process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev').trim();
+  const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const resetUrl = `${FRONTEND_URL}/reset-password/${token}`;
+
+  try {
+    const emailOptions = {
+      from: FROM_EMAIL,
+      to: recipient,
+      subject: 'Password Reset Request 🔐',
+      text: `Hi ${name},\n\nYou requested a password reset. Please click on the link below to reset your password:\n\n${resetUrl}\n\nIf you didn't request this, please ignore this email. This link will expire in 1 hour.`,
+      html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%); padding: 40px; color: white; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px;">🔐 Reset Your Password</h1>
+            <p style="opacity: 0.85;">Securely reset your password below.</p>
+          </div>
+          <div style="padding: 30px; background: white;">
+            <p>Hi <strong>${name}</strong>,</p>
+            <p>We received a request to reset your password. Click the button below to proceed:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetUrl}" style="background: #4338ca; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Reset Password</a>
+            </div>
+            <p style="font-size: 14px; color: #64748b;">If you didn't request this, please ignore this email. This link will expire in 1 hour.</p>
+            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
+            <p style="font-size: 12px; color: #94a3b8; word-break: break-all;">
+              If the button doesn't work, copy and paste this URL into your browser: <br>
+              ${resetUrl}
+            </p>
+          </div>
+          <div style="padding: 20px; background: #f1f5f9; text-align: center; font-size: 12px; color: #94a3b8;">
+            © 2026 EventHub SaaS. All rights reserved.
+          </div>
+        </div>
+      `,
+    };
+
+    await resend.emails.send(emailOptions);
+  } catch (error) {
+    console.error(`❌ RESET EMAIL ERROR: Failed to send to ${recipient}`, error);
+  }
+};

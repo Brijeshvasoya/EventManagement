@@ -125,12 +125,12 @@ export default function Signup() {
           </div>
 
           {/* Testimonial Card */}
-          <div style={{ 
-            background: 'rgba(255, 255, 255, 0.9)', 
-            backdropFilter: 'blur(10px)', 
-            padding: '32px', 
-            borderRadius: '24px', 
-            border: '1px solid rgba(67, 56, 202, 0.1)', 
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(10px)',
+            padding: '32px',
+            borderRadius: '24px',
+            border: '1px solid rgba(67, 56, 202, 0.1)',
             maxWidth: '660px',
             animation: 'fadeInUp 1s ease-out 0.8s both',
             boxShadow: '0 10px 30px rgba(0,0,0,0.03)'
@@ -151,7 +151,7 @@ export default function Signup() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <div style={{ display: 'flex', marginRight: '8px' }}>
-                  {[ '#8B5CF6', '#06B6D4', '#EC4899', '#F59E0B', '#10B981' ].map((c, i) => (
+                  {['#8B5CF6', '#06B6D4', '#EC4899', '#F59E0B', '#10B981'].map((c, i) => (
                     <div key={i} style={{ width: '28px', height: '28px', borderRadius: '50%', background: c, border: '2px solid white', marginLeft: i === 0 ? 0 : '-10px' }}></div>
                   ))}
                 </div>

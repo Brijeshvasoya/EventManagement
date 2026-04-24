@@ -44,6 +44,8 @@ const typeDefs = `#graphql
     markNotificationAsRead(id: ID!): Notification!
     markAllNotificationsAsRead: Boolean!
     redeemReward(rewardId: String!, points: Int!): User!
+    forgotPassword(email: String!): Boolean!
+    resetPassword(token: String!, password: String!): Boolean!
   }
 
   type Subscription {

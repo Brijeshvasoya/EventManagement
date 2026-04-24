@@ -115,7 +115,9 @@ const resolvers = {
       });
 
       return fullUser;
-    }
+    },
+    forgotPassword: (_, { email }) => authService.forgotPassword(email),
+    resetPassword: (_, { token, password }) => authService.resetPassword(token, password),
   },
   Vendor: {
     organizer: (parent, _, { loaders }) => {

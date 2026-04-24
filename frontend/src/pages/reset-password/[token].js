@@ -2,32 +2,34 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
-import { useAuth } from '@/context/AuthContext';
-import Link from 'next/link';
+import Link from 'next/head';
 import Head from 'next/head';
 import toast from 'react-hot-toast';
 import { Form, Input, Button, Typography, ConfigProvider } from 'antd';
-import { MailOutlined, LockOutlined, ThunderboltOutlined, BarChartOutlined, GlobalOutlined, CustomerServiceOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import { LockOutlined, SaveOutlined, CheckCircleOutlined, ThunderboltOutlined, BarChartOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import NextLink from 'next/link';
 
-const { Text: AntText } = Typography;
-
-const LOGIN_MUTATION = gql`
-  mutation Login($email: String!, $password: String!) {
-    login(email: $email, password: $password) { token }
+const RESET_PASSWORD_MUTATION = gql`
+  mutation ResetPassword($token: String!, $password: String!) {
+    resetPassword(token: $token, password: $password)
   }
 `;
 
-export default function Login() {
-  const { login } = useAuth();
-  const [loginM, { loading }] = useMutation(LOGIN_MUTATION);
+export default function ResetPassword() {
   const router = useRouter();
-  const { returnUrl } = router.query;
+  const { token } = router.query;
+  const [resetPasswordM, { loading }] = useMutation(RESET_PASSWORD_MUTATION);
+  const [success, setSuccess] = useState(false);
 
   const onFinish = async (values) => {
+    if (!token) {
+      toast.error('Invalid link');
+      return;
+    }
     try {
-      const { data } = await loginM({ variables: values });
-      toast.success('Welcome back! ✨');
-      login(data.login.token, returnUrl || '/dashboard');
+      await resetPasswordM({ variables: { token, password: values.password } });
+      setSuccess(true);
+      toast.success('Password updated successfully! 🔐');
     } catch (err) {
       toast.error(err.message);
     }
@@ -45,7 +47,7 @@ export default function Login() {
       }}
     >
       <Head>
-        <title>Sign In | EventHub</title>
+        <title>Reset Password | EventHub</title>
       </Head>
       <div style={{
         height: '100vh',
@@ -58,20 +60,16 @@ export default function Login() {
         left: 0,
         fontFamily: "'Inter', sans-serif"
       }}>
-        {/* RE-ADDED: Round Type Glass Circles Animation */}
+        {/* Animated Background Elements */}
         <div className="glass-orb o1"></div>
         <div className="glass-orb o2"></div>
         <div className="glass-orb o3"></div>
-
-        {/* Decorative Spinning Circles */}
         <div className="spinning-circle sc1"></div>
         <div className="spinning-circle sc2"></div>
-
-        {/* Orbiting Glow Lights */}
         <div className="glow-light g1"></div>
         <div className="glow-light g2"></div>
 
-        {/* Floating Event Elements Animation */}
+        {/* Floating Event Elements */}
         <div className="event-item e1">🎫</div>
         <div className="event-item e2">🎉</div>
         <div className="event-item e3">📅</div>
@@ -100,19 +98,19 @@ export default function Login() {
               <div className="pulse-ring"></div>
             </div>
             <h1 style={{ fontSize: '4.5rem', fontWeight: 900, color: '#312E81', margin: 0, letterSpacing: '-2px' }}>
-              <span className="text-reveal">Welcome </span>{" "}
-              <span className="text-reveal" style={{ animationDelay: '0.2s' }}>back</span>
+              <span className="text-reveal">New </span>{" "}
+              <span className="text-reveal" style={{ animationDelay: '0.2s' }}>Security</span>
             </h1>
           </div>
 
           <p style={{ fontSize: '1.2rem', color: '#64748B', maxWidth: '500px', marginBottom: '60px', lineHeight: 1.6, animation: 'fadeInUp 1s ease-out 0.4s both' }}>
-            Access your events dashboard and monitor your global impact in real-time.
+            Finalize your account recovery by setting a strong, new password.
           </p>
 
           <div className="grid-cols-2" style={{ gap: '20px', maxWidth: '700px', marginBottom: '48px' }}>
             {[
-              { icon: <ThunderboltOutlined />, title: 'Smart Sync', desc: 'Real-time booking' },
-              { icon: <BarChartOutlined />, title: 'Insight Pro', desc: 'Growth analytics' }
+              { icon: <LockOutlined />, title: 'Smart Guard', desc: 'Secure encryption' },
+              { icon: <SaveOutlined />, title: 'Pro Protection', desc: 'Active monitoring' }
             ].map((item, i) => (
               <div key={i} className="feature-card" style={{ display: 'flex', gap: '16px', alignItems: 'center', background: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(10px)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(67, 56, 202, 0.1)', animation: `fadeInRight 0.8s ease-out ${0.5 + (i * 0.1)}s both` }}>
                 <div style={{ fontSize: '1.5rem', color: 'rgb(67, 56, 202)' }}>{item.icon}</div>
@@ -133,10 +131,10 @@ export default function Login() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {[
-                'https://i.pravatar.cc/100?u=1',
-                'https://i.pravatar.cc/100?u=2',
-                'https://i.pravatar.cc/100?u=12',
-                'https://i.pravatar.cc/100?u=4'
+                'https://i.pravatar.cc/100?u=5',
+                'https://i.pravatar.cc/100?u=6',
+                'https://i.pravatar.cc/100?u=7',
+                'https://i.pravatar.cc/100?u=8'
               ].map((url, i) => (
                 <div key={i} style={{
                   width: '40px',
@@ -156,7 +154,7 @@ export default function Login() {
                 {"★ ★ ★ ★ ★"}
               </div>
               <div style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: 500 }}>
-                <span style={{ color: '#1B2A4E', fontWeight: 700 }}>4.9 / 5</span> from 2,400+ reviews
+                <span style={{ color: '#1B2A4E', fontWeight: 700 }}>99.9%</span> Success Rate
               </div>
             </div>
           </div>
@@ -164,7 +162,7 @@ export default function Login() {
 
         {/* Right Side: Card */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-
+          
           <div className="rotating-square" style={{
             position: 'absolute',
             width: '500px',
@@ -187,38 +185,89 @@ export default function Login() {
             zIndex: 2,
             animation: 'scaleUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)'
           }}>
-            <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-              <div className="logo-hover" style={{ width: '56px', height: '56px', background: 'white', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', position: 'relative', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-                <img src="/logo.png" alt="Icon" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
-                <div className="spinner-ring"></div>
-              </div>
-              <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: 600 }}>Authorize to access your ecosystem.</p>
-            </div>
+            {!success ? (
+              <>
+                <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                  <div className="logo-hover" style={{ width: '56px', height: '56px', background: 'white', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', position: 'relative', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                    <LockOutlined style={{ fontSize: '24px', color: 'rgb(67, 56, 202)' }} />
+                    <div className="spinner-ring"></div>
+                  </div>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1B2A4E', marginBottom: '8px' }}>Reset Password</h2>
+                  <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: 600 }}>Enter your new secure password.</p>
+                </div>
 
-            <Form layout="vertical" onFinish={onFinish} size="large" requiredMark={false}>
-              <Form.Item label={<span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#94A3B8' }}>EMAIL ADDRESS</span>} name="email" rules={[{ required: true, message: 'Required' }, { type: 'email' }]}>
-                <Input prefix={<MailOutlined style={{ color: '#94A3B8', marginRight: '10px' }} />} placeholder="Enter your email" className="focus-glow" style={{ background: 'white', border: '1px solid #EDEDED', borderRadius: '10px' }} />
-              </Form.Item>
+                <Form layout="vertical" onFinish={onFinish} size="large" requiredMark={false}>
+                  <Form.Item 
+                    label={<span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#94A3B8' }}>NEW PASSWORD</span>} 
+                    name="password" 
+                    rules={[{ required: true, message: 'Required' }, { min: 6, message: 'Min 6 characters' }]}
+                  >
+                    <Input.Password 
+                      prefix={<LockOutlined style={{ color: '#94A3B8', marginRight: '10px' }} />} 
+                      placeholder="••••••••" 
+                      className="focus-glow" 
+                      style={{ background: 'white', border: '1px solid #EDEDED', borderRadius: '10px' }} 
+                    />
+                  </Form.Item>
 
-              <Form.Item label={<span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#94A3B8' }}>PASSWORD</span>} name="password" rules={[{ required: true, message: 'Required' }]}>
-                <Input.Password prefix={<LockOutlined style={{ color: '#94A3B8', marginRight: '10px' }} />} placeholder="••••••••" className="focus-glow" style={{ background: 'white', border: '1px solid #EDEDED', borderRadius: '10px' }} />
-              </Form.Item>
+                  <Form.Item 
+                    label={<span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#94A3B8' }}>CONFIRM PASSWORD</span>} 
+                    name="confirm" 
+                    dependencies={['password']}
+                    rules={[
+                      { required: true, message: 'Required' },
+                      ({ getFieldValue }) => ({
+                        validator(_, value) {
+                          if (!value || getFieldValue('password') === value) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(new Error('Passwords do not match'));
+                        },
+                      }),
+                    ]}
+                  >
+                    <Input.Password 
+                      prefix={<LockOutlined style={{ color: '#94A3B8', marginRight: '10px' }} />} 
+                      placeholder="••••••••" 
+                      className="focus-glow" 
+                      style={{ background: 'white', border: '1px solid #EDEDED', borderRadius: '10px' }} 
+                    />
+                  </Form.Item>
 
-              <div style={{ textAlign: 'right', marginTop: '-12px', marginBottom: '20px' }}>
-                <Link href="/forgot-password" style={{ color: 'rgb(67, 56, 202)', fontSize: '0.85rem', fontWeight: 600 }}>Forgot Password?</Link>
-              </div>
-
-              <Form.Item style={{ marginTop: '40px' }}>
-                <Button type="primary" htmlType="submit" loading={loading} block className="pulse-btn" style={{ height: '54px', borderRadius: '12px', background: 'linear-gradient(90deg, #1B2A4E 0%, #312E81 100%)', border: 'none', fontWeight: 800, fontSize: '0.9rem', color: 'white', letterSpacing: '1px' }}>
-                  SIGN IN TO DASHBOARD <ArrowRightOutlined style={{ marginLeft: '8px' }} />
+                  <Form.Item style={{ marginTop: '30px' }}>
+                    <Button 
+                      type="primary" 
+                      htmlType="submit" 
+                      loading={loading} 
+                      block 
+                      className="pulse-btn"
+                      style={{ height: '54px', borderRadius: '12px', background: 'linear-gradient(90deg, #1B2A4E 0%, #312E81 100%)', border: 'none', fontWeight: 800, fontSize: '0.9rem', color: 'white', letterSpacing: '1px' }}
+                    >
+                      UPDATE PASSWORD <SaveOutlined style={{ marginLeft: '8px' }} />
+                    </Button>
+                  </Form.Item>
+                </Form>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ width: '64px', height: '64px', background: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', boxShadow: '0 10px 30px rgba(16, 185, 129, 0.15)' }}>
+                  <CheckCircleOutlined style={{ fontSize: '32px', color: '#10B981' }} />
+                </div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1B2A4E', marginBottom: '12px' }}>All set!</h2>
+                <p style={{ color: '#64748B', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '32px', fontWeight: 500 }}>
+                  Your password has been successfully reset. You can now log in with your new credentials.
+                </p>
+                <Button 
+                  type="primary" 
+                  block 
+                  onClick={() => router.push('/login')}
+                  className="pulse-btn"
+                  style={{ height: '54px', borderRadius: '12px', background: 'linear-gradient(90deg, #1B2A4E 0%, #312E81 100%)', border: 'none', fontWeight: 800, color: 'white' }}
+                >
+                  LOG IN NOW <ArrowRightOutlined style={{ marginLeft: '8px' }} />
                 </Button>
-              </Form.Item>
-            </Form>
-
-            <div style={{ textAlign: 'center', marginTop: '20px' }}>
-              <span style={{ color: '#94A3B8', fontSize: '0.85rem' }}>New to the mission? </span>
-              <Link href="/signup" style={{ color: '#1B2A4E', fontWeight: 700, fontSize: '0.85rem' }}>Create Account</Link>
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -229,7 +278,6 @@ export default function Login() {
           @media (max-width: 1024px) { display: none !important; }
         }
 
-        /* RE-ADDED: Round Glass Pearls Animation */
         .glass-orb {
           position: absolute;
           border-radius: 50%;
@@ -248,7 +296,6 @@ export default function Login() {
           50% { transform: translate(50px, -50px) scale(1.1); }
         }
 
-        /* Decorative Spinning Circles */
         .spinning-circle {
           position: absolute;
           border-radius: 50%;

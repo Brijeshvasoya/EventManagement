@@ -1,7 +1,9 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const User = require('../../models/User');
 const { signToken } = require('../../utils/jwt');
 const { GraphQLError } = require('graphql');
+const { sendPasswordResetEmail } = require('../../utils/email');
 
 exports.register = async ({ name, email, password, role }) => {
   const existing = await User.findOne({ email });
@@ -46,4 +48,42 @@ exports.updateProfile = async (id, { name, email, currentPassword, newPassword }
 exports.getMe = async (user) => {
   if (!user) return null;
   return User.findById(user.id);
+};
+
+exports.forgotPassword = async (email) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    // We don't want to reveal if a user exists or not for security reasons,
+    // but in a controlled environment like this, we can return true anyway.
+    return true;
+  }
+
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+
+  await user.save();
+
+  await sendPasswordResetEmail(user.email, user.name, resetToken);
+  return true;
+};
+
+exports.resetPassword = async (token, password) => {
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    throw new GraphQLError('Token is invalid or has expired', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+
+  user.password = await bcrypt.hash(password, 10);
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+
+  await user.save();
+  return true;
 };

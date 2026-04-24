@@ -1,33 +1,27 @@
 import { useState } from 'react';
-import { useRouter } from 'next/router';
 import { useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
-import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import Head from 'next/head';
 import toast from 'react-hot-toast';
 import { Form, Input, Button, Typography, ConfigProvider } from 'antd';
-import { MailOutlined, LockOutlined, ThunderboltOutlined, BarChartOutlined, GlobalOutlined, CustomerServiceOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import { MailOutlined, ArrowLeftOutlined, SendOutlined, ThunderboltOutlined, BarChartOutlined } from '@ant-design/icons';
 
-const { Text: AntText } = Typography;
-
-const LOGIN_MUTATION = gql`
-  mutation Login($email: String!, $password: String!) {
-    login(email: $email, password: $password) { token }
+const FORGOT_PASSWORD_MUTATION = gql`
+  mutation ForgotPassword($email: String!) {
+    forgotPassword(email: $email)
   }
 `;
 
-export default function Login() {
-  const { login } = useAuth();
-  const [loginM, { loading }] = useMutation(LOGIN_MUTATION);
-  const router = useRouter();
-  const { returnUrl } = router.query;
+export default function ForgotPassword() {
+  const [forgotPasswordM, { loading }] = useMutation(FORGOT_PASSWORD_MUTATION);
+  const [submitted, setSubmitted] = useState(false);
 
   const onFinish = async (values) => {
     try {
-      const { data } = await loginM({ variables: values });
-      toast.success('Welcome back! ✨');
-      login(data.login.token, returnUrl || '/dashboard');
+      await forgotPasswordM({ variables: { email: values.email } });
+      setSubmitted(true);
+      toast.success('Reset link sent to your email! 📧');
     } catch (err) {
       toast.error(err.message);
     }
@@ -45,7 +39,7 @@ export default function Login() {
       }}
     >
       <Head>
-        <title>Sign In | EventHub</title>
+        <title>Forgot Password | EventHub</title>
       </Head>
       <div style={{
         height: '100vh',
@@ -58,20 +52,16 @@ export default function Login() {
         left: 0,
         fontFamily: "'Inter', sans-serif"
       }}>
-        {/* RE-ADDED: Round Type Glass Circles Animation */}
+        {/* Animated Background Elements */}
         <div className="glass-orb o1"></div>
         <div className="glass-orb o2"></div>
         <div className="glass-orb o3"></div>
-
-        {/* Decorative Spinning Circles */}
         <div className="spinning-circle sc1"></div>
         <div className="spinning-circle sc2"></div>
-
-        {/* Orbiting Glow Lights */}
         <div className="glow-light g1"></div>
         <div className="glow-light g2"></div>
 
-        {/* Floating Event Elements Animation */}
+        {/* Floating Event Elements */}
         <div className="event-item e1">🎫</div>
         <div className="event-item e2">🎉</div>
         <div className="event-item e3">📅</div>
@@ -100,19 +90,19 @@ export default function Login() {
               <div className="pulse-ring"></div>
             </div>
             <h1 style={{ fontSize: '4.5rem', fontWeight: 900, color: '#312E81', margin: 0, letterSpacing: '-2px' }}>
-              <span className="text-reveal">Welcome </span>{" "}
-              <span className="text-reveal" style={{ animationDelay: '0.2s' }}>back</span>
+              <span className="text-reveal">Reset </span>{" "}
+              <span className="text-reveal" style={{ animationDelay: '0.2s' }}>Access</span>
             </h1>
           </div>
 
           <p style={{ fontSize: '1.2rem', color: '#64748B', maxWidth: '500px', marginBottom: '60px', lineHeight: 1.6, animation: 'fadeInUp 1s ease-out 0.4s both' }}>
-            Access your events dashboard and monitor your global impact in real-time.
+            No worries! We'll help you get back into your account and continue managing your events.
           </p>
 
           <div className="grid-cols-2" style={{ gap: '20px', maxWidth: '700px', marginBottom: '48px' }}>
             {[
-              { icon: <ThunderboltOutlined />, title: 'Smart Sync', desc: 'Real-time booking' },
-              { icon: <BarChartOutlined />, title: 'Insight Pro', desc: 'Growth analytics' }
+              { icon: <ThunderboltOutlined />, title: 'Fast Recovery', desc: 'Instant reset links' },
+              { icon: <BarChartOutlined />, title: 'Always Secure', desc: 'Encrypted sessions' }
             ].map((item, i) => (
               <div key={i} className="feature-card" style={{ display: 'flex', gap: '16px', alignItems: 'center', background: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(10px)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(67, 56, 202, 0.1)', animation: `fadeInRight 0.8s ease-out ${0.5 + (i * 0.1)}s both` }}>
                 <div style={{ fontSize: '1.5rem', color: 'rgb(67, 56, 202)' }}>{item.icon}</div>
@@ -164,7 +154,7 @@ export default function Login() {
 
         {/* Right Side: Card */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-
+          
           <div className="rotating-square" style={{
             position: 'absolute',
             width: '500px',
@@ -187,37 +177,69 @@ export default function Login() {
             zIndex: 2,
             animation: 'scaleUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)'
           }}>
-            <div style={{ textAlign: 'center', marginBottom: '10px' }}>
-              <div className="logo-hover" style={{ width: '56px', height: '56px', background: 'white', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', position: 'relative', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-                <img src="/logo.png" alt="Icon" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
-                <div className="spinner-ring"></div>
-              </div>
-              <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: 600 }}>Authorize to access your ecosystem.</p>
-            </div>
+            {!submitted ? (
+              <>
+                <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                  <div className="logo-hover" style={{ width: '56px', height: '56px', background: 'white', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', position: 'relative', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                    <MailOutlined style={{ fontSize: '24px', color: 'rgb(67, 56, 202)' }} />
+                    <div className="spinner-ring"></div>
+                  </div>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1B2A4E', marginBottom: '8px' }}>Forgot Password?</h2>
+                  <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: 600 }}>We'll send you reset instructions.</p>
+                </div>
 
-            <Form layout="vertical" onFinish={onFinish} size="large" requiredMark={false}>
-              <Form.Item label={<span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#94A3B8' }}>EMAIL ADDRESS</span>} name="email" rules={[{ required: true, message: 'Required' }, { type: 'email' }]}>
-                <Input prefix={<MailOutlined style={{ color: '#94A3B8', marginRight: '10px' }} />} placeholder="Enter your email" className="focus-glow" style={{ background: 'white', border: '1px solid #EDEDED', borderRadius: '10px' }} />
-              </Form.Item>
+                <Form layout="vertical" onFinish={onFinish} size="large" requiredMark={false}>
+                  <Form.Item 
+                    label={<span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#94A3B8' }}>EMAIL ADDRESS</span>} 
+                    name="email" 
+                    rules={[{ required: true, message: 'Required' }, { type: 'email' }]}
+                  >
+                    <Input 
+                      prefix={<MailOutlined style={{ color: '#94A3B8', marginRight: '10px' }} />} 
+                      placeholder="Enter your email" 
+                      className="focus-glow" 
+                      style={{ background: 'white', border: '1px solid #EDEDED', borderRadius: '10px' }} 
+                    />
+                  </Form.Item>
 
-              <Form.Item label={<span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#94A3B8' }}>PASSWORD</span>} name="password" rules={[{ required: true, message: 'Required' }]}>
-                <Input.Password prefix={<LockOutlined style={{ color: '#94A3B8', marginRight: '10px' }} />} placeholder="••••••••" className="focus-glow" style={{ background: 'white', border: '1px solid #EDEDED', borderRadius: '10px' }} />
-              </Form.Item>
-
-              <div style={{ textAlign: 'right', marginTop: '-12px', marginBottom: '20px' }}>
-                <Link href="/forgot-password" style={{ color: 'rgb(67, 56, 202)', fontSize: '0.85rem', fontWeight: 600 }}>Forgot Password?</Link>
-              </div>
-
-              <Form.Item style={{ marginTop: '40px' }}>
-                <Button type="primary" htmlType="submit" loading={loading} block className="pulse-btn" style={{ height: '54px', borderRadius: '12px', background: 'linear-gradient(90deg, #1B2A4E 0%, #312E81 100%)', border: 'none', fontWeight: 800, fontSize: '0.9rem', color: 'white', letterSpacing: '1px' }}>
-                  SIGN IN TO DASHBOARD <ArrowRightOutlined style={{ marginLeft: '8px' }} />
+                  <Form.Item style={{ marginTop: '30px' }}>
+                    <Button 
+                      type="primary" 
+                      htmlType="submit" 
+                      loading={loading} 
+                      block 
+                      className="pulse-btn"
+                      style={{ height: '54px', borderRadius: '12px', background: 'linear-gradient(90deg, #1B2A4E 0%, #312E81 100%)', border: 'none', fontWeight: 800, fontSize: '0.9rem', color: 'white', letterSpacing: '1px' }}
+                    >
+                      SEND RESET LINK <SendOutlined style={{ marginLeft: '8px' }} />
+                    </Button>
+                  </Form.Item>
+                </Form>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ width: '64px', height: '64px', background: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', boxShadow: '0 10px 30px rgba(16, 185, 129, 0.15)' }}>
+                  <SendOutlined style={{ fontSize: '24px', color: '#10B981' }} />
+                </div>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1B2A4E', marginBottom: '12px' }}>Check your email</h2>
+                <p style={{ color: '#64748B', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '32px', fontWeight: 500 }}>
+                  We've sent a password reset link to your email address. Please check your inbox.
+                </p>
+                <Button 
+                  type="default" 
+                  block 
+                  onClick={() => setSubmitted(false)}
+                  style={{ height: '50px', borderRadius: '12px', fontWeight: 600 }}
+                >
+                  Didn't receive? Try again
                 </Button>
-              </Form.Item>
-            </Form>
+              </div>
+            )}
 
-            <div style={{ textAlign: 'center', marginTop: '20px' }}>
-              <span style={{ color: '#94A3B8', fontSize: '0.85rem' }}>New to the mission? </span>
-              <Link href="/signup" style={{ color: '#1B2A4E', fontWeight: 700, fontSize: '0.85rem' }}>Create Account</Link>
+            <div style={{ textAlign: 'center', marginTop: '30px' }}>
+              <Link href="/login" style={{ color: '#1B2A4E', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <ArrowLeftOutlined /> Back to Login
+              </Link>
             </div>
           </div>
         </div>
@@ -229,7 +251,6 @@ export default function Login() {
           @media (max-width: 1024px) { display: none !important; }
         }
 
-        /* RE-ADDED: Round Glass Pearls Animation */
         .glass-orb {
           position: absolute;
           border-radius: 50%;
@@ -248,7 +269,6 @@ export default function Login() {
           50% { transform: translate(50px, -50px) scale(1.1); }
         }
 
-        /* Decorative Spinning Circles */
         .spinning-circle {
           position: absolute;
           border-radius: 50%;
