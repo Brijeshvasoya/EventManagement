@@ -159,7 +159,7 @@ export default function MyEvents() {
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <Head><title>My Events | EventHub</title></Head>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '40px', background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)', borderRadius: '24px', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)', color: 'white' }}>
+      <div className="header-responsive" style={{ background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)', borderRadius: '24px', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)', color: 'white' }}>
         <div>
           <h2 style={{ margin: '0 0 8px 0', fontWeight: 900, fontSize: '2.5rem', letterSpacing: '-0.5px' }}>Event Portfolio</h2>
           <p style={{ margin: 0, color: 'rgba(255,255,255,0.7)', fontSize: '1.1rem' }}>Manage all the experiences you are bringing to life.</p>
@@ -185,7 +185,7 @@ export default function MyEvents() {
       ) : (
         <Row gutter={[24, 24]}>
           {events.map(event => (
-            <Col xs={24} lg={12} key={event.id}>
+            <Col xs={24} xl={12} key={event.id}>
               <div className="hover-bounce premium-event-card" onClick={() => router.push(`/events/${event.id}`)} style={{ cursor: 'pointer', display: 'flex', background: '#FFF', borderRadius: '24px', border: '1px solid #F3F4F6', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', overflow: 'hidden', height: '100%', position: 'relative' }}>
                 <div style={{ width: '180px', flexShrink: 0, background: `url(${event.imageUrl || '/event-placeholder.jpg'}) center/cover`, position: 'relative' }}>
                   <div style={{ position: 'absolute', top: 12, left: 12 }}>
@@ -252,7 +252,7 @@ export default function MyEvents() {
           <p style={{ margin: '0 0 1.5rem 0', color: '#6B7280', fontSize: '1rem' }}>Update your exclusive event details below.</p>
 
           <Form form={editForm} layout="vertical" onFinish={handleUpdateSubmit} requiredMark={false}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div className="grid-cols-2" style={{ gap: '16px', marginBottom: '16px' }}>
                   <Form.Item name="title" label={<label style={{ fontWeight: '700', color: '#4B5563', fontSize: '0.9rem' }}>Event Title *</label>} rules={[{ required: true }]} style={{ marginBottom: 0 }}>
                       <Input size="large" placeholder="e.g. Dream Music Festival" style={{ borderRadius: '12px' }} />
                   </Form.Item>
@@ -322,7 +322,7 @@ export default function MyEvents() {
                   <Input.TextArea rows={4} placeholder="What makes this event special?" style={{ borderRadius: '12px' }} />
               </Form.Item>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+              <div className="grid-cols-2" style={{ gap: '16px', marginBottom: '24px' }}>
                   <Form.Item name="date" label={<label style={{ fontWeight: '700', color: '#4B5563', fontSize: '0.9rem' }}>Date & Time *</label>} rules={[{ required: true }]} style={{ marginBottom: 0 }}>
                       <DatePicker size="large" showTime style={{ width: '100%', borderRadius: '12px' }} />
                   </Form.Item>

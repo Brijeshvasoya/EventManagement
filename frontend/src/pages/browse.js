@@ -153,7 +153,7 @@ export default function Browse() {
                 <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{emptyMsg}</p>
             </div>
         ) : (
-            <div className="event-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
+            <div className="event-grid grid-cols-auto-340" style={{ gap: '24px' }}>
                 {events.map((e, index) => {
                     const isBooked = myBookedEventIds.includes(e.id);
                     const isOwner = user?.id === e.organizer?.id || user?.role === 'ADMIN';
@@ -231,7 +231,7 @@ export default function Browse() {
                             <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
                                 <h3 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 16px 0', lineHeight: 1.3 }}>{e.title}</h3>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
+                                <div className="grid-cols-2" style={{ gap: '12px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
                                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.9rem' }}>
                                         <CalendarOutlined style={{ color: 'var(--primary-color)', marginTop: '3px' }} />
                                         <span style={{ lineHeight: 1.4 }}>{new Date(parseInt(e.date) || e.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>

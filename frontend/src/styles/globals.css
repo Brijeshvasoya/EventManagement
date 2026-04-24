@@ -1595,8 +1595,81 @@ textarea.ant-input {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+/* ===== ENHANCED RESPONSIVE GRIDS ===== */
+.grid-cols-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.grid-cols-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+.grid-cols-main {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+.grid-cols-reverse {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr);
+}
+.grid-cols-auto-400 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+.grid-cols-auto-380 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+}
+.grid-cols-auto-340 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+}
+.grid-cols-auto-320 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+.grid-cols-modal-info {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+}
+.grid-cols-ticket-split {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+}
+
+/* Medium Desktop / Tablet Landscape Breakpoint */
+@media (max-width: 1200px) {
+  .grid-cols-main,
+  .grid-cols-reverse {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .grid-cols-modal-info {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.header-responsive {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 40px;
+}
+
+/* Global Table Responsive */
+.table-responsive {
+  overflow-x: auto !important;
+  width: 100%;
+}
+
 /* ===== RESPONSIVE ===== */
-@media (max-width: 991px) {
+@media (max-width: 768px) {
   .ant-layout-sider {
     display: none !important;
   }
@@ -1609,14 +1682,70 @@ textarea.ant-input {
     margin: 16px !important;
   }
 
-  /* Fix Grid columns breaking on mobile */
-  .page-content>div>div>div[style*="display: grid"] {
+  /* Make grids stack on tablet/mobile */
+  .grid-cols-main,
+  .grid-cols-reverse,
+  .grid-cols-3,
+  .grid-cols-2,
+  .grid-cols-modal-info {
     grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+  
+  .header-responsive {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .desktop-actions {
+    display: none !important;
   }
 
-  /* Fix Details modal grid on mobile */
-  div[style*="display: grid"][style*="gridTemplateColumns: repeat(4"] {
+  .header-responsive {
+    padding: 24px !important;
+    text-align: center;
+  }
+  
+  .header-responsive div:last-child {
+    text-align: center !important;
+    width: 100%;
+  }
+
+  /* Premium Event Card Responsive */
+  .premium-event-card {
+    flex-direction: column !important;
+  }
+  .premium-event-card > div:first-child {
+    width: 100% !important;
+    height: 200px !important;
+  }
+
+
+  
+  .mobile-only-flex {
+    display: flex !important;
+  }
+
+  .dashboard-profile-mobile {
+    display: none !important;
+  }
+  
+  .grid-cols-ticket-split {
     grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Adjust minmax to fit smaller screens */
+  .grid-cols-auto-400,
+  .grid-cols-auto-380,
+  .grid-cols-auto-340,
+  .grid-cols-auto-320 {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
   }
 
   /* PDF Template hiding on mobile */
@@ -1627,6 +1756,14 @@ textarea.ant-input {
 
 @media (max-width: 768px) {
   .grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .grid-cols-ticket-split {
     grid-template-columns: 1fr !important;
   }
 
@@ -1701,7 +1838,7 @@ textarea.ant-input {
   }
 
   .modal-info-grid {
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: 1fr !important;
   }
 
   .modal-content-padding {
@@ -1728,19 +1865,5 @@ textarea.ant-input {
   /* Ticket booking modal adjustments */
   .ant-modal .booking-card {
     padding: 16px !important;
-  }
-
-  /* Ensure responsive grids don't overflow on small devices by forcing 1 column */
-  div[style*="grid-template-columns: repeat(auto-fill"] {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Modal Content Grid Adjustments */
-  div[style*="grid-template-columns: 1.2fr 1fr"] {
-    grid-template-columns: 1fr !important;
-  }
-
-  div[style*="display: grid"][style*="grid-template-columns: repeat(4"] {
-    grid-template-columns: 1fr !important;
   }
 }

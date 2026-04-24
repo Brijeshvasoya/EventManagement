@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { TopbarMobileIcons, DesktopHeaderActions } from './GlobalActions';
 import { Button, Avatar, Typography, ConfigProvider, theme, Drawer, Dropdown } from 'antd';
 import {
   AppstoreOutlined,
@@ -196,7 +197,10 @@ export default function AppLayout({ children }) {
             <img src="/logo.png" alt="EventHub Logo" style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '8px' }} />
             <h2 style={{ margin: 0, color: 'var(--text-primary)', fontWeight: 900, fontSize: '1.4rem' }}>EventHub</h2>
           </div>
-          <Button type="text" icon={<MenuOutlined style={{ fontSize: '24px', color: 'var(--text-primary)' }} />} onClick={() => setMobileMenuOpen(true)} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <TopbarMobileIcons />
+            <Button type="text" icon={<MenuOutlined style={{ fontSize: '24px', color: 'var(--text-primary)' }} />} onClick={() => setMobileMenuOpen(true)} />
+          </div>
         </header>
 
         {/* MOBILE DRAWER */}
@@ -265,6 +269,11 @@ export default function AppLayout({ children }) {
         }}>
           {/* Mobile spacer */}
           <div className="mobile-only" style={{ height: '70px', flexShrink: 0 }} />
+          
+          <div className="desktop-only" style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
+            <DesktopHeaderActions />
+          </div>
+
           {children}
         </main>
       </div>
@@ -274,7 +283,7 @@ export default function AppLayout({ children }) {
         .desktop-only { display: flex !important; }
         .mobile-only { display: none !important; }
         
-        @media (max-width: 992px) {
+        @media (max-width: 768px) {
           .desktop-only { display: none !important; }
           .mobile-only { display: flex !important; }
           .page-content { padding: 24px !important; }

@@ -8,7 +8,8 @@ const notificationService = {
     const userId = user.id || user._id;
 
     const notifications = await Notification.find({
-      recipient: new mongoose.Types.ObjectId(userId)
+      recipient: new mongoose.Types.ObjectId(userId),
+      read: false
     })
       .sort({ createdAt: -1 })
       .populate('booking')

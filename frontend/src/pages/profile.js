@@ -82,10 +82,9 @@ export default function Profile() {
 
       <div style={{ padding: '20px 0' }}>
         {/* Top Header Card */}
-        <div style={{
+        <div className="header-responsive" style={{
           background: 'white',
           borderRadius: '32px',
-          padding: '40px',
           marginBottom: '32px',
           boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
           display: 'flex',
@@ -147,7 +146,7 @@ export default function Profile() {
           requiredMark={false}
           size="large"
         >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px' }}>
+          <div className="grid-cols-auto-400" style={{ gap: '32px' }}>
 
             {/* Account Information */}
             <div style={{

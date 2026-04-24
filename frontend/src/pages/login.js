@@ -109,7 +109,7 @@ export default function Login() {
             Access your events dashboard and monitor your global impact in real-time.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', maxWidth: '700px', marginBottom: '48px' }}>
+          <div className="grid-cols-2" style={{ gap: '20px', maxWidth: '700px', marginBottom: '48px' }}>
             {[
               { icon: <ThunderboltOutlined />, title: 'Smart Sync', desc: 'Real-time booking' },
               { icon: <BarChartOutlined />, title: 'Insight Pro', desc: 'Growth analytics' }

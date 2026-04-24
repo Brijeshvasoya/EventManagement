@@ -144,7 +144,7 @@ export default function VendorManagement() {
     <div className="mobile-pad-reduce" style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
       <Head><title>Vendor Management | EventHub</title></Head>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="header-responsive" style={{ marginBottom: '2rem' }}>
         <div>
           <div style={{
             display: 'inline-block',
@@ -179,7 +179,7 @@ export default function VendorManagement() {
         </Button>
       </div>
 
-      <div className="hover-bounce" style={{
+      <div className="table-responsive hover-bounce" style={{
         background: 'var(--card-bg)',
         borderRadius: '24px',
         overflow: 'hidden',

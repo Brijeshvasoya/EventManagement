@@ -195,7 +195,7 @@ export default function Signup() {
             </div>
 
             <Form layout="vertical" onFinish={onFinish} size="large" requiredMark={false} initialValues={{ role: 'USER' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="grid-cols-2" style={{ gap: '16px' }}>
                 <Form.Item label={<span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#94A3B8' }}>FULL NAME</span>} name="name" rules={[{ required: true, message: 'Required' }]}>
                   <Input prefix={<UserOutlined style={{ color: '#94A3B8', marginRight: '8px' }} />} placeholder="Alex Thorne" className="focus-glow" style={{ background: 'white', border: '1px solid #EDEDED', borderRadius: '10px' }} />
                 </Form.Item>
@@ -204,7 +204,7 @@ export default function Signup() {
                 </Form.Item>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="grid-cols-2" style={{ gap: '16px' }}>
                 <Form.Item label={<span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#94A3B8' }}>PASSWORD</span>} name="password" rules={[{ required: true, message: 'Required' }]}>
                   <Input.Password prefix={<LockOutlined style={{ color: '#94A3B8', marginRight: '10px' }} />} placeholder="••••••••" className="focus-glow" style={{ background: 'white', border: '1px solid #EDEDED', borderRadius: '10px' }} />
                 </Form.Item>
@@ -215,7 +215,7 @@ export default function Signup() {
 
               <Form.Item label={<span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#94A3B8' }}>OPERATIVE ROLE</span>} name="role" style={{ marginBottom: '32px' }}>
                 <Radio.Group style={{ width: '100%' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="grid-cols-2" style={{ gap: '12px' }}>
                     <Radio.Button value="USER" style={{ borderRadius: '10px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>🎫 ATTENDEE</Radio.Button>
                     <Radio.Button value="ORGANIZER" style={{ borderRadius: '10px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>🎯 ORGANIZER</Radio.Button>
                   </div>

@@ -152,10 +152,9 @@ export default function CreateEvent() {
       <div>
 
         {/* Top Header Card (Matching Profile - Compact) */}
-        <div style={{
+        <div className="header-responsive" style={{
           background: 'white',
           borderRadius: '24px',
-          padding: '24px 32px',
           marginBottom: '24px',
           boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
           display: 'flex',
@@ -217,7 +216,7 @@ export default function CreateEvent() {
             ticketTypes: [{ name: 'REGULAR', price: 50, capacity: 100 }]
           }}
         >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '20px', alignItems: 'stretch' }}>
+          <div className="grid-cols-auto-380" style={{ gap: '20px', alignItems: 'stretch' }}>
 
             {/* Left Column: Details (Compact) */}
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -267,7 +266,7 @@ export default function CreateEvent() {
                   <div style={{ flex: 1, height: '1px', background: '#F1F5F9' }}></div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="grid-cols-2" style={{ gap: '16px' }}>
                   <Form.Item label="DATE & TIME" name="date" rules={[{ required: true }]} style={{ marginBottom: 0 }}>
                     <Input type="datetime-local" style={{ borderRadius: '10px' }} />
                   </Form.Item>
@@ -322,7 +321,7 @@ export default function CreateEvent() {
                   )}
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', marginTop: '20px' }}>
                   <span style={{ color: '#1B2A4E', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.5px' }}>TICKETING & NETWORK</span>
                   <div style={{ flex: 1, height: '1px', background: '#F1F5F9' }}></div>
                 </div>
@@ -331,7 +330,7 @@ export default function CreateEvent() {
                   {(fields, { add, remove }) => (
                     <>
                       {fields.map(({ key, name, ...restField }) => (
-                        <div key={key} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '8px', marginBottom: '12px', alignItems: 'end', background: '#F8FAFC', padding: '12px', borderRadius: '12px', border: '1px solid #F1F5F9' }}>
+                        <div key={key} className="grid-cols-ticket-split" style={{ gap: '8px', marginBottom: '12px', alignItems: 'end', background: '#F8FAFC', padding: '12px', borderRadius: '12px', border: '1px solid #F1F5F9' }}>
                           <Form.Item {...restField} name={[name, 'name']} label="TIER" style={{ marginBottom: 0 }}>
                             <Input placeholder="VIP" style={{ borderRadius: '8px', fontSize: '0.85rem' }} />
                           </Form.Item>

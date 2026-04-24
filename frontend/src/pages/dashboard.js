@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useContext, useState } from 'react';
+import { GlobalActionsContext } from '../components/GlobalActions';
 import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_MY_BOOKINGS, CANCEL_BOOKING, GET_MY_ANALYTICS, UPDATE_PROFILE, GET_MY_EVENTS, GET_MY_NOTIFICATIONS, UNREAD_NOTIFICATION_COUNT, MARK_NOTIFICATION_AS_READ, MARK_ALL_NOTIFICATIONS_AS_READ, GET_ME, GET_EVENTS, REDEEM_REWARD } from '@/features/events/graphql/queries';
+import { GET_MY_BOOKINGS, CANCEL_BOOKING, GET_MY_ANALYTICS, GET_MY_EVENTS, GET_EVENTS, REDEEM_REWARD } from '@/features/events/graphql/queries';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -20,23 +21,14 @@ export default function Dashboard() {
 
   const [activeBooking, setActiveBooking] = useState(null);
   const [isQRModalVisible, setIsQRModalVisible] = useState(false);
-  const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
-  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [isRewardsModalVisible, setIsRewardsModalVisible] = useState(false);
-  const [profileForm] = Form.useForm();
+  
+  const { refetchGlobalNotifications } = useContext(GlobalActionsContext);
 
   const isOrganizer = user?.role === 'ORGANIZER' || user?.role === 'ADMIN';
 
   const { data: bookingData, loading: bookingLoading, refetch } = useQuery(GET_MY_BOOKINGS, {
     fetchPolicy: 'cache-and-network'
-  });
-
-  const { data: meData } = useQuery(GET_ME, {
-    skip: !user,
-    fetchPolicy: 'cache-and-network',
-    onCompleted: (data) => {
-      if (data.me) setUser({ ...user, ...data.me });
-    }
   });
 
   const { data: analyticsData } = useQuery(GET_MY_ANALYTICS, {
@@ -47,24 +39,13 @@ export default function Dashboard() {
     skip: !isOrganizer, fetchPolicy: 'cache-and-network'
   });
 
-  const { data: notificationData, refetch: refetchNotifications } = useQuery(GET_MY_NOTIFICATIONS, {
-    skip: !user, fetchPolicy: 'cache-and-network'
-  });
-
   const { data: allEventsData } = useQuery(GET_EVENTS, {
     variables: { limit: 5 },
     skip: isOrganizer,
     fetchPolicy: 'cache-and-network'
   });
 
-  const { data: unreadCountData, refetch: refetchUnreadCount } = useQuery(UNREAD_NOTIFICATION_COUNT, {
-    skip: !user, fetchPolicy: 'cache-and-network', pollInterval: 30000 // Poll every 30s
-  });
-
-  const [updateProfile, { loading: updating }] = useMutation(UPDATE_PROFILE);
   const [cancel] = useMutation(CANCEL_BOOKING);
-  const [markRead] = useMutation(MARK_NOTIFICATION_AS_READ);
-  const [markAllRead] = useMutation(MARK_ALL_NOTIFICATIONS_AS_READ);
   const [redeemReward, { loading: redeeming }] = useMutation(REDEEM_REWARD);
 
   const handleRedeem = async (reward) => {
@@ -74,38 +55,11 @@ export default function Dashboard() {
       });
       setUser({ ...user, loyaltyPoints: data.redeemReward.loyaltyPoints, redeemedRewards: data.redeemReward.redeemedRewards });
       toast.success(`Succesfully redeemed ${reward.title}! 🎁`);
-      refetchNotifications();
+      refetchGlobalNotifications();
     } catch (e) {
       toast.error(e.message);
     }
   };
-
-  const handleMarkRead = async (id) => {
-    try {
-      await markRead({ variables: { id } });
-      refetchNotifications();
-      refetchUnreadCount();
-    } catch (e) {
-      toast.error(e.message);
-    }
-  };
-
-  const handleMarkAllRead = async () => {
-    try {
-      await markAllRead();
-      toast.success('All notifications marked as read');
-      refetchNotifications();
-      refetchUnreadCount();
-    } catch (e) {
-      toast.error(e.message);
-    }
-  };
-
-  useEffect(() => {
-    if (user && isProfileModalVisible) {
-      profileForm.setFieldsValue({ name: user.name, email: user.email });
-    }
-  }, [user, isProfileModalVisible]);
 
   if (authLoading || bookingLoading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '20px' }}>
@@ -120,17 +74,6 @@ export default function Dashboard() {
     </div>
   );
   if (!user) { router.push('/login'); return null; }
-
-  const handleProfileSubmit = async (values) => {
-    try {
-      const { data } = await updateProfile({ variables: values });
-      setUser({ ...user, name: data.updateProfile.name, email: data.updateProfile.email });
-      toast.success('Profile updated successfully! ✨');
-      setIsProfileModalVisible(false);
-    } catch (e) {
-      toast.error(e.message);
-    }
-  };
 
   const handleCancel = async (id) => {
     if (confirm('Are you sure you want to cancel this ticket?')) {
@@ -187,36 +130,14 @@ export default function Dashboard() {
 
   const bookings = bookingData?.myBookings || [];
 
-  const handleOpenDrawer = () => {
-    setIsDrawerVisible(true);
-    refetchNotifications();
-  };
+
 
   return (
     <>
       <Head><title>Dashboard | EventHub</title></Head>
       <div style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 
-        {/* PROFILE UPDATE MODAL */}
-        <Modal
-          title={<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><SettingOutlined /> Update Your Profile</div>}
-          open={isProfileModalVisible}
-          onCancel={() => setIsProfileModalVisible(false)}
-          footer={null}
-          centered
-        >
-          <Form form={profileForm} layout="vertical" onFinish={handleProfileSubmit} style={{ marginTop: '20px' }}>
-            <Form.Item name="name" label="Full Name" rules={[{ required: true, message: 'Please enter your name' }]}>
-              <Input prefix={<UserOutlined />} size="large" placeholder="Your Name" />
-            </Form.Item>
-            <Form.Item name="email" label="Email Address" rules={[{ required: true, type: 'email', message: 'Enter a valid email' }]}>
-              <Input prefix={<MailOutlined />} size="large" placeholder="Email Address" />
-            </Form.Item>
-            <Button type="primary" htmlType="submit" size="large" block loading={updating} style={{ height: '50px', borderRadius: '12px' }}>
-              Save Changes
-            </Button>
-          </Form>
-        </Modal>
+
 
         {/* QR SCAN PREVIEW MODAL */}
         <Modal
@@ -368,103 +289,12 @@ export default function Dashboard() {
           </Button>
         </Modal>
 
-        {/* NOTIFICATIONS DRAWER */}
-        <Drawer
-          title={
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>Notifications</span>
-              <Button type="text" onClick={handleMarkAllRead} style={{ color: 'var(--primary-color)', fontWeight: 700 }}>Mark all as read</Button>
-            </div>
-          }
-          placement="right"
-          onClose={() => setIsDrawerVisible(false)}
-          open={isDrawerVisible}
-          styles={{ header: { borderBottom: '1px solid var(--glass-border)' }, body: { padding: '16px', background: '#F9FAFB' }, wrapper: { width: 400 } }}
-        >
-          <List
-            dataSource={notificationData?.myNotifications || []}
-            locale={{ emptyText: <Empty description="No notifications found" /> }}
-            renderItem={(item) => (
-              <div
-                key={item.id}
-                style={{
-                  background: item.read ? '#FFFFFF' : 'rgba(67, 56, 202, 0.08)',
-                  borderRadius: '16px',
-                  padding: '16px',
-                  marginBottom: '12px',
-                  border: '1px solid',
-                  borderColor: item.read ? '#E5E7EB' : 'rgba(67, 56, 202, 0.2)',
-                  boxShadow: item.read ? 'none' : '0 4px 12px rgba(67, 56, 202, 0.05)',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '12px',
-                    background: item.read ? '#F3F4F6' : 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: item.read ? '#9CA3AF' : 'white',
-                    flexShrink: 0
-                  }}>
-                    {item.type === 'BOOKING_CONFIRMED' ? <CrownOutlined /> : <BellOutlined />}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.95rem', lineHeight: 1.4, marginBottom: '4px' }}>
-                      {item.message}
-                    </div>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '8px' }}>
-                      {new Date(parseInt(item.createdAt) || item.createdAt).toLocaleString()}
-                    </div>
-                    {!item.read && (
-                      <Button
-                        size="small"
-                        icon={<CheckOutlined />}
-                        onClick={() => handleMarkRead(item.id)}
-                        style={{ borderRadius: '100px', fontWeight: 600, fontSize: '0.75rem', background: 'white', color: 'var(--primary-color)', border: '1px solid var(--primary-color)' }}
-                      >
-                        Mark as read
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          />
-        </Drawer>
 
         {/* EVENTHUB HEADER */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
+        <div className="header-responsive" style={{ marginBottom: '32px' }}>
           <div>
             <h1 style={{ margin: 0, fontSize: '2.2rem', fontWeight: 800, color: '#1B2A4E', letterSpacing: '-0.5px' }}>Dashboard</h1>
             <p style={{ color: '#6B7280', margin: '4px 0 0 0', fontSize: '1rem' }}>Hello {user?.name}, welcome back!</p>
-          </div>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <Badge count={unreadCountData?.unreadNotificationCount || 0} offset={[-2, 6]}>
-                <div
-                  className="hover-bounce"
-                  onClick={handleOpenDrawer}
-                  style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 50%, rgb(67, 56, 202) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.3)' }}
-                >
-                  <BellOutlined style={{ fontSize: '20px' }} />
-                </div>
-              </Badge>
-              <div className="hover-bounce" style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#1B2A4E', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.2)' }} onClick={() => setIsProfileModalVisible(true)}>
-                <SettingOutlined />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '12px' }}>
-              <Avatar size={44} style={{ background: '#E5E7EB', color: '#1B2A4E' }} icon={<UserOutlined />} />
-              <div>
-                <div style={{ fontWeight: 700, color: '#1B2A4E', fontSize: '0.95rem' }}>{meData?.me?.name || user?.name || 'Orlando Laurentius'}</div>
-                <div style={{ color: '#6B7280', fontSize: '0.8rem', textTransform: 'capitalize' }}>{meData?.me?.role?.toLowerCase() || user?.role?.toLowerCase() || 'User'}</div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -489,12 +319,12 @@ export default function Dashboard() {
           const topCat2 = sortedCats[1] || ['Sports', 0];
 
           return (
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '24px' }}>
+            <div className="grid-cols-main" style={{ gap: '24px' }}>
               {/* LEFT COLUMN: Main Dashboard Content */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
                 {/* TOP KPI CARDS ROW */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+                <div className="grid-cols-auto-320" style={{ gap: '24px' }}>
                   <Card styles={{ body: { padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' } }} style={{ borderRadius: '20px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                     <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(67, 56, 202, 0.1)', color: 'rgb(67, 56, 202)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>📅</div>
                     <div>
@@ -521,7 +351,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* GRAPHS ROW: Ticket Sales (Doughnut) & Sales Revenue (Bar) */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.8fr)', gap: '24px' }}>
+                <div className="grid-cols-reverse" style={{ gap: '24px' }}>
                   <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                       <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Ticket Sales</h3>
@@ -615,7 +445,7 @@ export default function Dashboard() {
                   <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.2rem' }}>All Events</h3>
                   <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }} onClick={() => router.push('/browse')}>View All Event</div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                <div className="grid-cols-auto-320" style={{ gap: '20px' }}>
                   {myEventsData?.myEvents.slice(0, 3).map(e => (
                     <div key={e.id} className="hover-bounce" style={{ background: '#FFF', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', padding: '16px' }}>
                       <div style={{ position: 'relative', height: '140px', borderRadius: '16px', overflow: 'hidden', marginBottom: '16px', background: `url(${e.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover` }}>
@@ -722,13 +552,13 @@ export default function Dashboard() {
           }
 
           return (
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '24px' }}>
+            <div className="grid-cols-main" style={{ gap: '24px' }}>
 
               {/* LEFT COLUMN */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
                 {/* KPI CARDS */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
+                <div className="grid-cols-3" style={{ gap: '24px' }}>
                   <Card styles={{ body: { padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' } }} style={{ borderRadius: '20px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                     <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(67, 56, 202, 0.1)', color: 'rgb(67, 56, 202)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🗓️</div>
                     <div>
@@ -755,7 +585,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* CHARTS ROW */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.8fr)', gap: '24px' }}>
+                <div className="grid-cols-reverse" style={{ gap: '24px' }}>
                   <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                     <h3 style={{ margin: '0 0 20px 0', color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Interest Split</h3>
                     <div style={{ position: 'relative', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
@@ -803,7 +633,7 @@ export default function Dashboard() {
                   {bookings.length === 0 ? (
                     <Empty description="No bookings found" />
                   ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+                    <div className="grid-cols-auto-320" style={{ gap: '20px' }}>
                       {bookings.slice(0, 6).map(b => (
                         <Card
                           key={b.id}
@@ -868,13 +698,13 @@ export default function Dashboard() {
                                 </div>
                                 <div style={{ width: '8px', height: '8px', background: '#EF4444', borderRadius: '50%', margin: '15px auto 0' }}></div>
                               </div>
-                              <div style={{ padding: '60px 50px', flex: 1, display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '40px' }}>
+                              <div className="grid-cols-modal-info" style={{ padding: '60px 50px', flex: 1, gap: '40px' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '45px' }}>
                                   <div>
                                     <p style={{ color: '#6366F1', fontWeight: '700', textTransform: 'uppercase', fontSize: '1rem', letterSpacing: '1px', marginBottom: '12px' }}>Guest Holder</p>
                                     <h2 style={{ fontSize: '3rem', fontWeight: '800', color: '#1E293B', margin: 0, lineHeight: 1.1 }}>{user.name || 'SaaS User'}</h2>
                                   </div>
-                                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+                                  <div className="grid-cols-2" style={{ gap: '30px' }}>
                                     <div>
                                       <p style={{ color: '#6366F1', fontWeight: '700', textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '1px', marginBottom: '8px' }}>Date & Time</p>
                                       <p style={{ fontSize: '1.4rem', fontWeight: '700', color: '#334155', margin: 0 }}>{new Date(parseInt(b.event.date) || b.event.date).toLocaleDateString()}</p>
@@ -885,7 +715,7 @@ export default function Dashboard() {
                                       <p style={{ fontSize: '1.2rem', fontWeight: '600', color: '#334155', margin: 0, lineHeight: 1.4 }}>{b.event.location}</p>
                                     </div>
                                   </div>
-                                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginTop: 'auto' }}>
+                                  <div className="grid-cols-2" style={{ gap: '30px', marginTop: 'auto' }}>
                                     <div>
                                       <p style={{ color: '#6366F1', fontWeight: '700', textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '1px', marginBottom: '8px' }}>Ticket Tier</p>
                                       <p style={{ fontSize: '1.6rem', fontWeight: '800', color: '#4F46E5', margin: 0 }}>{b.ticketType || 'Silver'}</p>
