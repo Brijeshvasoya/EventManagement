@@ -16,6 +16,7 @@ const User = require('./models/User');
 const Event = require('./models/Event');
 const { generateTicketPDF } = require('./utils/pdfGenerator');
 const QRCode = require('qrcode');
+const { startReminderCron, runReminderJob } = require('./utils/reminderCron');
 
 
 
@@ -142,6 +143,21 @@ const startServer = async () => {
     }
   });
 
+  // Manual Cron Trigger (dev/admin use — protected by a secret query key)
+  app.post('/api/cron/run-reminders', async (req, res) => {
+    const secret = req.query.secret || req.body.secret;
+    if (secret !== (process.env.CRON_SECRET || 'dev-secret-123')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    try {
+      const result = await runReminderJob();
+      res.json({ success: true, ...result });
+    } catch (err) {
+      console.error('❌ Manual cron trigger failed:', err.message);
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // Prevent abuse & brute force (200 requests per 15 minutes)
 
   const limiter = rateLimit({
@@ -188,6 +204,7 @@ const startServer = async () => {
   const PORT = process.env.PORT || 4000;
   app.listen(PORT, () => {
     console.log(`🚀 Server ready at ${process.env.BACKEND_URL}:${PORT}/graphql`);
+    startReminderCron();
   });
 };
 

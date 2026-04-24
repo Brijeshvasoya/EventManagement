@@ -80,14 +80,9 @@ export function GlobalActionsProvider({ children }) {
     }
   };
 
-  const handleOpenDrawer = async () => {
+  const handleOpenDrawer = () => {
     setIsDrawerVisible(true);
-    try {
-      await markAllRead();
-      refetchUnreadCount();
-    } catch (e) {
-      toast.error(e.message);
-    }
+    refetchGlobalNotifications();
   };
 
   return (
@@ -124,24 +119,37 @@ export function GlobalActionsProvider({ children }) {
                 <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🔔</div>
                 No notifications yet
               </div>
-            ) : (notificationData?.myNotifications || []).map((item) => (
-              <div
-                key={item.id}
-                onClick={() => handleMarkRead(item.id)}
-                style={{ background: item.read ? 'white' : '#FEE2E2', padding: '16px', borderRadius: '16px', border: '1px solid #F1F5F9', transition: 'all 0.3s ease', cursor: 'pointer', display: 'flex', gap: '12px', alignItems: 'flex-start' }}
-              >
-                <div style={{ background: item.read ? '#F1F5F9' : '#FECACA', color: item.read ? '#64748B' : '#EF4444', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>
-                  {item.read ? <CheckCircleFilled /> : <BellOutlined />}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, color: '#1B2A4E', fontSize: '0.95rem', marginBottom: '4px' }}>{item.title}</div>
-                  <div style={{ color: '#64748B', fontSize: '0.85rem', marginBottom: '6px' }}>{item.message}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>
-                    {new Date(parseInt(item.createdAt)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            ) : (notificationData?.myNotifications || []).map((item) => {
+              const typeConfig = {
+                EVENT_REMINDER: { icon: '⏰', bg: '#FEF3C7', iconBg: '#FDE68A', iconColor: '#D97706' },
+                TICKET_BOOKED: { icon: '🎟️', bg: '#ECFDF5', iconBg: '#A7F3D0', iconColor: '#059669' },
+                BOOKING_CONFIRMED: { icon: '✅', bg: '#EFF6FF', iconBg: '#BFDBFE', iconColor: '#2563EB' },
+                EVENT_CANCELLED: { icon: '❌', bg: '#FEF2F2', iconBg: '#FECACA', iconColor: '#DC2626' },
+              };
+              const cfg = item.read
+                ? { icon: <CheckCircleFilled />, bg: 'white', iconBg: '#F1F5F9', iconColor: '#64748B', isIcon: true }
+                : { ...(typeConfig[item.type] || { icon: '🔔', bg: '#FEE2E2', iconBg: '#FECACA', iconColor: '#EF4444' }), isIcon: false };
+
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => handleMarkRead(item.id)}
+                  style={{ background: cfg.bg, padding: '16px', borderRadius: '16px', border: '1px solid #F1F5F9', transition: 'all 0.3s ease', cursor: 'pointer', display: 'flex', gap: '12px', alignItems: 'flex-start' }}
+                >
+                  <div style={{ background: cfg.iconBg, color: cfg.iconColor, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: cfg.isIcon ? '16px' : '20px', flexShrink: 0 }}>
+                    {cfg.isIcon ? cfg.icon : cfg.icon}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, color: '#1B2A4E', fontSize: '0.95rem', marginBottom: '4px' }}>{item.title}</div>
+                    <div style={{ color: '#64748B', fontSize: '0.85rem', marginBottom: '6px' }} dangerouslySetInnerHTML={{ __html: item.message }} />
+                    <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>
+                      {new Date(parseInt(item.createdAt)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
+
           </div>
         </Drawer>
       )}
@@ -155,17 +163,15 @@ export function TopbarMobileIcons() {
 
   return (
     <div className="mobile-only-flex" style={{ display: 'none', gap: '10px' }}>
-      {["ORGANIZER", "ADMIN"]?.includes(user?.role) && (
-        <Badge count={unreadCountData?.unreadNotificationCount || 0} offset={[-2, 6]}>
-          <div
-            className="hover-bounce"
-            onClick={handleOpenDrawer}
-            style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 50%, rgb(67, 56, 202) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.3)' }}
-          >
-            <BellOutlined style={{ fontSize: '18px' }} />
-          </div>
-        </Badge>
-      )}
+      <Badge count={unreadCountData?.unreadNotificationCount || 0} offset={[-2, 6]}>
+        <div
+          className="hover-bounce"
+          onClick={handleOpenDrawer}
+          style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 50%, rgb(67, 56, 202) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.3)' }}
+        >
+          <BellOutlined style={{ fontSize: '18px' }} />
+        </div>
+      </Badge>
       <div className="hover-bounce" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#1B2A4E', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.2)' }} onClick={() => setIsProfileModalVisible(true)}>
         <SettingOutlined style={{ fontSize: '18px' }} />
       </div>
@@ -180,17 +186,15 @@ export function DesktopHeaderActions() {
   return (
     <div className="desktop-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
       <div style={{ display: 'flex', gap: '12px' }}>
-        {["ORGANIZER", "ADMIN"]?.includes(user?.role) && (
-          <Badge count={unreadCountData?.unreadNotificationCount || 0} offset={[-2, 6]}>
-            <div
-              className="hover-bounce"
-              onClick={handleOpenDrawer}
-              style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 50%, rgb(67, 56, 202) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.3)' }}
-            >
-              <BellOutlined style={{ fontSize: '20px' }} />
-            </div>
-          </Badge>
-        )}
+        <Badge count={unreadCountData?.unreadNotificationCount || 0} offset={[-2, 6]}>
+          <div
+            className="hover-bounce"
+            onClick={handleOpenDrawer}
+            style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 50%, rgb(67, 56, 202) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.3)' }}
+          >
+            <BellOutlined style={{ fontSize: '20px' }} />
+          </div>
+        </Badge>
         <div className="hover-bounce" style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#1B2A4E', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.2)' }} onClick={() => setIsProfileModalVisible(true)}>
           <SettingOutlined style={{ fontSize: '20px' }} />
         </div>

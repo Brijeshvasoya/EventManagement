@@ -59,7 +59,7 @@ const bookingService = {
         const userName = user.name || (await User.findById(user.id)).name || 'A user';
         await notificationService.createNotification({
           recipient: event.organizer._id,
-          message: `${userName} has booked ${booking.quantity} ticket(s) for your event "${event.title}"`,
+          message: `<b>${userName}</b> has booked <b>${booking.quantity}</b> ticket(s) for your event "${event.title}"`,
           type: 'BOOKING_CONFIRMED',
           bookingId: booking._id,
           eventId: event._id
@@ -67,6 +67,25 @@ const bookingService = {
       } catch (err) {
         console.error('Failed to create notification for organizer:', err.message);
       }
+    }
+
+    // Notify Attendee (user who just booked)
+    try {
+      const eventDateStr = new Date(parseInt(event.date) || event.date).toLocaleDateString('en-IN', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      await notificationService.createNotification({
+        recipient: user.id,
+        message: `<b>🎟️ Booking Confirmed</b>: Your booking for "${event.title}" is confirmed! ${booking.quantity} ticket(s) on ${eventDateStr} at ${event.location}.`,
+        type: 'TICKET_BOOKED',
+        bookingId: booking._id,
+        eventId: event._id
+      });
+    } catch (err) {
+      console.error('Failed to create booking notification for attendee:', err.message);
     }
 
     // ASYNC EMAIL RECEIPT: Fetch full user if needed & generate PDF attachment
@@ -137,6 +156,23 @@ const bookingService = {
 
     // Deduct Loyalty Points on cancellation
     await User.findByIdAndUpdate(user.id, { $inc: { loyaltyPoints: -100 } });
+
+    // Notify Attendee about cancellation
+    try {
+      const cancelledEvent = await Event.findById(booking.event);
+      const refundNote = booking.amountPaid > 0
+        ? ` A 75% refund of ₹${(booking.amountPaid * 0.75).toFixed(2)} has been initiated.`
+        : '';
+      await notificationService.createNotification({
+        recipient: user.id,
+        message: `<b>❌ Booking Cancelled</b>: Your booking for "${cancelledEvent?.title || 'the event'}" has been cancelled.${refundNote}`,
+        type: 'EVENT_CANCELLED',
+        bookingId: booking._id,
+        eventId: booking.event
+      });
+    } catch (err) {
+      console.error('Failed to create cancellation notification for attendee:', err.message);
+    }
 
     return true;
   },
