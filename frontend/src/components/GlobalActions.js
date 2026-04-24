@@ -2,7 +2,7 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { Form, Modal, Input, Drawer, Badge, Avatar, Typography, Button } from 'antd';
 import { UserOutlined, SettingOutlined, BellOutlined, CheckCircleFilled, CheckOutlined } from '@ant-design/icons';
-import { GET_MY_NOTIFICATIONS, UNREAD_NOTIFICATION_COUNT, MARK_NOTIFICATION_AS_READ, MARK_ALL_NOTIFICATIONS_AS_READ, UPDATE_PROFILE, GET_ME } from '@/features/events/graphql/queries';
+import { GET_MY_NOTIFICATIONS, MARK_NOTIFICATION_AS_READ, MARK_ALL_NOTIFICATIONS_AS_READ, UPDATE_PROFILE, GET_ME } from '@/features/events/graphql/queries';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -18,13 +18,11 @@ export function GlobalActionsProvider({ children }) {
   const [profileForm] = Form.useForm();
   const [mounted, setMounted] = useState(false);
 
-  const { data: unreadCountData, refetch: refetchUnreadCount } = useQuery(UNREAD_NOTIFICATION_COUNT, {
+  const { data: notificationData, refetch: refetchGlobalNotifications } = useQuery(GET_MY_NOTIFICATIONS, {
     skip: !user, fetchPolicy: 'cache-and-network', pollInterval: 30000
   });
 
-  const { data: notificationData, refetch: refetchGlobalNotifications } = useQuery(GET_MY_NOTIFICATIONS, {
-    skip: !user, fetchPolicy: 'cache-and-network'
-  });
+  const unreadCount = notificationData?.myNotifications?.filter(n => !n.read).length || 0;
 
   useQuery(GET_ME, {
     skip: !user,
@@ -63,7 +61,6 @@ export function GlobalActionsProvider({ children }) {
     try {
       await markRead({ variables: { id } });
       refetchGlobalNotifications();
-      refetchUnreadCount();
     } catch (e) {
       toast.error(e.message);
     }
@@ -74,7 +71,6 @@ export function GlobalActionsProvider({ children }) {
       await markAllRead();
       toast.success('All notifications marked as read');
       refetchGlobalNotifications();
-      refetchUnreadCount();
     } catch (e) {
       toast.error(e.message);
     }
@@ -87,7 +83,7 @@ export function GlobalActionsProvider({ children }) {
 
   return (
     <GlobalActionsContext.Provider value={{
-      mounted, user, unreadCountData, handleOpenDrawer, setIsProfileModalVisible, refetchGlobalNotifications
+      mounted, user, unreadCount, handleOpenDrawer, setIsProfileModalVisible, refetchGlobalNotifications
     }}>
       {children}
 
@@ -158,12 +154,12 @@ export function GlobalActionsProvider({ children }) {
 }
 
 export function TopbarMobileIcons() {
-  const { mounted, user, unreadCountData, handleOpenDrawer, setIsProfileModalVisible } = useContext(GlobalActionsContext);
+  const { mounted, user, unreadCount, handleOpenDrawer, setIsProfileModalVisible } = useContext(GlobalActionsContext);
   if (!mounted || !user) return null;
 
   return (
     <div className="mobile-only-flex" style={{ display: 'none', gap: '10px' }}>
-      <Badge count={unreadCountData?.unreadNotificationCount || 0} offset={[-2, 6]}>
+      <Badge count={unreadCount} offset={[-2, 6]}>
         <div
           className="hover-bounce"
           onClick={handleOpenDrawer}
@@ -180,13 +176,13 @@ export function TopbarMobileIcons() {
 }
 
 export function DesktopHeaderActions() {
-  const { mounted, user, unreadCountData, handleOpenDrawer, setIsProfileModalVisible } = useContext(GlobalActionsContext);
+  const { mounted, user, unreadCount, handleOpenDrawer, setIsProfileModalVisible } = useContext(GlobalActionsContext);
   if (!mounted || !user) return null;
 
   return (
     <div className="desktop-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
       <div style={{ display: 'flex', gap: '12px' }}>
-        <Badge count={unreadCountData?.unreadNotificationCount || 0} offset={[-2, 6]}>
+        <Badge count={unreadCount} offset={[-2, 6]}>
           <div
             className="hover-bounce"
             onClick={handleOpenDrawer}
