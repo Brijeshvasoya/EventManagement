@@ -35,6 +35,7 @@ export default function FeedbackPage() {
   const [success, setSuccess] = useState(false);
 
   const { data, loading: querying } = useQuery(GET_BOOKING_DETAILS, {
+    variables: { id: bookingId },
     skip: !bookingId,
   });
 
@@ -166,7 +167,7 @@ export default function FeedbackPage() {
 
         {/* Right Side: Card */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-          
+
           <div className="rotating-square" style={{
             position: 'absolute',
             width: '500px',
@@ -212,7 +213,7 @@ export default function FeedbackPage() {
                   <Form.Item name="rating" rules={[{ required: true, message: 'Please select a rating' }]}>
                     <Rate
                       allowHalf={false}
-                      style={{ fontSize: '32px', color: '#FBBF24' }} 
+                      style={{ fontSize: '32px', color: '#FBBF24' }}
                     />
                   </Form.Item>
                 </div>

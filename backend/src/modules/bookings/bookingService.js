@@ -165,7 +165,7 @@ const bookingService = {
       const refundNote = booking.amountPaid > 0
         ? ` A 75% refund of ₹${(booking.amountPaid * 0.75).toFixed(2)} has been initiated.`
         : '';
-      
+
       // Notify Attendee
       await notificationService.createNotification({
         recipient: user.id,
@@ -198,10 +198,10 @@ const bookingService = {
         if (fullUser && cancelledEvent) {
           const { sendCancellationEmail } = require('../../utils/email');
           const { generateRefundSlipPDF } = require('../../utils/pdfGenerator');
-          
+
           // Generate PDF refund slip
           const pdfBuffer = await generateRefundSlipPDF(fullUser, booking, cancelledEvent);
-          
+
           // Send email with attachment
           await sendCancellationEmail(fullUser, booking, cancelledEvent, pdfBuffer);
         }
@@ -291,12 +291,12 @@ const bookingService = {
   getPublicBookingForFeedback: async (bookingId) => {
     const booking = await Booking.findById(bookingId).populate('event');
     if (!booking) throw new Error('Booking not found');
-    if (booking.status !== 'CHECKED_IN') throw new Error('Invalid feedback request');
-    
+    if (booking.status !== 'CHECKED_IN') throw new Error(`Feedback not allowed. Current booking status: ${booking.status}`);
+
     // Populate organizer name for display
     const Event = require('../../models/Event'); // ensure populated
     const populatedEvent = await Event.findById(booking.event).populate('organizer');
-    
+
     return {
       id: booking.id,
       eventTitle: populatedEvent.title,
@@ -310,7 +310,7 @@ const bookingService = {
 
     const booking = await Booking.findById(bookingId).populate('event');
     if (!booking) throw new Error('Booking not found');
-    
+
     // Check if feedback already exists
     const existingFeedback = await Feedback.findOne({ booking: bookingId });
     if (existingFeedback) throw new Error('Feedback already submitted for this booking');
