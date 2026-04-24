@@ -318,7 +318,7 @@ export default function EventDetailsPage() {
                   </Tag>
                   {new Date(parseInt(event.date) || event.date) >= new Date() && (
                     <Popconfirm title="Are you sure you want to cancel?" onConfirm={handleCancel}>
-                      <Button danger icon={<CloseCircleOutlined />} size="large" block style={{ borderRadius: '12px', height: '50px' }}>Cancel Reservation</Button>
+                      <Button danger icon={<CloseCircleOutlined />} size="large" block style={{ borderRadius: '12px', height: '50px', cursor: 'pointer' }}>Cancel Reservation</Button>
                     </Popconfirm>
                   )}
                 </>
