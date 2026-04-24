@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
@@ -18,10 +18,16 @@ const LOGIN_MUTATION = gql`
 `;
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [loginM, { loading }] = useMutation(LOGIN_MUTATION);
   const router = useRouter();
   const { returnUrl } = router.query;
+
+  useEffect(() => {
+    if (user) {
+      router.replace('/dashboard');
+    }
+  }, [user, router]);
 
   const onFinish = async (values) => {
     try {

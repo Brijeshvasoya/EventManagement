@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 import { useAuth } from '@/context/AuthContext';
@@ -17,8 +18,15 @@ const REGISTER_MUTATION = gql`
 `;
 
 export default function Signup() {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [registerM, { loading }] = useMutation(REGISTER_MUTATION);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      router.replace('/dashboard');
+    }
+  }, [user, router]);
 
   const onFinish = async (values) => {
     if (values.password !== values.confirmPassword) {

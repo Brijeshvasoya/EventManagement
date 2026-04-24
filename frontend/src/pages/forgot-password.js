@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
+import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import Head from 'next/head';
 import toast from 'react-hot-toast';
@@ -14,8 +16,16 @@ const FORGOT_PASSWORD_MUTATION = gql`
 `;
 
 export default function ForgotPassword() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [forgotPasswordM, { loading }] = useMutation(FORGOT_PASSWORD_MUTATION);
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      router.replace('/dashboard');
+    }
+  }, [user, router]);
 
   const onFinish = async (values) => {
     try {

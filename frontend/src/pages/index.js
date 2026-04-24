@@ -7,7 +7,7 @@ export default function IndexRedirect() {
   useEffect(() => {
     // Redirect root to dashboard component
     if (router.isReady) {
-      router.replace('/dashboard');
+      router.replace('/login');
     }
   }, [router.isReady]);
 
