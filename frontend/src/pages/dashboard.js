@@ -539,6 +539,7 @@ export default function Dashboard() {
 
           // DYNAMIC BOOKING TRENDS (Last 6 months)
           const last6Months = [];
+          console.log("🚀 ~ Dashboard ~ last6Months:", last6Months)
           for (let i = 5; i >= 0; i--) {
             const d = new Date();
             d.setMonth(d.getMonth() - i);
@@ -547,7 +548,7 @@ export default function Dashboard() {
               const bDate = new Date(parseInt(b.event?.date) || b.event?.date);
               return bDate.getMonth() === d.getMonth() && bDate.getFullYear() === d.getFullYear();
             }).length;
-            last6Months.push({ name: monthName, count });
+            last6Months.push({ name: monthName, "Total Tickets": count });
           }
 
           return (
@@ -615,7 +616,7 @@ export default function Dashboard() {
                           <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 12 }} />
                           <YAxis hide domain={[0, 'dataMax + 2']} />
                           <Tooltip cursor={{ fill: '#F8FAFC' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-                          <Bar dataKey="count" fill="rgb(67, 56, 202)" radius={[4, 4, 0, 0]} barSize={24} />
+                          <Bar dataKey="Total Tickets" fill="rgb(67, 56, 202)" radius={[4, 4, 0, 0]} barSize={100} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
