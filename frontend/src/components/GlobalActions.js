@@ -19,7 +19,7 @@ export function GlobalActionsProvider({ children }) {
   const [mounted, setMounted] = useState(false);
 
   const { data: notificationData, refetch: refetchGlobalNotifications } = useQuery(GET_MY_NOTIFICATIONS, {
-    skip: !user, fetchPolicy: 'cache-and-network', pollInterval: 30000
+    skip: !user, fetchPolicy: 'cache-and-network'
   });
 
   const unreadCount = notificationData?.myNotifications?.filter(n => !n.read).length || 0;
@@ -27,16 +27,15 @@ export function GlobalActionsProvider({ children }) {
   const { data: meData } = useQuery(GET_ME, {
     skip: !user,
     fetchPolicy: 'cache-and-network',
-    pollInterval: 60000 // Refresh user data every minute
   });
 
   useEffect(() => {
     if (meData?.me) {
-      const needsUpdate = 
-        meData.me.name !== user?.name || 
+      const needsUpdate =
+        meData.me.name !== user?.name ||
         meData.me.loyaltyPoints !== user?.loyaltyPoints ||
         meData.me.redeemedRewards?.length !== user?.redeemedRewards?.length;
-        
+
       if (needsUpdate) {
         setUser({ ...user, ...meData.me });
       }
