@@ -155,15 +155,17 @@ export function TopbarMobileIcons() {
 
   return (
     <div className="mobile-only-flex" style={{ display: 'none', gap: '10px' }}>
-      <Badge count={unreadCountData?.unreadNotificationCount || 0} offset={[-2, 6]}>
-        <div
-          className="hover-bounce"
-          onClick={handleOpenDrawer}
-          style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 50%, rgb(67, 56, 202) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.3)' }}
-        >
-          <BellOutlined style={{ fontSize: '18px' }} />
-        </div>
-      </Badge>
+      {["ORGANIZER", "ADMIN"]?.includes(user?.role) && (
+        <Badge count={unreadCountData?.unreadNotificationCount || 0} offset={[-2, 6]}>
+          <div
+            className="hover-bounce"
+            onClick={handleOpenDrawer}
+            style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 50%, rgb(67, 56, 202) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.3)' }}
+          >
+            <BellOutlined style={{ fontSize: '18px' }} />
+          </div>
+        </Badge>
+      )}
       <div className="hover-bounce" style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#1B2A4E', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.2)' }} onClick={() => setIsProfileModalVisible(true)}>
         <SettingOutlined style={{ fontSize: '18px' }} />
       </div>
@@ -178,15 +180,17 @@ export function DesktopHeaderActions() {
   return (
     <div className="desktop-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
       <div style={{ display: 'flex', gap: '12px' }}>
-        <Badge count={unreadCountData?.unreadNotificationCount || 0} offset={[-2, 6]}>
-          <div
-            className="hover-bounce"
-            onClick={handleOpenDrawer}
-            style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 50%, rgb(67, 56, 202) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.3)' }}
-          >
-            <BellOutlined style={{ fontSize: '20px' }} />
-          </div>
-        </Badge>
+        {["ORGANIZER", "ADMIN"]?.includes(user?.role) && (
+          <Badge count={unreadCountData?.unreadNotificationCount || 0} offset={[-2, 6]}>
+            <div
+              className="hover-bounce"
+              onClick={handleOpenDrawer}
+              style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 50%, rgb(67, 56, 202) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.3)' }}
+            >
+              <BellOutlined style={{ fontSize: '20px' }} />
+            </div>
+          </Badge>
+        )}
         <div className="hover-bounce" style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#1B2A4E', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.2)' }} onClick={() => setIsProfileModalVisible(true)}>
           <SettingOutlined style={{ fontSize: '20px' }} />
         </div>
