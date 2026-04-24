@@ -233,6 +233,7 @@ const resolvers = {
       subscribe: withFilter(
         () => {
           const { pubsub, EVENTS } = require('../utils/pubsub');
+          console.log('📡 New Subscription request for NOTIFICATION_ADDED');
           return pubsub.asyncIterator([EVENTS.NOTIFICATION_ADDED]);
         },
         (payload, variables, { user }) => {
@@ -254,6 +255,9 @@ const resolvers = {
           return isMatch;
         }
       ),
+      resolve: (payload) => {
+        return payload.notificationAdded;
+      }
     }
   }
 };

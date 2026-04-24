@@ -15,6 +15,7 @@ const notificationService = {
       .populate('booking')
       .populate('event');
 
+    console.log(`[LIST DEBUG] User: ${userId}, Found: ${notifications.length}`);
     return notifications;
   },
 
@@ -25,6 +26,7 @@ const notificationService = {
       recipient: new mongoose.Types.ObjectId(userId),
       read: false
     });
+    console.log(`[COUNT DEBUG] User: ${userId}, Unread Count: ${count}`);
     return count;
   },
 

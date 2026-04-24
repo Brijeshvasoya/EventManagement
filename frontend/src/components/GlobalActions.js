@@ -51,6 +51,7 @@ export function GlobalActionsProvider({ children }) {
   });
 
   const unreadCount = countData?.unreadNotificationCount || 0;
+  if (unreadCount > 0) console.log('Current Badge Count:', unreadCount);
 
   const { data: meData } = useQuery(GET_ME, {
     skip: !user,
@@ -119,6 +120,7 @@ export function GlobalActionsProvider({ children }) {
   const handleOpenDrawer = () => {
     setIsDrawerVisible(true);
     refetchGlobalNotifications();
+    refetchCount();
   };
 
   return (
@@ -198,7 +200,7 @@ export function TopbarMobileIcons() {
   if (!mounted || !user) return null;
 
   return (
-    <div className="mobile-only-flex" style={{ display: 'none', gap: '10px' }}>
+    <div className="mobile-only-flex" style={{ display: 'flex', gap: '10px' }}>
       <Badge count={unreadCount} offset={[-2, 6]}>
         <div
           className="hover-bounce"

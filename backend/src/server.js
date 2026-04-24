@@ -143,6 +143,12 @@ const startServer = async () => {
 
   const serverCleanup = useServer({ 
     schema,
+    onConnect: (ctx) => {
+      console.log('🚀 WebSocket Connected');
+    },
+    onDisconnect: (ctx) => {
+      console.log('❌ WebSocket Disconnected');
+    },
     context: (ctx) => {
       // Handle subscription auth
       const connectionParams = ctx.connectionParams;
@@ -151,7 +157,10 @@ const startServer = async () => {
         const token = connectionParams.authorization.split(' ')[1];
         try {
           user = verifyToken(token);
-        } catch (e) {}
+          console.log(`👤 Subscription Auth: ${user.name} (${user.role})`);
+        } catch (e) {
+          console.log('⚠️ Subscription Auth Failed:', e.message);
+        }
       }
       return { user, loaders: createLoaders() };
     }

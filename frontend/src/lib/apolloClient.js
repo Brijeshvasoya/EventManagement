@@ -25,6 +25,8 @@ const authLink = setContext((_, { headers }) => {
 const wsLink = typeof window !== 'undefined'
   ? new GraphQLWsLink(createClient({
       url: `${process.env.NEXT_PUBLIC_BACKEND_URL.replace('http', 'ws')}/graphql`,
+      lazy: true,
+      retryAttempts: 5,
       connectionParams: () => {
         const token = localStorage.getItem('token');
         return {
