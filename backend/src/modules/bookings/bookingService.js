@@ -120,6 +120,7 @@ const bookingService = {
     if (booking.status === 'CANCELLED') throw new Error('Already cancelled');
 
     // AUTO STRIPE REFUND
+    let refundSucceeded = false;
     if (booking.stripePaymentId) {
       try {
         let paymentIntentId = booking.stripePaymentId;
@@ -141,7 +142,9 @@ const bookingService = {
               amount: refundAmount,
               reason: 'requested_by_customer'
             });
+            // ✅ Only mark REFUNDED if Stripe call succeeded
             booking.paymentStatus = 'REFUNDED';
+            refundSucceeded = true;
           } else {
             console.log(`ℹ️ No refund processed for booking ID: ${bookingId} (Amount was $0)`);
           }
@@ -150,10 +153,12 @@ const bookingService = {
         }
       } catch (err) {
         console.error('❌ Refund Failed (might be already processed):', err.message);
+        // paymentStatus stays as PAID — don't incorrectly mark as REFUNDED
       }
     }
 
     booking.status = 'CANCELLED';
+    // ✅ Save booking AFTER paymentStatus is finalized — so email reads correct value
     await booking.save();
 
     // Deduct Loyalty Points on cancellation
@@ -162,8 +167,8 @@ const bookingService = {
     // Notify Attendee about cancellation
     try {
       const cancelledEvent = await Event.findById(booking.event).populate('organizer');
-      const refundNote = booking.amountPaid > 0
-        ? ` A 75% refund of ₹${(booking.amountPaid * 0.75).toFixed(2)} has been initiated.`
+      const refundNote = refundSucceeded && booking.amountPaid > 0
+        ? ` A 75% refund of $${(booking.amountPaid * 0.75).toFixed(2)} has been initiated.`
         : '';
 
       // Notify Attendee
@@ -181,7 +186,7 @@ const bookingService = {
         await notificationService.createNotification({
           recipient: cancelledEvent.organizer._id,
           message: `<b>⚠️ Cancellation</b>: <b>${userName}</b> has cancelled their booking for your event "${cancelledEvent.title}". ${booking.quantity} seat(s) are now available.`,
-          type: 'EVENT_CANCELLED', // Reuse type or create BOOKING_CANCELLED if preferred
+          type: 'EVENT_CANCELLED',
           bookingId: booking._id,
           eventId: booking.event
         });
@@ -190,7 +195,7 @@ const bookingService = {
       console.error('Failed to create cancellation notifications:', err.message);
     }
 
-    // ASYNC EMAIL DISPATCH: Send cancellation notification
+    // ASYNC EMAIL DISPATCH: Send cancellation email AFTER refund status is confirmed & saved
     (async () => {
       try {
         const fullUser = (user.email && user.name) ? user : await User.findById(user.id);
@@ -199,11 +204,11 @@ const bookingService = {
           const { sendCancellationEmail } = require('../../utils/email');
           const { generateRefundSlipPDF } = require('../../utils/pdfGenerator');
 
-          // Generate PDF refund slip
+          // ✅ Use the saved booking object — which has the correct final paymentStatus
           const pdfBuffer = await generateRefundSlipPDF(fullUser, booking, cancelledEvent);
 
-          // Send email with attachment
           await sendCancellationEmail(fullUser, booking, cancelledEvent, pdfBuffer);
+          console.log(`✅ Refund slip emailed to ${fullUser.email} (Status: ${booking.paymentStatus})`);
         }
       } catch (e) {
         console.error('❌ Cancellation email failed but booking updated:', e.message);
