@@ -16,7 +16,7 @@ import {
   CalendarOutlined, EnvironmentOutlined, TeamOutlined,
   DollarCircleOutlined, ShopOutlined, UserOutlined,
   MailOutlined, ArrowLeftOutlined, CheckCircleOutlined,
-  CloseCircleOutlined, InfoCircleOutlined, DownloadOutlined
+  CloseCircleOutlined, InfoCircleOutlined, DownloadOutlined, StarFilled
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
@@ -243,7 +243,8 @@ export default function EventDetailsPage() {
               {[
                 { icon: <CalendarOutlined style={{ color: 'var(--primary-color)' }} />, label: 'Date & Time', value: dayjs(parseInt(event.date) || event.date).format('MMMM D, YYYY h:mm A') },
                 { icon: <EnvironmentOutlined style={{ color: 'var(--secondary-color)' }} />, label: 'Venue', value: event.location },
-                { icon: <TeamOutlined style={{ color: '#ff8b3d' }} />, label: 'Capacity', value: `${event.bookedCount} / ${event.capacity} Guests` }
+                { icon: <TeamOutlined style={{ color: '#ff8b3d' }} />, label: 'Capacity', value: `${event.bookedCount} / ${event.capacity} Guests` },
+                { icon: <StarFilled style={{ color: '#FBBF24' }} />, label: 'Organizer Rating', value: `${event.organizer?.name} (${event.organizer?.averageRating?.toFixed(1) || '0.0'})` }
               ].map((item, i) => (
                 <div className="hover-bounce" key={i} style={{
                   padding: '14px',

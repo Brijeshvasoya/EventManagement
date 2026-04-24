@@ -144,8 +144,16 @@ const startServer = async () => {
   const serverCleanup = useServer({ 
     schema,
     context: (ctx) => {
-      // Handle subscription auth if needed
-      return { loaders: createLoaders() };
+      // Handle subscription auth
+      const connectionParams = ctx.connectionParams;
+      let user = null;
+      if (connectionParams && connectionParams.authorization) {
+        const token = connectionParams.authorization.split(' ')[1];
+        try {
+          user = verifyToken(token);
+        } catch (e) {}
+      }
+      return { user, loaders: createLoaders() };
     }
   }, wsServer);
 

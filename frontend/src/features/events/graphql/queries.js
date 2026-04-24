@@ -3,7 +3,7 @@ import { gql } from '@apollo/client';
 export const GET_ME = gql`
   query GetMe {
     me {
-      id name email role createdAt loyaltyPoints rating redeemedRewards
+      id name email role createdAt loyaltyPoints averageRating redeemedRewards
     }
   }
 `;
@@ -77,7 +77,7 @@ export const GET_MY_BOOKINGS = gql`
 export const UPDATE_PROFILE = gql`
   mutation UpdateProfile($name: String, $email: String, $currentPassword: String, $newPassword: String) {
     updateProfile(name: $name, email: $email, currentPassword: $currentPassword, newPassword: $newPassword) {
-      id name email role createdAt loyaltyPoints rating
+      id name email role createdAt loyaltyPoints averageRating
     }
   }
 `;
@@ -86,7 +86,7 @@ export const GET_EVENT_DETAILS = gql`
   query GetEventDetails($id: ID!) {
     event(id: $id) {
       id title description date location capacity imageUrl eventType status bookedCount
-      organizer { id name email }
+      organizer { id name email averageRating }
       ticketTypes { name price capacity }
       attendees { id user { id name email } quantity amountPaid ticketType status createdAt }
       vendors { id name category cost contactInfo }

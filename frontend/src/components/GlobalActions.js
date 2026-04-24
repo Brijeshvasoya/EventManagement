@@ -29,9 +29,14 @@ export function GlobalActionsProvider({ children }) {
   // Real-time Notification Subscription
   useSubscription(NOTIFICATION_SUBSCRIPTION, {
     onData: ({ data }) => {
-      const newNotification = data.data?.notificationAdded;
-      if (newNotification) {
-        toast.success(`New Notification: ${newNotification.message.replace(/<[^>]*>?/gm, '')}`, {
+      // Handle both { data: { notificationAdded: ... } } (Standard result) 
+      // and { data: { data: { notificationAdded: ... } } } (Some older versions/wrappers)
+      const payload = data.data?.notificationAdded || data.notificationAdded;
+      
+      if (payload) {
+        // Only show toast if the recipient is the current user (if we have that info)
+        // or just let the backend filter (ideal)
+        toast.success(`New Activity: ${payload.message.replace(/<[^>]*>?/gm, '')}`, {
           icon: '🔔',
           duration: 4000
         });

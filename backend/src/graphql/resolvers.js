@@ -1,4 +1,5 @@
 const { GraphQLError } = require('graphql');
+const { withFilter } = require('graphql-subscriptions');
 const QRCode = require('qrcode');
 const authService = require('../modules/auth/authService');
 const eventService = require('../modules/events/eventService');
@@ -229,19 +230,18 @@ const resolvers = {
   },
   Subscription: {
     notificationAdded: {
-      subscribe: () => {
-        const { pubsub, EVENTS } = require('../utils/pubsub');
-        return pubsub.asyncIterator([EVENTS.NOTIFICATION_ADDED]);
-      },
-      // Optional: Filter so user only sees their own notifications
-      /*
       subscribe: withFilter(
-        () => pubsub.asyncIterator([EVENTS.NOTIFICATION_ADDED]),
-        (payload, variables, context) => {
-           return payload.notificationAdded.recipient.toString() === context.user.id;
+        () => {
+          const { pubsub, EVENTS } = require('../utils/pubsub');
+          return pubsub.asyncIterator([EVENTS.NOTIFICATION_ADDED]);
+        },
+        (payload, variables, { user }) => {
+          if (!user) return false;
+          // Compare recipient ID from payload with the current subscriber's ID
+          const recipientId = payload.notificationAdded.recipient.toString();
+          return recipientId === user.id;
         }
-      )
-      */
+      ),
     }
   }
 };

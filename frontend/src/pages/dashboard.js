@@ -81,6 +81,7 @@ export default function Dashboard() {
         await cancel({ variables: { id } });
         toast.success('Ticket cancelled successfully');
         refetch();
+        refetchGlobalNotifications?.();
       } catch (e) { toast.error(e.message); }
     }
   };
@@ -346,6 +347,14 @@ export default function Dashboard() {
                     <div>
                       <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>Tickets Sold</div>
                       <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{ticketsSold}</div>
+                    </div>
+                  </Card>
+
+                  <Card styles={{ body: { padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' } }} style={{ borderRadius: '20px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(251, 191, 36, 0.1)', color: '#FBBF24', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>⭐</div>
+                    <div>
+                      <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>Global Rating</div>
+                      <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{user?.averageRating?.toFixed(1) || '0.0'}</div>
                     </div>
                   </Card>
                 </div>
