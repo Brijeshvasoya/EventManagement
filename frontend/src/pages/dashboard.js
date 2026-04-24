@@ -579,7 +579,7 @@ export default function Dashboard() {
                     <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>💎</div>
                     <div>
                       <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>Loyalty Pts</div>
-                      <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{meData?.me?.loyaltyPoints || 0}</div>
+                      <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{user?.loyaltyPoints || 0}</div>
                     </div>
                   </Card>
                 </div>
@@ -609,8 +609,8 @@ export default function Dashboard() {
 
                   <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                     <h3 style={{ margin: '0 0 20px 0', color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Booking Trends</h3>
-                    <div style={{ height: '220px' }}>
-                      <ResponsiveContainer width="100%" height="100%">
+                    <div style={{ height: '220px', minWidth: 0 }}>
+                      <ResponsiveContainer width="100%" height="100%" debounce={100}>
                         <BarChart data={last6Months}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                           <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 12 }} />
