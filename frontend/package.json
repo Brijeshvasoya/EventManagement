@@ -15,6 +15,7 @@
     "@stripe/stripe-js": "^9.0.1",
     "antd": "^6.3.5",
     "graphql": "^16.13.2",
+    "graphql-ws": "^6.0.8",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "jwt-decode": "^4.0.0",
@@ -26,11 +27,11 @@
     "recharts": "^3.8.1"
   },
   "devDependencies": {
-    "eslint": "^9",
-    "eslint-config-next": "16.2.2",
     "chart.js": "^4.5.1",
     "cloudinary": "^1.41.3",
     "concurrently": "^9.2.1",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.2",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "html2canvas": "^1.4.1",
