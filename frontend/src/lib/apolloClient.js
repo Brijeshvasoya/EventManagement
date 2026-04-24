@@ -27,6 +27,7 @@ const wsLink = typeof window !== 'undefined'
       url: `${process.env.NEXT_PUBLIC_BACKEND_URL.replace('http', 'ws')}/graphql`,
       lazy: true,
       retryAttempts: 5,
+      connectionAckWaitTimeout: 30000,
       connectionParams: () => {
         const token = localStorage.getItem('token');
         return {

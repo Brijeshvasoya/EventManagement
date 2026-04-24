@@ -149,6 +149,12 @@ const startServer = async () => {
     onDisconnect: (ctx) => {
       console.log('❌ WebSocket Disconnected');
     },
+    onSubscribe: (ctx, msg) => {
+      console.log('📡 subscription requested:', msg.payload.operationName || 'unnamed');
+    },
+    onError: (ctx, msg, errors) => {
+      console.error('⚠️ WebSocket Error:', errors);
+    },
     context: (ctx) => {
       // Handle subscription auth
       const connectionParams = ctx.connectionParams;
@@ -165,6 +171,15 @@ const startServer = async () => {
       return { user, loaders: createLoaders() };
     }
   }, wsServer);
+
+  // Keep-alive heartbeat (30s) to prevent Railway/Production timeouts
+  setInterval(() => {
+    wsServer.clients.forEach((client) => {
+      if (client.readyState === 1) {
+        client.ping();
+      }
+    });
+  }, 30000);
 
   const server = new ApolloServer({
     schema,

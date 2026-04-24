@@ -9,6 +9,7 @@ const notificationService = require('../modules/notifications/notificationServic
 
 const stripeService = require('../modules/payments/stripeService');
 const analyticsService = require('../modules/analytics/analyticsService');
+const { pubsub, EVENTS } = require('../utils/pubsub');
 
 const resolvers = {
   Query: {
@@ -232,7 +233,6 @@ const resolvers = {
     notificationAdded: {
       subscribe: withFilter(
         () => {
-          const { pubsub, EVENTS } = require('../utils/pubsub');
           console.log('📡 New Subscription request for NOTIFICATION_ADDED');
           return pubsub.asyncIterator([EVENTS.NOTIFICATION_ADDED]);
         },
