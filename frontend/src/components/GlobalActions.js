@@ -28,12 +28,16 @@ export function GlobalActionsProvider({ children }) {
 
   // Real-time Notification Subscription
   useSubscription(NOTIFICATION_SUBSCRIPTION, {
-    onData: ({ data }) => {
+    skip: !user,
+    onData: (result) => {
+      console.log('Subscription data received:', result);
       // Handle both { data: { notificationAdded: ... } } (Standard result) 
       // and { data: { data: { notificationAdded: ... } } } (Some older versions/wrappers)
-      const payload = data.data?.notificationAdded || data.notificationAdded;
+      const data = result.data;
+      const payload = data?.data?.notificationAdded || data?.notificationAdded;
       
       if (payload) {
+        console.log('Notification payload:', payload);
         // Only show toast if the recipient is the current user (if we have that info)
         // or just let the backend filter (ideal)
         toast.success(`New Activity: ${payload.message.replace(/<[^>]*>?/gm, '')}`, {
@@ -175,7 +179,7 @@ export function GlobalActionsProvider({ children }) {
                     <div style={{ fontWeight: 700, color: '#1B2A4E', fontSize: '0.95rem', marginBottom: '4px' }}>{item.title}</div>
                     <div style={{ color: '#64748B', fontSize: '0.85rem', marginBottom: '6px' }} dangerouslySetInnerHTML={{ __html: item.message }} />
                     <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>
-                      {new Date(parseInt(item.createdAt)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      {new Date(isNaN(item.createdAt) ? item.createdAt : parseInt(item.createdAt)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                 </div>

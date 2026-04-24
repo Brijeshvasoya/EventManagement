@@ -236,10 +236,22 @@ const resolvers = {
           return pubsub.asyncIterator([EVENTS.NOTIFICATION_ADDED]);
         },
         (payload, variables, { user }) => {
-          if (!user) return false;
-          // Compare recipient ID from payload with the current subscriber's ID
+          if (!user) {
+            console.log('Subscription filter failed: No user in context');
+            return false;
+          }
+          
+          if (!payload || !payload.notificationAdded) {
+            console.log('Subscription filter failed: No payload');
+            return false;
+          }
+
           const recipientId = payload.notificationAdded.recipient.toString();
-          return recipientId === user.id;
+          const userId = user.id.toString();
+          
+          const isMatch = recipientId === userId;
+          console.log(`Subscription filter: recipient=${recipientId}, user=${userId}, match=${isMatch}`);
+          return isMatch;
         }
       ),
     }

@@ -59,9 +59,16 @@ const notificationService = {
       event: eventId
     });
 
-    // Publish to subscriptions
+    console.log(`Creating notification: Type=${type}, Recipient=${recipient}`);
+
+    // Publish to subscriptions (convert to plain object first)
+    const plainNotification = notification.toObject();
     pubsub.publish(EVENTS.NOTIFICATION_ADDED, {
-      notificationAdded: notification
+      notificationAdded: {
+        ...plainNotification,
+        id: notification._id.toString(), // Ensure ID is a string
+        recipient: recipient.toString()  // Ensure recipient is a string for the filter
+      }
     });
 
     return notification;
