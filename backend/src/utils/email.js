@@ -190,3 +190,106 @@ exports.sendPasswordResetEmail = async (email, name, token) => {
     console.error(`❌ RESET EMAIL ERROR: Failed to send to ${recipient}`, error);
   }
 };
+
+exports.sendCancellationEmail = async (user, booking, event, pdfBuffer = null) => {
+  const recipient = (process.env.RESEND_TEST_RECIPIENT || user.email).trim();
+  const FROM_EMAIL = (process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev').trim();
+
+  try {
+    const eventDate = isNaN(event.date) ? new Date(event.date) : new Date(Number(event.date));
+    const formattedDate = eventDate.toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    const emailOptions = {
+      from: FROM_EMAIL,
+      to: recipient,
+      subject: `Ticket Cancelled: ${event.title} ❌`,
+      text: `Hi ${user.name},\n\nYour ticket for "${event.title}" has been successfully cancelled.\n\nBooking ID: #${booking.id.slice(-8).toUpperCase()}\nEvent Date: ${formattedDate}\nLocation: ${event.location}\n\nWe hope to see you at another event soon!`,
+      html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%); padding: 40px; color: white; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px;">❌ Ticket Cancelled</h1>
+            <p style="opacity: 0.85;">Your booking has been successfully cancelled.</p>
+          </div>
+          <div style="padding: 30px; background: white;">
+            <p>Hi <strong>${user.name}</strong>,</p>
+            <p>Your ticket for the following event has been cancelled:</p>
+            <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin: 20px 0;">
+              <h3 style="color: #1e1b4b; margin-top: 0;">${event.title}</h3>
+              <p style="margin: 5px 0;"><strong>Date:</strong> ${formattedDate}</p>
+              <p style="margin: 5px 0;"><strong>Location:</strong> ${event.location}</p>
+              <p style="margin: 5px 0;"><strong>Booking ID:</strong> #${booking.id.slice(-8).toUpperCase()}</p>
+            </div>
+            <p>Your refund slip has been attached to this email.</p>
+            <p style="color: #64748b; font-size: 14px;">We hope to see you at another event soon! Any applicable refunds will be processed according to the event's policy.</p>
+            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
+          </div>
+          <div style="padding: 20px; background: #f1f5f9; text-align: center; font-size: 12px; color: #94a3b8;">
+            © 2026 EventHub SaaS. All rights reserved.
+          </div>
+        </div>
+      `,
+    };
+
+    if (pdfBuffer) {
+      emailOptions.attachments = [
+        {
+          filename: `Refund_Slip_${event.title.replace(/\s+/g, '_')}.pdf`,
+          content: pdfBuffer,
+        }
+      ];
+    }
+    const response = await resend.emails.send(emailOptions);
+    if (response.error) throw new Error(response.error.message);
+  } catch (error) {
+    console.error(`❌ CANCELLATION EMAIL ERROR: Failed to send to ${recipient}`, error);
+  }
+};
+
+exports.sendCheckInFeedbackEmail = async (user, booking, event) => {
+  const recipient = (process.env.RESEND_TEST_RECIPIENT || user.email).trim();
+  const FROM_EMAIL = (process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev').trim();
+  const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const feedbackUrl = `${FRONTEND_URL}/feedback/${booking.id}`;
+
+  try {
+    const emailOptions = {
+      from: FROM_EMAIL,
+      to: recipient,
+      subject: `How was "${event.title}"? 🌟`,
+      text: `Hi ${user.name},\n\nYou've checked in to "${event.title}". We hope you're enjoying the experience! We'd love to hear your feedback. Please rate your experience here: ${feedbackUrl}`,
+      html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%); padding: 40px; color: white; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px;">🌟 Enjoying the Event?</h1>
+            <p style="opacity: 0.85;">We'd love to hear your feedback on "${event.title}"</p>
+          </div>
+          <div style="padding: 30px; background: white; text-align: center;">
+            <p>Hi <strong>${user.name}</strong>,</p>
+            <p>You've successfully checked in! To help us improve and support our organizers, please take a moment to rate your experience.</p>
+            
+            <div style="margin: 30px 0;">
+              <a href="${feedbackUrl}" style="background: #4338ca; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Rate Organizer & Event</a>
+            </div>
+
+            <div style="color: #64748b; font-size: 14px; margin-top: 20px;">
+              Your ratings help ${event.organizer?.name || 'the organizer'} grow!
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
+          </div>
+          <div style="padding: 20px; background: #f1f5f9; text-align: center; font-size: 12px; color: #94a3b8;">
+            © 2026 EventHub SaaS. All rights reserved.
+          </div>
+        </div>
+      `,
+    };
+
+    await resend.emails.send(emailOptions);
+  } catch (error) {
+    console.error(`❌ FEEDBACK EMAIL ERROR: Failed to send to ${recipient}`, error);
+  }
+};

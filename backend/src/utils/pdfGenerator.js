@@ -154,3 +154,93 @@ exports.generateTicketPDF = async (user, booking, event) => {
     }
   });
 };
+
+exports.generateRefundSlipPDF = async (user, booking, event) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ 
+        size: 'A4', 
+        margin: 50,
+        info: {
+          Title: `Refund Slip - ${event.title}`,
+          Author: 'EventHub Billing',
+        }
+      });
+
+      let buffers = [];
+      doc.on('data', buffers.push.bind(buffers));
+      doc.on('end', () => {
+        const result = Buffer.concat(buffers);
+        resolve(result);
+      });
+
+      // Colors
+      const primary = '#ef4444'; // Red for cancellation/refund
+      const textMain = '#1e293b';
+      const textMuted = '#64748b';
+      const border = '#e2e8f0';
+
+      // Header
+      doc.fontSize(20).font('Helvetica-Bold').fillColor(primary).text('REFUND SLIP', { align: 'right' });
+      doc.fontSize(10).font('Helvetica').fillColor(textMuted).text(`Date: ${new Date().toLocaleDateString()}`, { align: 'right' });
+      doc.moveDown(2);
+
+      // Logo/Company
+      doc.fontSize(16).font('Helvetica-Bold').fillColor(textMain).text('EventHub SaaS');
+      doc.fontSize(10).font('Helvetica').fillColor(textMuted).text('Official Cancellation Receipt');
+      doc.moveDown(2);
+
+      // Customer Details
+      doc.roundedRect(50, doc.y, 500, 80, 8).lineWidth(1).strokeColor(border).stroke();
+      const detailsY = doc.y + 15;
+      doc.fillColor(textMain).font('Helvetica-Bold').fontSize(10).text('BILL TO:', 70, detailsY);
+      doc.font('Helvetica').text(user.name, 70, detailsY + 15);
+      doc.text(user.email, 70, detailsY + 30);
+      
+      doc.font('Helvetica-Bold').text('BOOKING ID:', 350, detailsY);
+      doc.font('Helvetica').text(`#${booking.id.toUpperCase()}`, 350, detailsY + 15);
+      doc.moveDown(6);
+
+      // Table Header
+      const tableTop = doc.y;
+      doc.rect(50, tableTop, 500, 25).fill('#f8fafc');
+      doc.fillColor(textMain).font('Helvetica-Bold').fontSize(10);
+      doc.text('DESCRIPTION', 70, tableTop + 8);
+      doc.text('AMOUNT', 450, tableTop + 8);
+      doc.moveDown(1);
+
+      // Items
+      const itemY = doc.y + 10;
+      doc.font('Helvetica').text(`Ticket Cancellation: ${event.title}`, 70, itemY);
+      doc.text(`$${Number(booking.amountPaid).toFixed(2)}`, 450, itemY);
+      
+      doc.moveDown(1);
+      doc.font('Helvetica-Oblique').fontSize(9).text(`Refund Policy: 75% of base price`, 70, doc.y);
+
+      // Summary
+      doc.moveDown(3);
+      const summaryX = 350;
+      doc.fontSize(10).font('Helvetica').text('Original Paid:', summaryX, doc.y);
+      doc.text(`$${Number(booking.amountPaid).toFixed(2)}`, 480, doc.y - 12, { align: 'right' });
+      
+      doc.moveDown(0.5);
+      doc.fillColor(primary).text('Handling Fee (25%):', summaryX, doc.y);
+      doc.text(`-$${(booking.amountPaid * 0.25).toFixed(2)}`, 480, doc.y - 12, { align: 'right' });
+
+      doc.moveDown(1);
+      doc.rect(summaryX, doc.y, 200, 1).fill(border);
+      doc.moveDown(0.5);
+      
+      doc.fontSize(12).font('Helvetica-Bold').fillColor('#10b981').text('NET REFUND:', summaryX, doc.y);
+      doc.text(`$${(booking.amountPaid * 0.75).toFixed(2)}`, 480, doc.y - 14, { align: 'right' });
+
+      // Footer Note
+      doc.moveDown(10);
+      doc.fontSize(9).font('Helvetica').fillColor(textMuted).text('Note: The 25% deduction covers Platform Handling, Payment Gateway fees, and administrative costs. This refund has been initiated and may take 5-10 business days to reflect in your account.', { align: 'center', width: 440 });
+
+      doc.end();
+    } catch (error) {
+      reject(error);
+    }
+  });
+};

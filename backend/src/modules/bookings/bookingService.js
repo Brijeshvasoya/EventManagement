@@ -7,6 +7,8 @@ const User = require('../../models/User');
 const { requireAuth } = require('../../utils/authGuard');
 const notificationService = require('../notifications/notificationService');
 
+const Feedback = require('../../models/Feedback');
+
 const bookingService = {
   getMyBookings: async (user) => {
     requireAuth(user);
@@ -188,6 +190,26 @@ const bookingService = {
       console.error('Failed to create cancellation notifications:', err.message);
     }
 
+    // ASYNC EMAIL DISPATCH: Send cancellation notification
+    (async () => {
+      try {
+        const fullUser = (user.email && user.name) ? user : await User.findById(user.id);
+        const cancelledEvent = await Event.findById(booking.event);
+        if (fullUser && cancelledEvent) {
+          const { sendCancellationEmail } = require('../../utils/email');
+          const { generateRefundSlipPDF } = require('../../utils/pdfGenerator');
+          
+          // Generate PDF refund slip
+          const pdfBuffer = await generateRefundSlipPDF(fullUser, booking, cancelledEvent);
+          
+          // Send email with attachment
+          await sendCancellationEmail(fullUser, booking, cancelledEvent, pdfBuffer);
+        }
+      } catch (e) {
+        console.error('❌ Cancellation email failed but booking updated:', e.message);
+      }
+    })();
+
     return true;
   },
 
@@ -234,6 +256,16 @@ const bookingService = {
     booking.status = 'CHECKED_IN';
     await booking.save();
 
+    // ASYNC EMAIL DISPATCH: Send feedback request email
+    (async () => {
+      try {
+        const { sendCheckInFeedbackEmail } = require('../../utils/email');
+        await sendCheckInFeedbackEmail(booking.user, booking, booking.event);
+      } catch (e) {
+        console.error('❌ Feedback email failed but check-in successful:', e.message);
+      }
+    })();
+
     return booking;
   },
 
@@ -254,6 +286,63 @@ const bookingService = {
 
     await booking.save();
     return booking;
+  },
+
+  getPublicBookingForFeedback: async (bookingId) => {
+    const booking = await Booking.findById(bookingId).populate('event');
+    if (!booking) throw new Error('Booking not found');
+    if (booking.status !== 'CHECKED_IN') throw new Error('Invalid feedback request');
+    
+    // Populate organizer name for display
+    const Event = require('../../models/Event'); // ensure populated
+    const populatedEvent = await Event.findById(booking.event).populate('organizer');
+    
+    return {
+      id: booking.id,
+      eventTitle: populatedEvent.title,
+      organizerName: populatedEvent.organizer?.name || 'Organizer',
+      status: booking.status
+    };
+  },
+
+  submitFeedback: async ({ bookingId, rating, comment }) => {
+    if (rating < 1 || rating > 5) throw new Error('Rating must be between 1 and 5');
+
+    const booking = await Booking.findById(bookingId).populate('event');
+    if (!booking) throw new Error('Booking not found');
+    
+    // Check if feedback already exists
+    const existingFeedback = await Feedback.findOne({ booking: bookingId });
+    if (existingFeedback) throw new Error('Feedback already submitted for this booking');
+
+    // We only allow feedback for CHECKED_IN bookings
+    if (booking.status !== 'CHECKED_IN') {
+      throw new Error('Feedback can only be submitted for valid, checked-in tickets.');
+    }
+
+    const event = booking.event;
+    const organizerId = event.organizer;
+
+    // Create Feedback (using the user from the booking itself)
+    const feedback = await Feedback.create({
+      booking: bookingId,
+      event: event._id,
+      organizer: organizerId,
+      user: booking.user,
+      rating,
+      comment
+    });
+
+    // Update Organizer Stats
+    const organizer = await User.findById(organizerId);
+    if (organizer) {
+      const currentTotal = organizer.averageRating * organizer.numReviews;
+      organizer.numReviews += 1;
+      organizer.averageRating = (currentTotal + rating) / organizer.numReviews;
+      await organizer.save();
+    }
+
+    return feedback;
   }
 };
 

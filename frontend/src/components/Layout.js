@@ -28,7 +28,7 @@ export default function AppLayout({ children }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (loading) return null;
-  if (['/login', '/signup', '/forgot-password'].includes(router.pathname) || router.pathname.startsWith('/reset-password')) return <>{children}</>;
+  if (['/login', '/signup', '/forgot-password', '/feedback'].includes(router.pathname) || router.pathname.startsWith('/reset-password') || router.pathname.startsWith('/feedback/')) return <>{children}</>;
 
   const menuItems = [
     { key: '/dashboard', icon: <AppstoreOutlined />, label: 'Dashboard' },

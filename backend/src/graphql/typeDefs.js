@@ -1,6 +1,7 @@
 const typeDefs = `#graphql
-  type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int rating: Float redeemedRewards: [String] }
+  type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int averageRating: Float numReviews: Int redeemedRewards: [String] }
   type TicketType { name: String! price: Float! capacity: Int! }
+  type Feedback { id: ID! booking: Booking! event: Event! organizer: User! user: User! rating: Int! comment: String createdAt: String! }
   type Event { id: ID! title: String! description: String! date: String! location: String! capacity: Int! imageUrl: String organizer: User! isBooked: Boolean eventType: String status: String ticketTypes: [TicketType] bookedCount: Int attendees: [Booking!] vendors: [Vendor!] }
   type Booking { id: ID! event: Event! user: User! status: String! createdAt: String! qrCode: String ticketType: String amountPaid: Float quantity: Int paymentStatus: String }
   type Vendor { id: ID! name: String! category: String! rating: Float cost: Float contactInfo: String availableDates: [String] organizer: User! events: [Event!] }
@@ -8,6 +9,7 @@ const typeDefs = `#graphql
   type AuthPayload { token: String! user: User! }
   type MonthlyData { n: String! c: Float! p: Float! }
   type AnalyticsStats { totalRevenue: Float! ticketsSold: Int! cancelledTickets: Int! confirmedBookingsCount: Int! monthlyData: [MonthlyData!]! }
+  type PublicBookingFeedback { id: ID! eventTitle: String! organizerName: String! status: String! }
   
   input TicketTypeInput { name: String! price: Float! capacity: Int! }
   input CreateEventInput { title: String! description: String! date: String! location: String! capacity: Int imageUrl: String eventType: String ticketTypes: [TicketTypeInput] vendorIds: [ID] }
@@ -25,6 +27,7 @@ const typeDefs = `#graphql
     myAnalytics: AnalyticsStats!
     myNotifications: [Notification!]!
     unreadNotificationCount: Int!
+    feedbackInfo(bookingId: ID!): PublicBookingFeedback!
   }
   
   type Mutation {
@@ -46,6 +49,7 @@ const typeDefs = `#graphql
     redeemReward(rewardId: String!, points: Int!): User!
     forgotPassword(email: String!): Boolean!
     resetPassword(token: String!, password: String!): Boolean!
+    submitFeedback(bookingId: ID!, rating: Int!, comment: String): Feedback!
   }
 
   type Subscription {

@@ -28,7 +28,8 @@ const resolvers = {
     vendor: (_, { id }) => Vendor.findById(id),
     myAnalytics: (_, __, { user }) => analyticsService.getOrganizerAnalytics(user),
     myNotifications: (_, __, { user }) => notificationService.getNotifications(user),
-    unreadNotificationCount: (_, __, { user }) => notificationService.getUnreadCount(user)
+    unreadNotificationCount: (_, __, { user }) => notificationService.getUnreadCount(user),
+    feedbackInfo: (_, { bookingId }) => bookingService.getPublicBookingForFeedback(bookingId)
   },
   Mutation: {
     register: (_, args) => authService.register(args),
@@ -118,6 +119,13 @@ const resolvers = {
     },
     forgotPassword: (_, { email }) => authService.forgotPassword(email),
     resetPassword: (_, { token, password }) => authService.resetPassword(token, password),
+    submitFeedback: (_, args) => bookingService.submitFeedback(args),
+  },
+  Feedback: {
+    booking: (parent, _, { loaders }) => loaders.bookingLoader.load(parent.booking.toString()),
+    event: (parent, _, { loaders }) => loaders.eventLoader.load(parent.event.toString()),
+    organizer: (parent, _, { loaders }) => loaders.userLoader.load(parent.organizer.toString()),
+    user: (parent, _, { loaders }) => loaders.userLoader.load(parent.user.toString()),
   },
   Vendor: {
     organizer: (parent, _, { loaders }) => {
