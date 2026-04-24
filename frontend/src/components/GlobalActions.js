@@ -2,7 +2,7 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 import { useQuery, useMutation, useSubscription } from '@apollo/client/react';
 import { Form, Modal, Input, Drawer, Badge, Avatar, Typography, Button } from 'antd';
 import { UserOutlined, SettingOutlined, BellOutlined, CheckCircleFilled, CheckOutlined } from '@ant-design/icons';
-import { GET_MY_NOTIFICATIONS, MARK_NOTIFICATION_AS_READ, MARK_ALL_NOTIFICATIONS_AS_READ, UPDATE_PROFILE, GET_ME, NOTIFICATION_SUBSCRIPTION } from '@/features/events/graphql/queries';
+import { GET_MY_NOTIFICATIONS, MARK_NOTIFICATION_AS_READ, MARK_ALL_NOTIFICATIONS_AS_READ, UPDATE_PROFILE, GET_ME, NOTIFICATION_SUBSCRIPTION, UNREAD_NOTIFICATION_COUNT } from '@/features/events/graphql/queries';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -22,6 +22,10 @@ export function GlobalActionsProvider({ children }) {
     skip: !user, fetchPolicy: 'cache-and-network'
   });
 
+  const { data: countData, refetch: refetchCount } = useQuery(UNREAD_NOTIFICATION_COUNT, {
+    skip: !user, fetchPolicy: 'cache-and-network'
+  });
+
   // Real-time Notification Subscription
   useSubscription(NOTIFICATION_SUBSCRIPTION, {
     onData: ({ data }) => {
@@ -32,11 +36,12 @@ export function GlobalActionsProvider({ children }) {
           duration: 4000
         });
         refetchGlobalNotifications();
+        refetchCount();
       }
     }
   });
 
-  const unreadCount = notificationData?.myNotifications?.filter(n => !n.read).length || 0;
+  const unreadCount = countData?.unreadNotificationCount || 0;
 
   const { data: meData } = useQuery(GET_ME, {
     skip: !user,
@@ -85,6 +90,7 @@ export function GlobalActionsProvider({ children }) {
     try {
       await markRead({ variables: { id } });
       refetchGlobalNotifications();
+      refetchCount();
     } catch (e) {
       toast.error(e.message);
     }
@@ -95,6 +101,7 @@ export function GlobalActionsProvider({ children }) {
       await markAllRead();
       toast.success('All notifications marked as read');
       refetchGlobalNotifications();
+      refetchCount();
     } catch (e) {
       toast.error(e.message);
     }
