@@ -222,10 +222,9 @@ const resolvers = {
       }
     },
     redeemedRewards: (parent) => parent.redeemedRewards || [],
-    rating: async (parent) => {
+    averageRating: async (parent) => {
       if (parent.role !== 'ORGANIZER') return null;
-      // Future: Calculate based on event reviews
-      return 5.0;
+      return parent.averageRating || 0;
     }
   },
   Subscription: {
