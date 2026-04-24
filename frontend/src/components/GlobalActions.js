@@ -27,6 +27,10 @@ export function GlobalActionsProvider({ children }) {
   });
 
   // Real-time Notification Subscription
+  useEffect(() => {
+    if (user) console.log('📡 Initializing PubSub Subscription link...');
+  }, [user]);
+
   useSubscription(NOTIFICATION_SUBSCRIPTION, {
     skip: !user,
     onData: (result) => {

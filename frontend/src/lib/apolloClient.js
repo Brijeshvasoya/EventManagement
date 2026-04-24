@@ -24,7 +24,9 @@ const authLink = setContext((_, { headers }) => {
 // Subscription link setup
 const wsLink = typeof window !== 'undefined'
   ? new GraphQLWsLink(createClient({
-      url: `${process.env.NEXT_PUBLIC_BACKEND_URL.replace('http', 'ws')}/graphql`,
+      url: process.env.NEXT_PUBLIC_BACKEND_URL 
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL.startsWith('https') ? 'wss' : 'ws'}://${process.env.NEXT_PUBLIC_BACKEND_URL.split('://')[1]}/graphql`
+        : 'ws://localhost:4000/graphql',
       lazy: true,
       retryAttempts: 5,
       connectionAckWaitTimeout: 30000,
