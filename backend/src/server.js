@@ -23,7 +23,7 @@ const { startReminderCron, runReminderJob } = require('./utils/reminderCron');
 const { createServer } = require('http');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
 const { WebSocketServer } = require('ws');
-const { useServer } = require('graphql-ws/lib/use/ws');
+const { useServer } = require('graphql-ws/use/ws');
 
 connectDB();
 
