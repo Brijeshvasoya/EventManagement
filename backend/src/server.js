@@ -150,7 +150,7 @@ const startServer = async () => {
       console.log('❌ WebSocket Disconnected');
     },
     onSubscribe: (ctx, msg) => {
-      console.log('📡 subscription requested:', msg.payload.operationName || 'unnamed');
+      console.log('📡 subscription requested:', msg?.payload?.operationName || 'notificationAdded');
     },
     onError: (ctx, msg, errors) => {
       console.error('⚠️ WebSocket Error:', errors);
@@ -216,8 +216,9 @@ const startServer = async () => {
 
   const PORT = process.env.PORT || 4000;
   httpServer.listen(PORT, () => {
-    console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
-    console.log(`🚀 Subscriptions ready at ws://localhost:${PORT}/graphql`);
+    const baseUrl = process.env.BACKEND_URL || `http://localhost:${PORT}`;
+    console.log(`🚀 Server ready at ${baseUrl}/graphql`);
+    console.log(`🚀 Subscriptions ready at ${baseUrl.replace('http', 'ws')}/graphql`);
     startReminderCron();
   });
 };
