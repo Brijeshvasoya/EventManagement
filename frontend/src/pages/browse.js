@@ -23,6 +23,7 @@ export default function Browse() {
         fetchPolicy: 'network-only',
         skip: !user
     });
+    console.log("🚀 ~ Browse ~ bookingData:", bookingData)
     const { data: vendorData, loading: vendorLoading } = useQuery(GET_MY_VENDORS, {
         skip: !user || user.role === 'USER'
     });
@@ -41,7 +42,7 @@ export default function Browse() {
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/ai/generate-image`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage?.getItem('token')}` },
                 body: JSON.stringify({ title, eventType })
             });
             const data = await res.json();
@@ -50,7 +51,7 @@ export default function Browse() {
                 toast.success("AI Poster Generated! 🎨");
             }
         } catch (err) {
-            toast.error("AI image service is currently unavailable.");
+            toast.error("AI image service is currently unavailable?.");
         } finally {
             setAiImageLoading(false);
         }
@@ -92,7 +93,7 @@ export default function Browse() {
     };
 
     const handleFileChange = (info) => {
-        const file = info.file.originFileObj || info.file;
+        const file = info.file?.originFileObj || info.file;
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => setPreviewImage(reader.result);
@@ -110,7 +111,7 @@ export default function Browse() {
                     id: eventId,
                     input: {
                         ...values,
-                        date: values.date.toISOString(),
+                        date: values.date?.toISOString(),
                         imageUrl: previewImage,
                         capacity: selectedEvent.capacity,
                         vendorIds: editVendorIds
@@ -121,8 +122,8 @@ export default function Browse() {
             setIsEditModalOpen(false);
             refetchEvents();
         } catch (e) {
-            console.error("Update Error:", e);
-            toast.error(e.message);
+            console?.error("Update Error:", e);
+            toast.error(e?.message);
         }
     };
 
@@ -132,7 +133,7 @@ export default function Browse() {
             toast.success('Event deleted successfully');
             refetchEvents();
         } catch (e) {
-            toast.error(e.message);
+            toast.error(e?.message);
         }
     };
 
@@ -155,12 +156,12 @@ export default function Browse() {
         ) : (
             <div className="event-grid grid-cols-auto-340" style={{ gap: '24px' }}>
                 {events.map((e, index) => {
-                    const isBooked = myBookedEventIds.includes(e.id);
-                    const isOwner = user?.id === e.organizer?.id || user?.role === 'ADMIN';
+                    const isBooked = myBookedEventIds.includes(e?.id);
+                    const isOwner = user?.id === e?.organizer?.id || user?.role === 'ADMIN';
 
                     return (
                         <div
-                            key={e.id}
+                            key={e?.id}
                             className="hover-bounce premium-event-card"
                             onClick={() => showDetails(e)}
                             style={{
@@ -179,7 +180,7 @@ export default function Browse() {
                         >
                             <div style={{ height: '220px', position: 'relative', overflow: 'hidden' }}>
                                 <img
-                                    src={e.imageUrl || '/event-placeholder.jpg'}
+                                    src={e?.imageUrl || '/event-placeholder.jpg'}
                                     style={{
                                         width: '100%', height: '100%', objectFit: 'cover',
                                         transition: 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)'
@@ -194,12 +195,12 @@ export default function Browse() {
                                 }} />
 
                                 <div style={{ position: 'absolute', top: '16px', left: '16px', display: 'flex', gap: '8px' }}>
-                                    <div style={{ 
-                                        borderRadius: '8px', 
-                                        fontWeight: '900', 
-                                        margin: 0, 
-                                        backdropFilter: 'blur(10px)', 
-                                        background: 'rgba(14, 165, 233, 0.95)', 
+                                    <div style={{
+                                        borderRadius: '8px',
+                                        fontWeight: '900',
+                                        margin: 0,
+                                        backdropFilter: 'blur(10px)',
+                                        background: 'rgba(14, 165, 233, 0.95)',
                                         color: 'white',
                                         padding: '5px 12px',
                                         fontSize: '0.75rem',
@@ -211,7 +212,7 @@ export default function Browse() {
                                         alignItems: 'center',
                                         justifyContent: 'center'
                                     }}>
-                                        {e.eventType || 'Public'}
+                                        {e?.eventType || 'Public'}
                                     </div>
                                 </div>
 
@@ -229,22 +230,22 @@ export default function Browse() {
                             </div>
 
                             <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                                <h3 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 16px 0', lineHeight: 1.3 }}>{e.title}</h3>
+                                <h3 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 16px 0', lineHeight: 1.3 }}>{e?.title}</h3>
 
                                 <div className="grid-cols-2" style={{ gap: '12px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
                                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.9rem' }}>
                                         <CalendarOutlined style={{ color: 'var(--primary-color)', marginTop: '3px' }} />
-                                        <span style={{ lineHeight: 1.4 }}>{new Date(parseInt(e.date) || e.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+                                        <span style={{ lineHeight: 1.4 }}>{new Date(parseInt(e?.date) || e?.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.9rem' }}>
                                         <EnvironmentOutlined style={{ color: 'var(--secondary-color)', marginTop: '3px' }} />
-                                        <span style={{ lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{e.location}</span>
+                                        <span style={{ lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{e?.location}</span>
                                     </div>
                                 </div>
 
                                 <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
                                     <span style={{ color: 'var(--primary-color)', fontWeight: 800, fontSize: '1.1rem' }}>
-                                        {e.ticketTypes?.[0] ? `From $${Math.min(...e.ticketTypes.map(t => t.price)).toLocaleString()}` : 'Free'}
+                                        {e?.amountPaid ? `Paid: $${Number(e.amountPaid).toLocaleString()}` : (e?.ticketTypes?.[0] ? `From $${Math.min(...e?.ticketTypes.map(t => t.price)).toLocaleString()}` : 'Free')}
                                     </span>
 
                                     {isOwner ? (
@@ -255,7 +256,7 @@ export default function Browse() {
                                             <Tooltip title="Edit Event">
                                                 <Button icon={<EditOutlined />} shape="circle" style={{ background: 'var(--glass-bg)', borderColor: 'var(--glass-border)', color: 'var(--primary-color)' }} onClick={() => handleEditOpen(e)} />
                                             </Tooltip>
-                                            <Popconfirm title="Delete this event?" onConfirm={() => handleDelete(e.id)}>
+                                            <Popconfirm title="Delete this event?" onConfirm={() => handleDelete(e?.id)}>
                                                 <Button icon={<DeleteOutlined />} shape="circle" danger style={{ background: 'var(--glass-bg)', borderColor: 'var(--glass-border)' }} />
                                             </Popconfirm>
                                         </div>
@@ -274,25 +275,25 @@ export default function Browse() {
     );
 
     const upcomingEvents = allEvents.filter(e => {
-        const isUpcoming = new Date(parseInt(e.date) || e.date) >= now;
+        const isUpcoming = new Date(parseInt(e?.date) || e?.date) >= now;
         if (user?.role === 'ORGANIZER') {
-            return isUpcoming && e.organizer?.id === user.id;
+            return isUpcoming && e?.organizer?.id === user.id;
         }
         return isUpcoming;
     });
 
     const completedEvents = allEvents.filter(e => {
-        const isPast = new Date(parseInt(e.date) || e.date) < now;
+        const isPast = new Date(parseInt(e?.date) || e?.date) < now;
         if (user?.role === 'ORGANIZER') {
-            return isPast && e.organizer?.id === user.id;
+            return isPast && e?.organizer?.id === user.id;
         }
         return isPast;
     });
 
     // BETTER: Get Participated events directly from myBookings
     const participatedEvents = myBookings
-        .map(b => b.event)
-        .filter(e => !!e); // remove nulls
+        .map(b => ({ ...b?.event, amountPaid: b?.amountPaid }))
+        .filter(e => !!e?.id);
 
     return (
         <>
@@ -333,7 +334,7 @@ export default function Browse() {
                     <Form form={editForm} layout="vertical" onFinish={handleUpdateSubmit} requiredMark={false} className="compact-form">
                         <div className="grid-2" style={{ gap: '12px', marginBottom: '12px' }}>
                             <Form.Item name="title" label={<label style={{ fontWeight: '600', color: '#a0a0b8', fontSize: '0.85rem' }}>Event Title *</label>} rules={[{ required: true }]} style={{ marginBottom: 0 }}>
-                                <Input placeholder="e.g. Next.js Dev Con" style={{ borderRadius: '10px', padding: '10px 14px' }} />
+                                <Input placeholder="e?.g. Next.js Dev Con" style={{ borderRadius: '10px', padding: '10px 14px' }} />
                             </Form.Item>
 
                             <Form.Item name="eventType" label={<label style={{ fontWeight: '600', color: '#a0a0b8', fontSize: '0.85rem' }}>Event Type *</label>} rules={[{ required: true }]} style={{ marginBottom: 0 }}>

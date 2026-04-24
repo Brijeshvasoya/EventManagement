@@ -50,13 +50,21 @@ const notificationService = {
   },
 
   createNotification: async ({ recipient, message, type, bookingId, eventId }) => {
-    return Notification.create({
+    const { pubsub, EVENTS } = require('../../utils/pubsub');
+    const notification = await Notification.create({
       recipient,
       message,
       type,
       booking: bookingId,
       event: eventId
     });
+
+    // Publish to subscriptions
+    pubsub.publish(EVENTS.NOTIFICATION_ADDED, {
+      notificationAdded: notification
+    });
+
+    return notification;
   }
 };
 

@@ -45,5 +45,9 @@ const typeDefs = `#graphql
     markAllNotificationsAsRead: Boolean!
     redeemReward(rewardId: String!, points: Int!): User!
   }
+
+  type Subscription {
+    notificationAdded: Notification!
+  }
 `;
 module.exports = typeDefs;

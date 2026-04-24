@@ -22,7 +22,7 @@ export default function Dashboard() {
   const [activeBooking, setActiveBooking] = useState(null);
   const [isQRModalVisible, setIsQRModalVisible] = useState(false);
   const [isRewardsModalVisible, setIsRewardsModalVisible] = useState(false);
-  
+
   const { refetchGlobalNotifications } = useContext(GlobalActionsContext);
 
   const isOrganizer = user?.role === 'ORGANIZER' || user?.role === 'ADMIN';
@@ -263,9 +263,9 @@ export default function Dashboard() {
                     <div style={{ fontSize: '0.85rem', color: '#6B7280' }}>{reward.desc}</div>
                   </div>
                   {isUnlocked && !isRedeemed && (
-                    <Button 
-                      type="primary" 
-                      size="small" 
+                    <Button
+                      type="primary"
+                      size="small"
                       onClick={() => handleRedeem(reward)}
                       loading={redeeming}
                       style={{ borderRadius: '8px', background: '#8338EC', border: 'none', fontWeight: 600 }}
@@ -403,7 +403,6 @@ export default function Dashboard() {
                           <YAxis stroke="#9CA3AF" axisLine={false} tickLine={false} fontSize={12} tickFormatter={(v) => `${(v / 1000)}k`} />
                           <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
                           <Bar dataKey="c" fill="rgb(67, 56, 202)" radius={[6, 6, 6, 6]} barSize={12} name="Total Rev ($)" />
-                          <Bar dataKey="p" fill="rgba(67, 56, 202, 0.15)" radius={[6, 6, 6, 6]} barSize={12} name="Profit Est ($)" />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -813,7 +812,13 @@ export default function Dashboard() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                     <span style={{ color: '#6B7280' }}>Level</span>
-                    <Tag color="gold" style={{ margin: 0, borderRadius: '4px' }}>Gold Member</Tag>
+                    {(() => {
+                      const amount = totalSpent || 0;
+                      if (amount >= 1500) return <Tag color="purple" style={{ margin: 0, borderRadius: '4px' }}>Elite Member</Tag>;
+                      if (amount >= 500) return <Tag color="gold" style={{ margin: 0, borderRadius: '4px' }}>Gold Member</Tag>;
+                      if (amount >= 100) return <Tag color="blue" style={{ margin: 0, borderRadius: '4px' }}>Silver Member</Tag>;
+                      return <Tag color="default" style={{ margin: 0, borderRadius: '4px' }}>Bronze Member</Tag>;
+                    })()}
                   </div>
                   <Divider style={{ margin: '16px 0' }} />
                   <Button type="dashed" block onClick={() => setIsRewardsModalVisible(true)} style={{ borderRadius: '12px', fontWeight: 600 }}>Explore Rewards</Button>

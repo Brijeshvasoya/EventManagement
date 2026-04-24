@@ -217,6 +217,23 @@ const resolvers = {
       // Future: Calculate based on event reviews
       return 5.0;
     }
+  },
+  Subscription: {
+    notificationAdded: {
+      subscribe: () => {
+        const { pubsub, EVENTS } = require('../utils/pubsub');
+        return pubsub.asyncIterator([EVENTS.NOTIFICATION_ADDED]);
+      },
+      // Optional: Filter so user only sees their own notifications
+      /*
+      subscribe: withFilter(
+        () => pubsub.asyncIterator([EVENTS.NOTIFICATION_ADDED]),
+        (payload, variables, context) => {
+           return payload.notificationAdded.recipient.toString() === context.user.id;
+        }
+      )
+      */
+    }
   }
 };
 module.exports = resolvers;

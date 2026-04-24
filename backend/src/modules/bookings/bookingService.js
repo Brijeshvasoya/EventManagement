@@ -159,10 +159,12 @@ const bookingService = {
 
     // Notify Attendee about cancellation
     try {
-      const cancelledEvent = await Event.findById(booking.event);
+      const cancelledEvent = await Event.findById(booking.event).populate('organizer');
       const refundNote = booking.amountPaid > 0
         ? ` A 75% refund of ₹${(booking.amountPaid * 0.75).toFixed(2)} has been initiated.`
         : '';
+      
+      // Notify Attendee
       await notificationService.createNotification({
         recipient: user.id,
         message: `<b>❌ Booking Cancelled</b>: Your booking for "${cancelledEvent?.title || 'the event'}" has been cancelled.${refundNote}`,
@@ -170,8 +172,20 @@ const bookingService = {
         bookingId: booking._id,
         eventId: booking.event
       });
+
+      // Notify Organizer
+      if (cancelledEvent?.organizer) {
+        const userName = user.name || (await User.findById(user.id))?.name || 'A user';
+        await notificationService.createNotification({
+          recipient: cancelledEvent.organizer._id,
+          message: `<b>⚠️ Cancellation</b>: <b>${userName}</b> has cancelled their booking for your event "${cancelledEvent.title}". ${booking.quantity} seat(s) are now available.`,
+          type: 'EVENT_CANCELLED', // Reuse type or create BOOKING_CANCELLED if preferred
+          bookingId: booking._id,
+          eventId: booking.event
+        });
+      }
     } catch (err) {
-      console.error('Failed to create cancellation notification for attendee:', err.message);
+      console.error('Failed to create cancellation notifications:', err.message);
     }
 
     return true;

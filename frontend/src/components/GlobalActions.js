@@ -1,8 +1,8 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { useQuery, useMutation } from '@apollo/client/react';
+import { useQuery, useMutation, useSubscription } from '@apollo/client/react';
 import { Form, Modal, Input, Drawer, Badge, Avatar, Typography, Button } from 'antd';
 import { UserOutlined, SettingOutlined, BellOutlined, CheckCircleFilled, CheckOutlined } from '@ant-design/icons';
-import { GET_MY_NOTIFICATIONS, MARK_NOTIFICATION_AS_READ, MARK_ALL_NOTIFICATIONS_AS_READ, UPDATE_PROFILE, GET_ME } from '@/features/events/graphql/queries';
+import { GET_MY_NOTIFICATIONS, MARK_NOTIFICATION_AS_READ, MARK_ALL_NOTIFICATIONS_AS_READ, UPDATE_PROFILE, GET_ME, NOTIFICATION_SUBSCRIPTION } from '@/features/events/graphql/queries';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -20,6 +20,20 @@ export function GlobalActionsProvider({ children }) {
 
   const { data: notificationData, refetch: refetchGlobalNotifications } = useQuery(GET_MY_NOTIFICATIONS, {
     skip: !user, fetchPolicy: 'cache-and-network'
+  });
+
+  // Real-time Notification Subscription
+  useSubscription(NOTIFICATION_SUBSCRIPTION, {
+    onData: ({ data }) => {
+      const newNotification = data.data?.notificationAdded;
+      if (newNotification) {
+        toast.success(`New Notification: ${newNotification.message.replace(/<[^>]*>?/gm, '')}`, {
+          icon: '🔔',
+          duration: 4000
+        });
+        refetchGlobalNotifications();
+      }
+    }
   });
 
   const unreadCount = notificationData?.myNotifications?.filter(n => !n.read).length || 0;

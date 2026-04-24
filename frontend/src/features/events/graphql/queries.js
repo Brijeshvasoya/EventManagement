@@ -65,7 +65,11 @@ export const GET_MY_BOOKINGS = gql`
   query GetMyBookings {
     myBookings {
       id status qrCode ticketType amountPaid quantity createdAt
-      event { id title date location capacity imageUrl description eventType organizer { name } }
+      event { 
+        id title date location capacity imageUrl description eventType status bookedCount
+        organizer { id name email }
+        ticketTypes { name price capacity }
+      }
     }
   }
 `;
@@ -183,6 +187,16 @@ export const REDEEM_REWARD = gql`
   mutation RedeemReward($rewardId: String!, $points: Int!) {
     redeemReward(rewardId: $rewardId, points: $points) {
       id loyaltyPoints redeemedRewards
+    }
+  }
+`;
+
+export const NOTIFICATION_SUBSCRIPTION = gql`
+  subscription OnNotificationAdded {
+    notificationAdded {
+      id message type read createdAt
+      booking { id ticketType quantity }
+      event { id title }
     }
   }
 `;
