@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { jwtDecode } from 'jwt-decode';
+import { useApolloClient, useMutation } from '@apollo/client/react';
+import { LOGOUT } from '@/features/events/graphql/queries';
 
 const AuthContext = createContext();
 
@@ -8,6 +10,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const client = useApolloClient();
+  const [logoutMutation] = useMutation(LOGOUT);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -30,10 +34,16 @@ export const AuthProvider = ({ children }) => {
     router.push(returnUrl);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await logoutMutation();
+    } catch (e) {
+      console.error("Logout mutation failed", e);
+    }
     localStorage.removeItem('token');
+    await client.clearStore();
     setUser(null);
-    router.push('/login');
+    router.replace('/login');
   };
 
   return (

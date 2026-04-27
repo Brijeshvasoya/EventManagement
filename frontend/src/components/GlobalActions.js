@@ -63,7 +63,7 @@ export function GlobalActionsProvider({ children }) {
   });
 
   useEffect(() => {
-    if (meData?.me) {
+    if (meData?.me && user) {
       const needsUpdate =
         meData.me.name !== user?.name ||
         meData.me.loyaltyPoints !== user?.loyaltyPoints ||

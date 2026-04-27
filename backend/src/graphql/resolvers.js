@@ -248,9 +248,15 @@ const resolvers = {
             return false;
           }
 
-          const recipientId = payload.notificationAdded.recipient.toString();
-          const userId = user.id.toString();
+          // Convert everything to string for safe comparison (handling both .id and ._id)
+          const recipientId = (payload.notificationAdded.recipient?._id || payload.notificationAdded.recipient || '').toString();
+          const userId = (user.id || user._id || '').toString();
           
+          if (!recipientId || !userId) {
+            console.log(`Subscription filter: Missing IDs (recipient=${recipientId}, user=${userId})`);
+            return false;
+          }
+
           const isMatch = recipientId === userId;
           console.log(`Subscription filter: recipient=${recipientId}, user=${userId}, match=${isMatch}`);
           return isMatch;

@@ -19,7 +19,7 @@ export default function Profile() {
   const { data: meData, loading: meLoading } = useQuery(GET_ME, {
     skip: !user,
     onCompleted: (data) => {
-      if (data.me) setUser({ ...user, ...data.me });
+      if (data.me && user) setUser({ ...user, ...data.me });
     }
   });
 

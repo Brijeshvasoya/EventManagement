@@ -160,7 +160,9 @@ const startServer = async () => {
       const connectionParams = ctx.connectionParams;
       let user = null;
       if (connectionParams && connectionParams.authorization) {
-        const token = connectionParams.authorization.split(' ')[1];
+        // Handle both "Bearer <token>" and raw "<token>"
+        const authHeader = connectionParams.authorization;
+        const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
         try {
           user = verifyToken(token);
           console.log(`👤 Subscription Auth: ${user.name} (${user.role})`);
@@ -172,18 +174,12 @@ const startServer = async () => {
     }
   }, wsServer);
 
-  // Keep-alive heartbeat (30s) to prevent Railway/Production timeouts
-  setInterval(() => {
-    wsServer.clients.forEach((client) => {
-      if (client.readyState === 1) {
-        client.ping();
-      }
-    });
-  }, 30000);
+  const { ApolloServerPluginDrainHttpServer } = require('@apollo/server/plugin/drainHttpServer');
 
   const server = new ApolloServer({
     schema,
     plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
       {
         async serverWillStart() {
           return {

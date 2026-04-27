@@ -200,3 +200,9 @@ export const NOTIFICATION_SUBSCRIPTION = gql`
     }
   }
 `;
+
+export const LOGOUT = gql`
+  mutation Logout {
+    logout
+  }
+`;
