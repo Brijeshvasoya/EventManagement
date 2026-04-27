@@ -61,6 +61,7 @@ const bookingService = {
         const userName = user.name || (await User.findById(user.id)).name || 'A user';
         await notificationService.createNotification({
           recipient: event.organizer._id,
+          title: 'New Booking',
           message: `<b>${userName}</b> has booked <b>${booking.quantity}</b> ticket(s) for your event "${event.title}"`,
           type: 'BOOKING_CONFIRMED',
           bookingId: booking._id,
@@ -81,6 +82,7 @@ const bookingService = {
       });
       await notificationService.createNotification({
         recipient: user.id,
+        title: 'Booking Confirmed',
         message: `<b>🎟️ Booking Confirmed</b>: Your booking for "${event.title}" is confirmed! ${booking.quantity} ticket(s) on ${eventDateStr} at ${event.location}.`,
         type: 'TICKET_BOOKED',
         bookingId: booking._id,
@@ -174,6 +176,7 @@ const bookingService = {
       // Notify Attendee
       await notificationService.createNotification({
         recipient: user.id,
+        title: 'Booking Cancelled',
         message: `<b>❌ Booking Cancelled</b>: Your booking for "${cancelledEvent?.title || 'the event'}" has been cancelled.${refundNote}`,
         type: 'EVENT_CANCELLED',
         bookingId: booking._id,
@@ -185,6 +188,7 @@ const bookingService = {
         const userName = user.name || (await User.findById(user.id))?.name || 'A user';
         await notificationService.createNotification({
           recipient: cancelledEvent.organizer._id,
+          title: 'Ticket Cancelled',
           message: `<b>⚠️ Cancellation</b>: <b>${userName}</b> has cancelled their booking for your event "${cancelledEvent.title}". ${booking.quantity} seat(s) are now available.`,
           type: 'EVENT_CANCELLED',
           bookingId: booking._id,
@@ -260,6 +264,20 @@ const bookingService = {
 
     booking.status = 'CHECKED_IN';
     await booking.save();
+
+    // Notify Attendee about successful check-in
+    try {
+      await notificationService.createNotification({
+        recipient: booking.user._id,
+        title: 'Ticket Checked In',
+        message: `<b>✅ Checked In</b>: You have successfully checked in for "${booking.event.title}". Enjoy the event!`,
+        type: 'TICKET_CHECKED_IN',
+        bookingId: booking._id,
+        eventId: booking.event._id
+      });
+    } catch (err) {
+      console.error('Failed to create check-in notification:', err.message);
+    }
 
     // ASYNC EMAIL DISPATCH: Send feedback request email
     (async () => {

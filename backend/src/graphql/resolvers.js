@@ -113,6 +113,7 @@ const resolvers = {
       // Create a notification for the user
       await notificationService.createNotification({
         recipient: user.id,
+        title: 'Reward Redeemed',
         message: `Congratulations! You have redeemed "${rewardId}". Check your email for details.`,
         type: 'REWARD_REDEEMED'
       });

@@ -5,7 +5,7 @@ const typeDefs = `#graphql
   type Event { id: ID! title: String! description: String! date: String! location: String! capacity: Int! imageUrl: String organizer: User! isBooked: Boolean eventType: String status: String ticketTypes: [TicketType] bookedCount: Int attendees: [Booking!] vendors: [Vendor!] }
   type Booking { id: ID! event: Event! user: User! status: String! createdAt: String! qrCode: String ticketType: String amountPaid: Float quantity: Int paymentStatus: String }
   type Vendor { id: ID! name: String! category: String! rating: Float cost: Float contactInfo: String availableDates: [String] organizer: User! events: [Event!] }
-  type Notification { id: ID! recipient: User! message: String! type: String! read: Boolean! booking: Booking event: Event createdAt: String! }
+  type Notification { id: ID! recipient: User! title: String message: String! type: String! read: Boolean! booking: Booking event: Event createdAt: String! }
   type AuthPayload { token: String! user: User! }
   type MonthlyData { n: String! c: Float! p: Float! }
   type AnalyticsStats { totalRevenue: Float! ticketsSold: Int! cancelledTickets: Int! confirmedBookingsCount: Int! monthlyData: [MonthlyData!]! }

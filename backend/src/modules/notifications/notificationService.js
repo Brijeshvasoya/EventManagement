@@ -51,10 +51,11 @@ const notificationService = {
     return true;
   },
 
-  createNotification: async ({ recipient, message, type, bookingId, eventId }) => {
+  createNotification: async ({ recipient, title, message, type, bookingId, eventId }) => {
     const { pubsub, EVENTS } = require('../../utils/pubsub');
     const notification = await Notification.create({
       recipient,
+      title,
       message,
       type,
       booking: bookingId,

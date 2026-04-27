@@ -166,6 +166,7 @@ export function GlobalActionsProvider({ children }) {
                 TICKET_BOOKED: { icon: '🎟️', bg: '#ECFDF5', iconBg: '#A7F3D0', iconColor: '#059669' },
                 BOOKING_CONFIRMED: { icon: '✅', bg: '#EFF6FF', iconBg: '#BFDBFE', iconColor: '#2563EB' },
                 EVENT_CANCELLED: { icon: '❌', bg: '#FEF2F2', iconBg: '#FECACA', iconColor: '#DC2626' },
+                TICKET_CHECKED_IN: { icon: '🤝', bg: '#F0F9FF', iconBg: '#BAE6FD', iconColor: '#0284C7' },
               };
               const cfg = item.read
                 ? { icon: <CheckCircleFilled />, bg: 'white', iconBg: '#F1F5F9', iconColor: '#64748B', isIcon: true }
