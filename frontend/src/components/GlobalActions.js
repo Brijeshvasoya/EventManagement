@@ -34,16 +34,12 @@ export function GlobalActionsProvider({ children }) {
   useSubscription(NOTIFICATION_SUBSCRIPTION, {
     skip: !user,
     onData: (result) => {
-      console.log('Subscription data received:', result);
-      // Handle both { data: { notificationAdded: ... } } (Standard result) 
-      // and { data: { data: { notificationAdded: ... } } } (Some older versions/wrappers)
+      console.log('📡 Subscription data received:', result);
       const data = result.data;
       const payload = data?.data?.notificationAdded || data?.notificationAdded;
       
       if (payload) {
-        console.log('Notification payload:', payload);
-        // Only show toast if the recipient is the current user (if we have that info)
-        // or just let the backend filter (ideal)
+        console.log('🔔 Notification payload:', payload);
         toast.success(`New Activity: ${payload.message.replace(/<[^>]*>?/gm, '')}`, {
           icon: '🔔',
           duration: 4000
@@ -51,6 +47,9 @@ export function GlobalActionsProvider({ children }) {
         refetchGlobalNotifications();
         refetchCount();
       }
+    },
+    onError: (error) => {
+      console.error('❌ Subscription Error:', error);
     }
   });
 

@@ -145,32 +145,34 @@ const startServer = async () => {
     schema,
     onConnect: (ctx) => {
       console.log('🚀 WebSocket Connected');
-    },
-    onDisconnect: (ctx) => {
-      console.log('❌ WebSocket Disconnected');
-    },
-    onSubscribe: (ctx, msg) => {
-      console.log('📡 subscription requested:', msg?.payload?.operationName || 'notificationAdded');
-    },
-    onError: (ctx, msg, errors) => {
-      console.error('⚠️ WebSocket Error:', errors);
-    },
-    context: (ctx) => {
-      // Handle subscription auth
       const connectionParams = ctx.connectionParams;
-      let user = null;
       if (connectionParams && connectionParams.authorization) {
-        // Handle both "Bearer <token>" and raw "<token>"
         const authHeader = connectionParams.authorization;
         const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
         try {
-          user = verifyToken(token);
+          const user = verifyToken(token);
+          ctx.user = user; // Store user in connection context
           console.log(`👤 Subscription Auth: ${user.name} (${user.role})`);
         } catch (e) {
           console.log('⚠️ Subscription Auth Failed:', e.message);
         }
       }
-      return { user, loaders: createLoaders() };
+      return true;
+    },
+    onDisconnect: (ctx, code, reason) => {
+      console.log(`❌ WebSocket Disconnected (Code: ${code}, Reason: ${reason || 'No reason'})`);
+    },
+    onSubscribe: (ctx, msg) => {
+      console.log('📡 Subscription requested:', msg?.payload?.operationName || 'Unnamed Operation');
+    },
+    onError: (ctx, msg, errors) => {
+      console.error('⚠️ WebSocket Error:', errors);
+    },
+    context: (ctx) => {
+      return { 
+        user: ctx.user, 
+        loaders: createLoaders() 
+      };
     }
   }, wsServer);
 

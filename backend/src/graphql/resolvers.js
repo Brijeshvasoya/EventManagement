@@ -235,7 +235,7 @@ const resolvers = {
       subscribe: withFilter(
         () => {
           console.log('📡 New Subscription request for NOTIFICATION_ADDED');
-          return pubsub.asyncIterator([EVENTS.NOTIFICATION_ADDED]);
+          return pubsub.asyncIterableIterator([EVENTS.NOTIFICATION_ADDED]);
         },
         (payload, variables, { user }) => {
           if (!user) {
