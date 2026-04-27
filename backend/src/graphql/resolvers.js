@@ -122,6 +122,7 @@ const resolvers = {
     forgotPassword: (_, { email }) => authService.forgotPassword(email),
     resetPassword: (_, { token, password }) => authService.resetPassword(token, password),
     submitFeedback: (_, args) => bookingService.submitFeedback(args),
+    logout: () => true,
   },
   Feedback: {
     booking: (parent, _, { loaders }) => loaders.bookingLoader.load(parent.booking.toString()),

@@ -50,6 +50,7 @@ const typeDefs = `#graphql
     forgotPassword(email: String!): Boolean!
     resetPassword(token: String!, password: String!): Boolean!
     submitFeedback(bookingId: ID!, rating: Int!, comment: String): Feedback!
+    logout: Boolean!
   }
 
   type Subscription {
