@@ -11,7 +11,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Spin, Card, Empty, Button, Tag, Divider, Modal, Form, Input, Typography, Avatar, Drawer, Badge, List, Progress } from 'antd';
-import { EnvironmentOutlined, CalendarOutlined, DownloadOutlined, QrcodeOutlined, CrownOutlined, CheckCircleFilled, UserOutlined, MailOutlined, SettingOutlined, AppstoreOutlined, ArrowRightOutlined, EyeOutlined, BellOutlined, CheckOutlined, RocketOutlined } from '@ant-design/icons';
+import { EnvironmentOutlined, CalendarOutlined, DownloadOutlined, QrcodeOutlined, CrownOutlined, CheckCircleFilled, UserOutlined, MailOutlined, SettingOutlined, AppstoreOutlined, ArrowRightOutlined, EyeOutlined, BellOutlined, CheckOutlined, RocketOutlined, PlusCircleOutlined } from '@ant-design/icons';
 
 const { Title, Text: AntText } = Typography;
 
@@ -130,6 +130,8 @@ export default function Dashboard() {
   };
 
   const bookings = bookingData?.myBookings || [];
+  const now = new Date();
+
 
 
 
@@ -300,6 +302,7 @@ export default function Dashboard() {
         </div>
 
         {isOrganizer ? (() => {
+          const upcomingEvents = myEventsData?.myEvents?.filter(e => new Date(parseInt(e.date) || e.date) >= now) || [];
           // Dynamic calculations from DB
           const totalCapacity = myEventsData?.myEvents?.reduce((acc, ev) => acc + (ev.capacity || 0), 0) || 0;
           const ticketsSold = analyticsData?.myAnalytics?.ticketsSold || 0;
@@ -330,7 +333,7 @@ export default function Dashboard() {
                     <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(67, 56, 202, 0.1)', color: 'rgb(67, 56, 202)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>📅</div>
                     <div>
                       <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>Upcoming Events</div>
-                      <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{myEventsData?.myEvents.length || 0}</div>
+                      <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{upcomingEvents.length}</div>
                     </div>
                   </Card>
 
@@ -481,56 +484,96 @@ export default function Dashboard() {
                   <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.2rem' }}>Upcoming Event</h3>
                 </div>
 
-                {myEventsData?.myEvents?.[0] ? (
+                {upcomingEvents[0] ? (
                   <>
                     <Card styles={{ body: { padding: 0 } }} style={{ borderRadius: '24px', border: 'none', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
-                      <div style={{ height: '200px', background: `url(${myEventsData?.myEvents[0].imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover`, position: 'relative' }}>
+                      <div style={{ height: '200px', background: `url(${upcomingEvents[0].imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover`, position: 'relative' }}>
                         <Tag style={{ position: 'absolute', top: '16px', left: '16px', background: 'rgba(255,255,255,0.9)', color: '#1B2A4E', border: 'none', borderRadius: '100px', fontWeight: 700, padding: '6px 16px' }}>Most Anticipated</Tag>
                       </div>
                       <div style={{ padding: '24px' }}>
-                        <h3 style={{ margin: '0 0 8px 0', color: '#1B2A4E', fontSize: '1.4rem', fontWeight: 800 }}>{myEventsData?.myEvents[0].title}</h3>
-                        <div style={{ color: '#6B7280', fontSize: '0.9rem', marginBottom: '20px' }}>{myEventsData?.myEvents[0].location}</div>
-                        <p style={{ color: '#6B7280', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>{myEventsData?.myEvents[0].description ? myEventsData?.myEvents[0].description.substring(0, 80) + '...' : 'Immerse yourself in electrifying performances by top artists and enjoy the festival.'}</p>
+                        <h3 style={{ margin: '0 0 8px 0', color: '#1B2A4E', fontSize: '1.4rem', fontWeight: 800 }}>{upcomingEvents[0].title}</h3>
+                        <div style={{ color: '#6B7280', fontSize: '0.9rem', marginBottom: '20px' }}>{upcomingEvents[0].location}</div>
+                        <p style={{ color: '#6B7280', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>{upcomingEvents[0].description ? upcomingEvents[0].description.substring(0, 80) + '...' : 'Immerse yourself in electrifying performances by top artists and enjoy the festival.'}</p>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1B2A4E', fontWeight: 600, fontSize: '0.9rem', background: '#F3F4F6', padding: '8px 16px', borderRadius: '12px' }}>
                             <CalendarOutlined />
-                            <span>{new Date(parseInt(myEventsData?.myEvents[0].date) || myEventsData?.myEvents[0].date).toLocaleDateString()}</span>
+                            <span>{new Date(parseInt(upcomingEvents[0].date) || upcomingEvents[0].date).toLocaleDateString()}</span>
                           </div>
-                          <Button type="primary" onClick={() => router.push(`/events/${myEventsData?.myEvents[0].id}`)} style={{ background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px', padding: '0 24px', fontWeight: 700, height: '40px', border: 'none', boxShadow: '0 4px 12px rgba(49, 46, 129, 0.3)' }}>View Details</Button>
+                          <Button type="primary" onClick={() => router.push(`/events/${upcomingEvents[0].id}`)} style={{ background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px', padding: '0 24px', fontWeight: 700, height: '40px', border: 'none', boxShadow: '0 4px 12px rgba(49, 46, 129, 0.3)' }}>View Details</Button>
                         </div>
                       </div>
                     </Card>
-                    {myEventsData?.myEvents?.[1] && (
+                    {upcomingEvents[1] && (
                       <Card styles={{ body: { padding: 0 } }} style={{ borderRadius: '24px', border: 'none', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
-                        <div style={{ height: '200px', background: `url(${myEventsData?.myEvents[1]?.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover`, position: 'relative' }}>
+                        <div style={{ height: '200px', background: `url(${upcomingEvents[1]?.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover`, position: 'relative' }}>
                           <Tag style={{ position: 'absolute', top: '16px', left: '16px', background: 'rgba(255,255,255,0.9)', color: '#1B2A4E', border: 'none', borderRadius: '100px', fontWeight: 700, padding: '6px 16px' }}>Most Anticipated</Tag>
                         </div>
                         <div style={{ padding: '24px' }}>
-                          <h3 style={{ margin: '0 0 8px 0', color: '#1B2A4E', fontSize: '1.4rem', fontWeight: 800 }}>{myEventsData?.myEvents[1]?.title}</h3>
-                          <div style={{ color: '#6B7280', fontSize: '0.9rem', marginBottom: '20px' }}>{myEventsData?.myEvents[1]?.location}</div>
-                          <p style={{ color: '#6B7280', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>{myEventsData?.myEvents[1]?.description ? myEventsData?.myEvents[1]?.description.substring(0, 80) + '...' : 'Immerse yourself in electrifying performances by top artists and enjoy the festival.'}</p>
+                          <h3 style={{ margin: '0 0 8px 0', color: '#1B2A4E', fontSize: '1.4rem', fontWeight: 800 }}>{upcomingEvents[1]?.title}</h3>
+                          <div style={{ color: '#6B7280', fontSize: '0.9rem', marginBottom: '20px' }}>{upcomingEvents[1]?.location}</div>
+                          <p style={{ color: '#6B7280', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>{upcomingEvents[1]?.description ? upcomingEvents[1]?.description.substring(0, 80) + '...' : 'Immerse yourself in electrifying performances by top artists and enjoy the festival.'}</p>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1B2A4E', fontWeight: 600, fontSize: '0.9rem', background: '#F3F4F6', padding: '8px 16px', borderRadius: '12px' }}>
                               <CalendarOutlined />
-                              <span>{new Date(parseInt(myEventsData?.myEvents[1]?.date) || myEventsData?.myEvents[1]?.date).toLocaleDateString()}</span>
+                              <span>{new Date(parseInt(upcomingEvents[1]?.date) || upcomingEvents[1]?.date).toLocaleDateString()}</span>
                             </div>
-                            <Button type="primary" onClick={() => router.push(`/events/${myEventsData?.myEvents[1]?.id}`)} style={{ background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px', padding: '0 24px', fontWeight: 700, height: '40px', border: 'none', boxShadow: '0 4px 12px rgba(49, 46, 129, 0.3)' }}>View Details</Button>
+                            <Button type="primary" onClick={() => router.push(`/events/${upcomingEvents[1]?.id}`)} style={{ background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px', padding: '0 24px', fontWeight: 700, height: '40px', border: 'none', boxShadow: '0 4px 12px rgba(49, 46, 129, 0.3)' }}>View Details</Button>
                           </div>
                         </div>
                       </Card>
                     )}
                   </>
                 ) : (
-                  <Card styles={{ body: { padding: '24px', textAlign: 'center' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-                    <div style={{ color: '#9CA3AF', marginBottom: '16px', fontSize: '2rem' }}>🎉</div>
-                    <div style={{ color: '#6B7280', fontWeight: 600 }}>Create an event to see it featured here.</div>
+                  <Card
+                    styles={{ body: { padding: '48px 24px', textAlign: 'center' } }}
+                    style={{
+                      borderRadius: '32px',
+                      border: '1px dashed #E2E8F0',
+                      background: 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%)',
+                      boxShadow: 'none'
+                    }}
+                  >
+                    <div style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '20px',
+                      background: 'white',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '2rem',
+                      marginBottom: '24px',
+                      boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)'
+                    }}>
+                      ✨
+                    </div>
+                    <Title level={4} style={{ color: '#1B2A4E', fontWeight: 800, marginBottom: '8px' }}>Launch Your Next Event</Title>
+                    <AntText style={{ color: '#64748B', display: 'block', marginBottom: '32px', fontSize: '1rem' }}>
+                      You don't have any upcoming events scheduled. Create one now to start selling tickets!
+                    </AntText>
+                    <Button
+                      type="primary"
+                      size="large"
+                      icon={<PlusCircleOutlined />}
+                      onClick={() => router.push('/events/create')}
+                      style={{
+                        background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)',
+                        borderRadius: '14px',
+                        height: '54px',
+                        padding: '0 32px',
+                        fontWeight: 700,
+                        border: 'none',
+                        boxShadow: '0 10px 15px -3px rgba(49, 46, 129, 0.3)'
+                      }}
+                    >
+                      Create Event Now
+                    </Button>
                   </Card>
                 )}
               </div>
             </div>
           );
         })() : (() => {
-          const now = new Date();
           const upcomingBookings = bookings.filter(b => b.event && new Date(parseInt(b.event.date) || b.event.date) >= now);
           const featuredBooking = upcomingBookings[0];
           const totalSpent = bookings.reduce((acc, b) => acc + (b.amountPaid || 0), 0);
@@ -768,7 +811,7 @@ export default function Dashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.2rem' }}>Upcoming Event</h3>
                 {(() => {
-                  const displayEvent = featuredBooking?.event || allEventsData?.events?.[0];
+                  const displayEvent = featuredBooking?.event;
                   if (!displayEvent) return (
                     <Card style={{ borderRadius: '24px', textAlign: 'center', padding: '40px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                       <Empty description="No upcoming events" />
