@@ -11,10 +11,10 @@ import {
   LoginOutlined,
   UserAddOutlined,
   ShopOutlined,
-  ThunderboltOutlined,
   MenuOutlined,
   CalendarOutlined,
-  DollarCircleOutlined
+  DollarCircleOutlined,
+  ScanOutlined
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -39,7 +39,8 @@ export default function AppLayout({ children }) {
       { key: '/my-events', icon: <CalendarOutlined />, label: 'My Events' },
       { key: '/transactions', icon: <DollarCircleOutlined />, label: 'Transactions' },
       { key: '/events/create', icon: <PlusCircleOutlined />, label: 'Create Event' },
-      { key: '/vendors', icon: <ShopOutlined />, label: 'Vendors' }
+      { key: '/vendors', icon: <ShopOutlined />, label: 'Vendors' },
+      { key: '/verify', icon: <ScanOutlined />, label: 'Scan Ticket' }
     ] : [])
   ];
 
@@ -269,7 +270,7 @@ export default function AppLayout({ children }) {
         }}>
           {/* Mobile spacer */}
           <div className="mobile-only" style={{ height: '70px', flexShrink: 0 }} />
-          
+
           <div className="desktop-only" style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
             <DesktopHeaderActions />
           </div>
