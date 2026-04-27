@@ -16,6 +16,8 @@ const GET_BOOKING_DETAILS = gql`
       eventTitle
       organizerName
       status
+      existingRating
+      existingComment
     }
   }
 `;
@@ -212,11 +214,20 @@ export default function FeedbackPage() {
                 )}
               </div>
 
-              <Form layout="vertical" onFinish={onFinish} requiredMark={false}>
-                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                  <Form.Item name="rating" rules={[{ required: true, message: 'Please select a rating' }]}>
+              <Form 
+                layout="vertical" 
+                onFinish={onFinish} 
+                requiredMark={false}
+                initialValues={{
+                  rating: booking?.existingRating,
+                  comment: booking?.existingComment
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <Form.Item name="rating" rules={[{ required: true, message: 'Please select a rating' }]} style={{ marginBottom: 0 }}>
                     <Rate
                       allowHalf={false}
+                      disabled={!!booking?.existingRating}
                       style={{ fontSize: '32px', color: '#FBBF24' }}
                     />
                   </Form.Item>
@@ -229,6 +240,7 @@ export default function FeedbackPage() {
                   <Input.TextArea
                     rows={3}
                     placeholder="What did you think of the event?"
+                    disabled={!!booking?.existingRating}
                     style={{ borderRadius: '12px', padding: '12px', background: 'white', border: '1px solid #EDEDED' }}
                   />
                 </Form.Item>
@@ -238,12 +250,23 @@ export default function FeedbackPage() {
                     type="primary"
                     htmlType="submit"
                     loading={submitting}
+                    disabled={!!booking?.existingRating}
                     block
                     className="pulse-btn"
-                    icon={<SendOutlined />}
-                    style={{ height: '54px', borderRadius: '12px', background: 'linear-gradient(90deg, #1B2A4E 0%, #312E81 100%)', border: 'none', fontWeight: 800, fontSize: '0.9rem', color: 'white', letterSpacing: '1px' }}
+                    icon={booking?.existingRating ? <CheckCircleOutlined /> : <SendOutlined />}
+                    style={{ 
+                      height: '54px', 
+                      borderRadius: '12px', 
+                      background: booking?.existingRating ? '#10B981' : 'linear-gradient(90deg, #1B2A4E 0%, #312E81 100%)', 
+                      border: 'none', 
+                      fontWeight: 800, 
+                      fontSize: '0.9rem', 
+                      color: 'white', 
+                      letterSpacing: '1px',
+                      opacity: booking?.existingRating ? 0.8 : 1
+                    }}
                   >
-                    SUBMIT REVIEW
+                    {booking?.existingRating ? 'FEEDBACK SUBMITTED' : 'SUBMIT REVIEW'}
                   </Button>
                 </Form.Item>
               </Form>
@@ -288,7 +311,7 @@ export default function FeedbackPage() {
       </div>
 
       <style jsx global>{`
-        .ant-rate-star { margin-right: 12px !important; }
+        .ant-rate-star:not(:last-child) { margin-right: 12px !important; }
         .ant-form-item-label > label { height: auto !important; }
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px); }

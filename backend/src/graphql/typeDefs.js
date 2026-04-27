@@ -9,7 +9,7 @@ const typeDefs = `#graphql
   type AuthPayload { token: String! user: User! }
   type MonthlyData { n: String! c: Float! p: Float! }
   type AnalyticsStats { totalRevenue: Float! ticketsSold: Int! cancelledTickets: Int! confirmedBookingsCount: Int! monthlyData: [MonthlyData!]! }
-  type PublicBookingFeedback { id: ID! eventTitle: String! organizerName: String! status: String! }
+  type PublicBookingFeedback { id: ID! eventTitle: String! organizerName: String! status: String! existingRating: Int existingComment: String }
   
   input TicketTypeInput { name: String! price: Float! capacity: Int! }
   input CreateEventInput { title: String! description: String! date: String! location: String! capacity: Int imageUrl: String eventType: String ticketTypes: [TicketTypeInput] vendorIds: [ID] }

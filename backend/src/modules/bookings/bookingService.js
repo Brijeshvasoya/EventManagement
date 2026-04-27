@@ -320,11 +320,16 @@ const bookingService = {
     const Event = require('../../models/Event'); // ensure populated
     const populatedEvent = await Event.findById(booking.event).populate('organizer');
 
+    // Check for existing feedback
+    const existingFeedback = await Feedback.findOne({ booking: bookingId });
+
     return {
       id: booking.id,
       eventTitle: populatedEvent.title,
       organizerName: populatedEvent.organizer?.name || 'Organizer',
-      status: booking.status
+      status: booking.status,
+      existingRating: existingFeedback?.rating,
+      existingComment: existingFeedback?.comment
     };
   },
 
