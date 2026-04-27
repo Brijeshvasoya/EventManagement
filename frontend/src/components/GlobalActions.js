@@ -2,7 +2,7 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 import { useQuery, useMutation, useSubscription } from '@apollo/client/react';
 import { Form, Modal, Input, Drawer, Badge, Avatar, Typography, Button } from 'antd';
 import { UserOutlined, SettingOutlined, BellOutlined, CheckCircleFilled, CheckOutlined } from '@ant-design/icons';
-import { GET_MY_NOTIFICATIONS, MARK_NOTIFICATION_AS_READ, MARK_ALL_NOTIFICATIONS_AS_READ, UPDATE_PROFILE, GET_ME, NOTIFICATION_SUBSCRIPTION, UNREAD_NOTIFICATION_COUNT } from '@/features/events/graphql/queries';
+import { GET_MY_NOTIFICATIONS, MARK_NOTIFICATION_AS_READ, MARK_ALL_NOTIFICATIONS_AS_READ, UPDATE_PROFILE, GET_ME, NOTIFICATION_SUBSCRIPTION, UNREAD_NOTIFICATION_COUNT, GET_MY_BOOKINGS } from '@/features/events/graphql/queries';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -25,6 +25,7 @@ export function GlobalActionsProvider({ children }) {
   const { data: countData, refetch: refetchCount } = useQuery(UNREAD_NOTIFICATION_COUNT, {
     skip: !user, fetchPolicy: 'cache-and-network'
   });
+  const { refetch: refetchBookings } = useQuery(GET_MY_BOOKINGS);
 
   // Real-time Notification Subscription
   useEffect(() => {
@@ -37,7 +38,7 @@ export function GlobalActionsProvider({ children }) {
       console.log('📡 Subscription data received:', result);
       const data = result.data;
       const payload = data?.data?.notificationAdded || data?.notificationAdded;
-      
+
       if (payload) {
         console.log('🔔 Notification payload:', payload);
         toast.success(`New Activity: ${payload.message.replace(/<[^>]*>?/gm, '')}`, {
@@ -46,6 +47,7 @@ export function GlobalActionsProvider({ children }) {
         });
         refetchGlobalNotifications();
         refetchCount();
+        refetchBookings();
       }
     },
     onError: (error) => {
