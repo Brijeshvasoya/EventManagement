@@ -1,5 +1,5 @@
 const typeDefs = `#graphql
-  type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int averageRating: Float numReviews: Int redeemedRewards: [String] }
+  type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int averageRating: Float numReviews: Int redeemedRewards: [String] isPlanPurchased: Boolean planId: String }
   type TicketType { name: String! price: Float! capacity: Int! }
   type Feedback { id: ID! booking: Booking! event: Event! organizer: User! user: User! rating: Int! comment: String createdAt: String! }
   type Event { id: ID! title: String! description: String! date: String! location: String! capacity: Int! imageUrl: String organizer: User! isBooked: Boolean eventType: String status: String ticketTypes: [TicketType] bookedCount: Int attendees: [Booking!] vendors: [Vendor!] }
@@ -28,6 +28,7 @@ const typeDefs = `#graphql
     myNotifications: [Notification!]!
     unreadNotificationCount: Int!
     feedbackInfo(bookingId: ID!): PublicBookingFeedback!
+    allUsers: [User!]!
   }
   
   type Mutation {
@@ -37,6 +38,8 @@ const typeDefs = `#graphql
     bookEvent(eventId: ID!, ticketType: String, amountPaid: Float, stripePaymentId: String, quantity: Int): Booking!
     cancelBooking(bookingId: ID!): Boolean!
     createCheckoutSession(eventId: ID!, ticketType: String!, quantity: Int!): String!
+    createPlanCheckoutSession(planId: String!): String!
+    confirmPlanPurchase(sessionId: String!, planId: String!): AuthPayload!
     updateEvent(id: ID!, input: CreateEventInput!): Event!
     deleteEvent(id: ID!): Boolean!
     updateProfile(name: String, email: String, currentPassword: String, newPassword: String): User!

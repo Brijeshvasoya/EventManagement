@@ -11,7 +11,7 @@ exports.register = async ({ name, email, password, role }) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
   const user = await User.create({ name, email, password: hashedPassword, role: role || 'USER' });
-  return { token: signToken({ id: user.id, email: user.email, role: user.role, name: user.name }), user };
+  return { token: signToken({ id: user.id, email: user.email, role: user.role, name: user.name, isPlanPurchased: user.isPlanPurchased, planId: user.planId }), user };
 };
 
 exports.login = async ({ email, password }) => {
@@ -19,7 +19,7 @@ exports.login = async ({ email, password }) => {
   if (!user || !(await bcrypt.compare(password, user.password))) {
     throw new GraphQLError('Invalid credentials', { extensions: { code: 'UNAUTHENTICATED' } });
   }
-  return { token: signToken({ id: user.id, email: user.email, role: user.role, name: user.name, createdAt: user.createdAt }), user };
+  return { token: signToken({ id: user.id, email: user.email, role: user.role, name: user.name, createdAt: user.createdAt, isPlanPurchased: user.isPlanPurchased, planId: user.planId }), user };
 };
 
 exports.updateProfile = async (id, { name, email, currentPassword, newPassword }) => {

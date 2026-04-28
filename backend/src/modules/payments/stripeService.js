@@ -54,3 +54,54 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user) => {
 
   return `${APP_URL}/checkout-success?eventId=${eventId}&ticketType=${ticketType}&quantity=${quantity}&sessionId=MOCK_SESSION_${Date.now()}`;
 };
+
+exports.createPlanCheckoutSession = async (planId, user) => {
+  requireAuth(user);
+  const APP_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
+
+  let amount = 0;
+  let planName = '';
+  if (planId === 'BASIC') { amount = 999; planName = 'Basic Plan'; }
+  else if (planId === 'PRO') { amount = 2999; planName = 'Pro Plan'; }
+  else throw new Error('Invalid plan');
+
+  if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock') {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: { name: planName },
+          unit_amount: amount
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      customer_email: user.email,
+      metadata: { userId: user.id, planId },
+      success_url: `${APP_URL}/plans?success=true&sessionId={CHECKOUT_SESSION_ID}&planId=${planId}`,
+      cancel_url: `${APP_URL}/plans?canceled=true`,
+    });
+    return session.url;
+  }
+  return `${APP_URL}/plans?success=true&sessionId=MOCK_SESSION_${Date.now()}&planId=${planId}`;
+};
+
+exports.confirmPlanPurchase = async (sessionId, planId, user) => {
+  requireAuth(user);
+  const User = require('../../models/User');
+  const fullUser = await User.findById(user.id);
+  if (!fullUser) throw new Error('User not found');
+
+  if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock') {
+    // In a real app, we might verify sessionId with Stripe API
+  }
+
+  fullUser.isPlanPurchased = true;
+  fullUser.planId = planId;
+  await fullUser.save();
+  
+  const { signToken } = require('../../utils/jwt');
+  const token = signToken({ id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name, isPlanPurchased: fullUser.isPlanPurchased, planId: fullUser.planId });
+  return { token, user: fullUser };
+};

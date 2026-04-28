@@ -31,7 +31,12 @@ const resolvers = {
     myAnalytics: (_, __, { user }) => analyticsService.getOrganizerAnalytics(user),
     myNotifications: (_, __, { user }) => notificationService.getNotifications(user),
     unreadNotificationCount: (_, __, { user }) => notificationService.getUnreadCount(user),
-    feedbackInfo: (_, { bookingId }) => bookingService.getPublicBookingForFeedback(bookingId)
+    feedbackInfo: (_, { bookingId }) => bookingService.getPublicBookingForFeedback(bookingId),
+    allUsers: async (_, __, { user }) => {
+      if (!user || user.role !== 'SUPER_ADMIN') throw new GraphQLError('Unauthorized');
+      const User = require('../models/User');
+      return await User.find({});
+    }
   },
   Mutation: {
     register: (_, args) => authService.register(args),
@@ -40,6 +45,8 @@ const resolvers = {
     bookEvent: (_, args, { user }) => bookingService.bookEvent(args, user),
     cancelBooking: (_, { bookingId }, { user }) => bookingService.cancelBooking(bookingId, user),
     createCheckoutSession: (_, { eventId, ticketType, quantity }, { user }) => stripeService.createCheckoutSession(eventId, ticketType, quantity, user),
+    createPlanCheckoutSession: (_, { planId }, { user }) => stripeService.createPlanCheckoutSession(planId, user),
+    confirmPlanPurchase: (_, { sessionId, planId }, { user }) => stripeService.confirmPlanPurchase(sessionId, planId, user),
     updateEvent: (_, { id, input }, { user }) => eventService.updateEvent(id, input, user),
     deleteEvent: (_, { id }, { user }) => eventService.deleteEvent(id, user),
     updateProfile: (_, { name, email, currentPassword, newPassword }, { user }) => {
