@@ -27,6 +27,12 @@ export default function AppLayout({ children }) {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  React.useEffect(() => {
+    if (!loading && user && user.role === 'ORGANIZER' && !user.isPlanPurchased && router.pathname !== '/plans' && router.pathname !== '/login' && router.pathname !== '/signup') {
+      router.replace('/plans');
+    }
+  }, [user, loading, router]);
+
   if (loading) return null;
   if (['/login', '/signup', '/forgot-password', '/feedback'].includes(router.pathname) || router.pathname.startsWith('/reset-password') || router.pathname.startsWith('/feedback/')) return <>{children}</>;
 
@@ -41,8 +47,16 @@ export default function AppLayout({ children }) {
       { key: '/events/create', icon: <PlusCircleOutlined />, label: 'Create Event' },
       { key: '/vendors', icon: <ShopOutlined />, label: 'Vendors' },
       { key: '/verify', icon: <ScanOutlined />, label: 'Scan Ticket' }
+    ] : []),
+    ...(user?.role === 'SUPER_ADMIN' ? [
+      { key: '/superadmin', icon: <UserOutlined />, label: 'Super Admin' }
     ] : [])
   ];
+
+  if (user?.role === 'ORGANIZER' && !user?.isPlanPurchased) {
+    menuItems.length = 0; // Clear all menus
+    menuItems.push({ key: '/plans', icon: <AppstoreOutlined />, label: 'Choose Plan' });
+  }
 
   const selectedKey = router.pathname === '/' ? '/dashboard' : router.pathname;
 

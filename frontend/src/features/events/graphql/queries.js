@@ -3,7 +3,7 @@ import { gql } from '@apollo/client';
 export const GET_ME = gql`
   query GetMe {
     me {
-      id name email role createdAt loyaltyPoints averageRating redeemedRewards
+      id name email role createdAt loyaltyPoints averageRating redeemedRewards isPlanPurchased planId
     }
   }
 `;

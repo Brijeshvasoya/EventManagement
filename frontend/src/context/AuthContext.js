@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const decoded = jwtDecode(token);
         if (decoded.exp * 1000 < Date.now()) throw new Error('Token expired');
-        setUser({ id: decoded.id, role: decoded.role, name: decoded.name, email: decoded.email, createdAt: decoded.createdAt });
+        setUser({ id: decoded.id, role: decoded.role, name: decoded.name, email: decoded.email, createdAt: decoded.createdAt, isPlanPurchased: decoded.isPlanPurchased, planId: decoded.planId });
       } catch (e) {
         localStorage.removeItem('token');
       }
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
   const login = (token, returnUrl = '/') => {
     localStorage.setItem('token', token);
     const decoded = jwtDecode(token);
-    setUser({ id: decoded.id, role: decoded.role, name: decoded.name, email: decoded.email, createdAt: decoded.createdAt });
+    setUser({ id: decoded.id, role: decoded.role, name: decoded.name, email: decoded.email, createdAt: decoded.createdAt, isPlanPurchased: decoded.isPlanPurchased, planId: decoded.planId });
     router.push(returnUrl);
   };
 
