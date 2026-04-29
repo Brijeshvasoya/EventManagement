@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useMutation, useQuery, gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { gql } from '@apollo/client';
 import { CREATE_EVENT, GET_MY_VENDORS } from '@/features/events/graphql/queries';
 import { Select, ConfigProvider, theme, Form, Input, InputNumber, Button, Divider, Typography, Space, Avatar } from 'antd';
 import { useRouter } from 'next/router';

@@ -1,4 +1,5 @@
-import { useQuery, gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
+import { gql } from '@apollo/client';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
