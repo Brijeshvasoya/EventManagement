@@ -14,19 +14,10 @@ const CREATE_PLAN_CHECKOUT_SESSION = gql`
   }
 `;
 
-const CONFIRM_PLAN_PURCHASE = gql`
-  mutation ConfirmPlanPurchase($sessionId: String!, $planId: String!) {
-    confirmPlanPurchase(sessionId: $sessionId, planId: $planId) {
-      token
-    }
-  }
-`;
-
 export default function PlansPage() {
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const [createSession, { loading: creating }] = useMutation(CREATE_PLAN_CHECKOUT_SESSION);
-  const [confirmPurchase] = useMutation(CONFIRM_PLAN_PURCHASE);
 
   const isPlanExpired = user?.isPlanPurchased &&
     user?.planExpiresAt &&
@@ -39,22 +30,6 @@ export default function PlansPage() {
     // Only redirect if plan is active (not expired) — send to billing, not dashboard
     if (user.isPlanPurchased && !isPlanExpired) { router.replace('/billing'); }
   }, [user, router, isPlanExpired]);
-
-  useEffect(() => {
-    const confirm = async () => {
-      const { success, sessionId, planId } = router.query;
-      if (success === 'true' && sessionId && planId) {
-        try {
-          const { data } = await confirmPurchase({ variables: { sessionId, planId } });
-          toast.success('Plan purchased successfully! 🚀');
-          login(data.confirmPlanPurchase.token, '/dashboard');
-        } catch (err) { toast.error(err.message || 'Failed to confirm purchase'); }
-      } else if (router.query.canceled === 'true') {
-        toast.error('Payment canceled. You must purchase a plan to continue.');
-      }
-    };
-    if (router.isReady) confirm();
-  }, [router.isReady, router.query, confirmPurchase, login]);
 
   const handleSubscribe = async (planId) => {
     try {

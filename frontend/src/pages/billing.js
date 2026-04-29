@@ -1,8 +1,10 @@
-import { useQuery } from '@apollo/client/react';
+import { useQuery, useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
+import { useEffect, useRef } from 'react';
 import Head from 'next/head';
+import toast from 'react-hot-toast';
 import { Button, Tag } from 'antd';
 import {
   CreditCardOutlined, CheckCircleFilled, ClockCircleOutlined,
@@ -30,6 +32,14 @@ const GET_MY_BILLING = gql`
   }
 `;
 
+const CONFIRM_PLAN_PURCHASE = gql`
+  mutation ConfirmPlanPurchase($sessionId: String!, $planId: String!) {
+    confirmPlanPurchase(sessionId: $sessionId, planId: $planId) {
+      token
+    }
+  }
+`;
+
 function formatDate(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -42,9 +52,33 @@ function daysLeft(iso) {
 }
 
 export default function BillingPage() {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const router = useRouter();
-  const { data, loading } = useQuery(GET_MY_BILLING, { fetchPolicy: 'cache-and-network' });
+  const confirmCalledRef = useRef(false);
+  const [confirmPurchase] = useMutation(CONFIRM_PLAN_PURCHASE);
+  const { data, loading, refetch } = useQuery(GET_MY_BILLING, { fetchPolicy: 'cache-and-network', skip: !user || user.role !== 'ORGANIZER' });
+
+  // Confirm plan purchase when redirected from Stripe
+  useEffect(() => {
+    const confirm = async () => {
+      const { success, sessionId, planId } = router.query;
+      if (success === 'true' && sessionId && planId) {
+        if (confirmCalledRef.current) return;
+        confirmCalledRef.current = true;
+        try {
+          const { data: d } = await confirmPurchase({ variables: { sessionId, planId } });
+          toast.success('Plan purchased successfully! 🚀');
+          login(d.confirmPlanPurchase.token);
+          // Remove query params and refetch billing
+          router.replace('/billing', undefined, { shallow: true });
+          refetch();
+        } catch (err) {
+          toast.error(err.message || 'Failed to confirm purchase');
+        }
+      }
+    };
+    if (router.isReady) confirm();
+  }, [router.isReady, router.query]);
 
   if (!user || user.role !== 'ORGANIZER') return null;
 

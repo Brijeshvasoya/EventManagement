@@ -79,12 +79,12 @@ exports.createPlanCheckoutSession = async (planId, user) => {
       mode: 'payment',
       customer_email: user.email,
       metadata: { userId: user.id, planId },
-      success_url: `${APP_URL}/plans?success=true&sessionId={CHECKOUT_SESSION_ID}&planId=${planId}`,
+      success_url: `${APP_URL}/billing?success=true&sessionId={CHECKOUT_SESSION_ID}&planId=${planId}`,
       cancel_url: `${APP_URL}/plans?canceled=true`,
     });
     return session.url;
   }
-  return `${APP_URL}/plans?success=true&sessionId=MOCK_SESSION_${Date.now()}&planId=${planId}`;
+  return `${APP_URL}/billing?success=true&sessionId=MOCK_SESSION_${Date.now()}&planId=${planId}`;
 };
 
 exports.confirmPlanPurchase = async (sessionId, planId, user) => {
@@ -104,19 +104,22 @@ exports.confirmPlanPurchase = async (sessionId, planId, user) => {
   fullUser.planExpiresAt = endDate;
   await fullUser.save();
 
-  // Record the invoice
+  // Record the invoice — idempotency check to prevent duplicates
   const PlanInvoice = require('../../models/PlanInvoice');
-  const amount = planId === 'BASIC' ? 799 : 2499;
-  await PlanInvoice.create({
-    organizer: fullUser._id,
-    planId,
-    amount,
-    currency: 'INR',
-    status: 'PAID',
-    stripeSessionId: sessionId,
-    planStartDate: startDate,
-    planEndDate: endDate,
-  });
+  const existing = await PlanInvoice.findOne({ stripeSessionId: sessionId });
+  if (!existing) {
+    const amount = planId === 'BASIC' ? 799 : 2499;
+    await PlanInvoice.create({
+      organizer: fullUser._id,
+      planId,
+      amount,
+      currency: 'INR',
+      status: 'PAID',
+      stripeSessionId: sessionId,
+      planStartDate: startDate,
+      planEndDate: endDate,
+    });
+  }
 
   const { signToken } = require('../../utils/jwt');
   const token = signToken({ id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name, isPlanPurchased: fullUser.isPlanPurchased, planId: fullUser.planId, planExpiresAt: fullUser.planExpiresAt });
