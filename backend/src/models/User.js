@@ -14,6 +14,16 @@ const userSchema = new mongoose.Schema({
   isPlanPurchased: { type: Boolean, default: false },
   planId: { type: String },
   planExpiresAt: { type: Date },
+  stripeAccountId: { type: String },
+  stripeOnboardingComplete: { type: Boolean, default: false },
+  bankDetails: {
+    accountHolderName: String,
+    accountNumber: String,
+    bankName: String,
+    ifscCode: String,
+  },
+  razorpayContactId: { type: String },
+  razorpayFundAccountId: { type: String },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

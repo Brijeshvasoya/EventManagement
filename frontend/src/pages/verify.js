@@ -108,17 +108,20 @@ export default function TicketVerifier() {
                     )}
 
                     {lastScanned && (
-                        <Card style={{
-                            borderRadius: '24px',
-                            background: 'rgba(30, 41, 59, 1)',
-                            border: `1px solid ${lastScanned.success ? '#10b981' : '#ef4444'}`,
-                            overflow: 'hidden'
-                        }}>
+                        <Card
+                            variant="borderless"
+                            style={{
+                                borderRadius: '24px',
+                                background: 'rgba(30, 41, 59, 1)',
+                                border: `1px solid ${lastScanned.success ? '#10b981' : '#ef4444'}`,
+                                overflow: 'hidden'
+                            }}
+                        >
                             <Result
                                 status={lastScanned.success ? "success" : "error"}
                                 title={<span style={{ color: 'white' }}>{lastScanned.success ? "Access Granted" : "Invalid Ticket"}</span>}
                                 subTitle={
-                                    <Space direction="vertical" style={{ width: '100%', marginTop: '1rem' }}>
+                                    <Space orientation="vertical" style={{ width: '100%', marginTop: '1rem' }}>
                                         {lastScanned.success ? (
                                             <>
                                                 <div style={{ color: '#94a3b8' }}>Guest: <Text strong style={{ color: 'white' }}>{lastScanned.user.name}</Text></div>

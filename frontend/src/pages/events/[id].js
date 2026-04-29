@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { GET_EVENT_DETAILS, GET_MY_BOOKINGS, CANCEL_BOOKING, CREATE_CHECKOUT_SESSION } from '@/features/events/graphql/queries';
@@ -15,7 +15,7 @@ import {
 import {
   CalendarOutlined, EnvironmentOutlined, TeamOutlined, ShopOutlined, UserOutlined,
   MailOutlined, CheckCircleOutlined,
-  CloseCircleOutlined, DownloadOutlined, StarFilled
+  CloseCircleOutlined, DownloadOutlined, StarFilled, SearchOutlined, FilterOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { IndianRupeeIcon } from 'lucide-react';
@@ -38,6 +38,9 @@ export default function EventDetailsPage() {
   });
 
   const [bookingOptions, setBookingOptions] = useState({ ticketType: '', quantity: 1 });
+  const [attendeeSearchText, setAttendeeSearchText] = useState('');
+  const [attendeeStatusFilter, setAttendeeStatusFilter] = useState('ALL');
+  const [vendorSearchText, setVendorSearchText] = useState('');
   const [createCheckout, { loading: sessionLoading }] = useMutation(CREATE_CHECKOUT_SESSION);
   const [cancelBooking] = useMutation(CANCEL_BOOKING);
 
@@ -143,6 +146,18 @@ export default function EventDetailsPage() {
       render: (date) => <span style={{ color: 'var(--text-secondary)' }}>{dayjs(isNaN(Number(date)) ? date : Number(date)).format('MMM D, YYYY')}</span>
     }
   ];
+
+  const filteredAttendees = (event.attendees || []).filter(a => {
+    const matchesSearch = a.user.name.toLowerCase().includes(attendeeSearchText.toLowerCase()) || 
+      a.user.email.toLowerCase().includes(attendeeSearchText.toLowerCase());
+    const matchesStatus = attendeeStatusFilter === 'ALL' || a.status === attendeeStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const filteredVendors = (event.vendors || []).filter(v => 
+    v.name.toLowerCase().includes(vendorSearchText.toLowerCase()) ||
+    v.category.toLowerCase().includes(vendorSearchText.toLowerCase())
+  );
 
   const vendorColumns = [
     {
@@ -371,16 +386,38 @@ export default function EventDetailsPage() {
               <Card
                 className="hover-bounce"
                 title={
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                    <span style={{ color: 'var(--text-primary)' }}><TeamOutlined /> Attendees & Bookings</span>
-                    <Button
-                      type="primary"
-                      icon={<DownloadOutlined />}
-                      onClick={exportToExcel}
-                      style={{ borderRadius: '8px', background: 'rgba(0, 212, 170, 0.1)', color: '#ffff', border: '1px solid rgba(0, 212, 170, 0.2)' }}
-                    >
-                      Export Guest List
-                    </Button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                      <span style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: '1.2rem' }}><TeamOutlined /> Attendees & Bookings</span>
+                      <Button
+                        type="primary"
+                        icon={<DownloadOutlined />}
+                        onClick={exportToExcel}
+                        style={{ borderRadius: '8px', background: 'rgba(0, 212, 170, 0.1)', color: '#ffff', border: '1px solid rgba(0, 212, 170, 0.2)' }}
+                      >
+                        Export Guest List
+                      </Button>
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                      <Input
+                        placeholder="Search guests..."
+                        prefix={<SearchOutlined style={{ color: '#94A3B8' }} />}
+                        onChange={e => setAttendeeSearchText(e.target.value)}
+                        style={{ width: '220px', borderRadius: '10px' }}
+                        allowClear
+                      />
+                      <Select
+                        defaultValue="ALL"
+                        style={{ width: 150 }}
+                        onChange={setAttendeeStatusFilter}
+                        options={[
+                          { value: 'ALL', label: 'All Status' },
+                          { value: 'CONFIRMED', label: 'Confirmed' },
+                          { value: 'CHECKED_IN', label: 'Checked In' },
+                          { value: 'CANCELLED', label: 'Cancelled' },
+                        ]}
+                      />
+                    </div>
                   </div>
                 }
                 style={{
@@ -392,18 +429,29 @@ export default function EventDetailsPage() {
                 }}
               >
                 <Table
-                  dataSource={event.attendees}
+                  dataSource={filteredAttendees}
                   columns={attendeeColumns}
                   rowKey="id"
                   scroll={{ x: 600 }}
                   pagination={{ pageSize: 5 }}
-                  locale={{ emptyText: <Empty description="No bookings yet" /> }}
+                  locale={{ emptyText: <Empty description={attendeeSearchText || attendeeStatusFilter !== 'ALL' ? "No matching guests found" : "No bookings yet"} /> }}
                 />
               </Card>
 
               <Card
                 className="hover-bounce"
-                title={<AntTitle level={4} style={{ margin: 0, color: 'var(--text-primary)' }}><ShopOutlined /> Event Vendors</AntTitle>}
+                title={
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                    <AntTitle level={4} style={{ margin: 0, color: 'var(--text-primary)' }}><ShopOutlined /> Event Vendors</AntTitle>
+                    <Input
+                      placeholder="Search vendors..."
+                      prefix={<SearchOutlined style={{ color: '#94A3B8' }} />}
+                      onChange={e => setVendorSearchText(e.target.value)}
+                      style={{ width: '220px', borderRadius: '10px' }}
+                      allowClear
+                    />
+                  </div>
+                }
                 style={{
                   borderRadius: '24px',
                   background: 'var(--card-bg)',
@@ -412,12 +460,12 @@ export default function EventDetailsPage() {
                 }}
               >
                 <Table
-                  dataSource={event.vendors}
+                  dataSource={filteredVendors}
                   columns={vendorColumns}
                   rowKey="id"
                   scroll={{ x: 600 }}
                   pagination={false}
-                  locale={{ emptyText: <Empty description="No vendors assigned to this event" /> }}
+                  locale={{ emptyText: <Empty description={vendorSearchText ? "No matching vendors found" : "No vendors assigned to this event"} /> }}
                 />
               </Card>
             </>

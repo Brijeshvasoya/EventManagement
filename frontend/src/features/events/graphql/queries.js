@@ -3,10 +3,13 @@ import { gql } from '@apollo/client';
 export const GET_ME = gql`
   query GetMe {
     me {
-      id name email role createdAt loyaltyPoints averageRating redeemedRewards isPlanPurchased planId
+      id name email role createdAt loyaltyPoints averageRating redeemedRewards isPlanPurchased planId totalWithdrawn availablePayout
+      bankDetails { accountHolderName accountNumber bankName ifscCode }
     }
   }
 `;
+
+
 
 export const GET_EVENTS = gql`
   query GetEvents($limit: Int, $offset: Int) {
@@ -206,3 +209,52 @@ export const LOGOUT = gql`
     logout
   }
 `;
+
+export const REQUEST_PAYOUT = gql`
+  mutation RequestPayout($amount: Float!) {
+    requestPayout(amount: $amount) {
+      id amount status createdAt
+    }
+  }
+`;
+
+export const GET_MY_PAYOUTS = gql`
+  query GetMyPayouts {
+    myPayouts {
+      id amount status createdAt
+    }
+  }
+`;
+
+export const GET_ALL_PAYOUTS = gql`
+  query GetAllPayouts {
+    allPayouts {
+      id amount status createdAt
+      organizer { 
+        id name email 
+        bankDetails { accountHolderName accountNumber bankName ifscCode }
+      }
+    }
+  }
+`;
+
+export const APPROVE_PAYOUT = gql`
+  mutation ApprovePayout($payoutId: ID!) {
+    approvePayout(payoutId: $payoutId) {
+      id status
+    }
+  }
+`;
+
+export const UPDATE_BANK_DETAILS = gql`
+  mutation UpdateBankDetails($accountHolderName: String!, $accountNumber: String!, $bankName: String!, $ifscCode: String!) {
+    updateBankDetails(accountHolderName: $accountHolderName, accountNumber: $accountNumber, bankName: $bankName, ifscCode: $ifscCode) {
+      id 
+      bankDetails { accountHolderName accountNumber bankName ifscCode }
+    }
+  }
+`;
+
+
+
+

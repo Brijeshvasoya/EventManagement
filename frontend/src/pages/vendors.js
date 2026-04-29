@@ -4,13 +4,15 @@ import { GET_MY_VENDORS, CREATE_VENDOR, UPDATE_VENDOR, DELETE_VENDOR, GET_MY_EVE
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import { Table, Button, Modal, Form, Input, InputNumber, Select, Space, Tag, Spin, Popconfirm } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ShopOutlined, PhoneOutlined, DollarOutlined, CalendarOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ShopOutlined, PhoneOutlined, DollarOutlined, CalendarOutlined, SearchOutlined } from '@ant-design/icons';
 import toast from 'react-hot-toast';
 
 export default function VendorManagement() {
   const { user, loading: authLoading } = useAuth();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingVendor, setEditingVendor] = useState(null);
+  const [searchText, setSearchText] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [form] = Form.useForm();
 
   const { data, loading, refetch } = useQuery(GET_MY_VENDORS, {
@@ -45,6 +47,13 @@ export default function VendorManagement() {
       Unauthorized Access
     </div>
   );
+
+  const vendors = (data?.myVendors || []).filter(v => {
+    const matchesSearch = v.name.toLowerCase().includes(searchText.toLowerCase()) || 
+      v.contactInfo?.toLowerCase().includes(searchText.toLowerCase());
+    const matchesCategory = categoryFilter === 'ALL' || v.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
   const handleAdd = () => {
     setEditingVendor(null);
@@ -168,15 +177,37 @@ export default function VendorManagement() {
             Manage your event vendors and service providers
           </p>
         </div>
-        <Button
-          type="primary"
-          size="large"
-          icon={<PlusOutlined />}
-          onClick={handleAdd}
-          style={{ borderRadius: '12px', height: '44px' }}
-        >
-          Add New Vendor
-        </Button>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <Input
+            placeholder="Search vendors..."
+            prefix={<SearchOutlined style={{ color: '#94A3B8' }} />}
+            onChange={e => setSearchText(e.target.value)}
+            style={{ width: '220px', borderRadius: '12px', height: '44px' }}
+            allowClear
+          />
+          <Select
+            defaultValue="ALL"
+            style={{ width: '160px', height: '44px' }}
+            onChange={setCategoryFilter}
+            options={[
+              { value: 'ALL', label: 'All Categories' },
+              { value: 'CATERING', label: 'Catering' },
+              { value: 'DECORATION', label: 'Decoration' },
+              { value: 'DJ', label: 'DJ' },
+              { value: 'PHOTOGRAPHER', label: 'Photographer' },
+              { value: 'OTHER', label: 'Other' },
+            ]}
+          />
+          <Button
+            type="primary"
+            size="large"
+            icon={<PlusOutlined />}
+            onClick={handleAdd}
+            style={{ borderRadius: '12px', height: '44px' }}
+          >
+            Add New Vendor
+          </Button>
+        </div>
       </div>
 
       <div className="table-responsive hover-bounce" style={{
@@ -188,7 +219,7 @@ export default function VendorManagement() {
         boxShadow: 'var(--shadow-md)'
       }}>
         <Table
-          dataSource={data?.myVendors || []}
+          dataSource={vendors}
           columns={columns}
           rowKey="id"
           pagination={{ pageSize: 10 }}

@@ -8,12 +8,17 @@ const Vendor = require('../models/Vendor');
 const notificationService = require('../modules/notifications/notificationService');
 
 const stripeService = require('../modules/payments/stripeService');
+const razorpayService = require('../modules/payments/razorpayService');
 const analyticsService = require('../modules/analytics/analyticsService');
 const { pubsub, EVENTS } = require('../utils/pubsub');
 
 const resolvers = {
   Query: {
-    me: (_, __, { user }) => authService.getMe(user),
+    me: async (_, __, { user }) => {
+      if (!user) return null;
+      const User = require('../models/User');
+      return await User.findById(user.id);
+    },
     events: (_, args) => eventService.getEvents(args),
     event: (_, { id }) => eventService.getEventById(id),
     myEvents: async (_, __, { user }) => {
@@ -168,20 +173,75 @@ const resolvers = {
     submitFeedback: (_, args) => bookingService.submitFeedback(args),
     logout: () => true,
     requestPayout: async (_, { amount }, { user }) => {
-      if (!user || user.role !== 'ORGANIZER') throw new Error('Unauthorized');
+      if (!user || user.role !== 'ORGANIZER') throw new GraphQLError('Unauthorized');
+      
+      const User = require('../models/User');
+      const fullUser = await User.findById(user.id);
+      
+      // Calculate available payout on the fly to ensure accuracy
+      const Booking = require('../models/Booking');
+      const Event = require('../models/Event');
       const Payout = require('../models/Payout');
+      
+      const events = await Event.find({ organizer: user.id });
+      const eventIds = events.map(e => e._id);
+      
+      const bookings = await Booking.aggregate([
+        { $match: { event: { $in: eventIds }, paymentStatus: 'PAID', status: { $in: ['CONFIRMED', 'CHECKED_IN'] } } },
+        { $group: { _id: null, total: { $sum: "$amountPaid" } } }
+      ]);
+      
+      const totalRevenue = bookings.length > 0 ? bookings[0].total : 0;
+      
+      const payouts = await Payout.aggregate([
+        { $match: { organizer: user.id, status: { $in: ['COMPLETED', 'PENDING'] } } },
+        { $group: { _id: null, total: { $sum: "$amount" } } }
+      ]);
+      
+      const totalWithdrawnAndPending = payouts.length > 0 ? payouts[0].total : 0;
+      const availablePayout = Math.max(0, (totalRevenue * 0.9) - totalWithdrawnAndPending);
+
+      if (amount > availablePayout) {
+        throw new GraphQLError(`Insufficient balance. Maximum you can withdraw is ₹${availablePayout.toFixed(2)} (after 10% platform fee).`);
+      }
+
       const payout = new Payout({ organizer: user.id, amount });
       await payout.save();
       return payout;
     },
     approvePayout: async (_, { payoutId }, { user }) => {
-      if (!user || user.role !== 'SUPER_ADMIN') throw new Error('Unauthorized');
+      if (!user || user.role !== 'SUPER_ADMIN') throw new GraphQLError('Unauthorized');
+      
       const Payout = require('../models/Payout');
+      const User = require('../models/User');
+      
       const payout = await Payout.findById(payoutId);
-      if (!payout) throw new Error('Payout not found');
+      if (!payout) throw new GraphQLError('Payout not found');
+      if (payout.status === 'COMPLETED') throw new GraphQLError('Payout already completed');
+
+      const organizer = await User.findById(payout.organizer);
+      if (!organizer) throw new GraphQLError('Organizer not found');
+
+      // Attempt Razorpay Payout
+      try {
+        await razorpayService.processPayout(payout, organizer);
+      } catch (e) {
+        throw new GraphQLError(`Razorpay Payout Failed: ${e.message}`);
+      }
+
       payout.status = 'COMPLETED';
       await payout.save();
       return payout;
+    },
+    updateBankDetails: async (_, { accountHolderName, accountNumber, bankName, ifscCode }, { user }) => {
+      if (!user || user.role !== 'ORGANIZER') throw new GraphQLError('Unauthorized');
+      const User = require('../models/User');
+      const updatedUser = await User.findByIdAndUpdate(
+        user.id,
+        { bankDetails: { accountHolderName, accountNumber, bankName, ifscCode } },
+        { new: true }
+      );
+      return updatedUser;
     },
   },
   Feedback: {
@@ -305,6 +365,37 @@ const resolvers = {
           { $group: { _id: null, total: { $sum: "$amount" } } }
         ]);
         return payouts.length > 0 ? payouts[0].total : 0;
+      } catch (e) {
+        return 0;
+      }
+    },
+    availablePayout: async (parent) => {
+      if (parent.role !== 'ORGANIZER') return 0;
+      try {
+        const Booking = require('../models/Booking');
+        const Event = require('../models/Event');
+        const Payout = require('../models/Payout');
+        
+        const organizerId = parent._id || parent.id;
+        const events = await Event.find({ organizer: organizerId });
+        const eventIds = events.map(e => e._id);
+        
+        const bookings = await Booking.aggregate([
+          { $match: { event: { $in: eventIds }, paymentStatus: 'PAID', status: { $in: ['CONFIRMED', 'CHECKED_IN'] } } },
+          { $group: { _id: null, total: { $sum: "$amountPaid" } } }
+        ]);
+        
+        const totalRevenue = bookings.length > 0 ? bookings[0].total : 0;
+        
+        const payouts = await Payout.aggregate([
+          { $match: { organizer: organizerId, status: { $in: ['COMPLETED', 'PENDING'] } } },
+          { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+        
+        const totalWithdrawnAndPending = payouts.length > 0 ? payouts[0].total : 0;
+        
+        const available = (totalRevenue * 0.9) - totalWithdrawnAndPending;
+        return Math.max(0, available);
       } catch (e) {
         return 0;
       }

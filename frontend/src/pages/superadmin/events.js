@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { GET_EVENTS } from '@/features/events/graphql/queries';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { Table, Typography, Card, ConfigProvider, Tag } from 'antd';
-import { GlobalOutlined } from '@ant-design/icons';
+import { Table, Typography, Card, ConfigProvider, Tag, Input, Select, Space } from 'antd';
+import { GlobalOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -13,6 +13,8 @@ const { Title } = Typography;
 export default function SuperAdminEvents() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const [searchText, setSearchText] = useState('');
+  const [typeFilter, setTypeFilter] = useState('ALL');
 
   useEffect(() => {
     if (!authLoading && (!user || user.role !== 'SUPER_ADMIN')) {
@@ -28,7 +30,12 @@ export default function SuperAdminEvents() {
   if (authLoading) return null;
   if (!user || user.role !== 'SUPER_ADMIN') return null;
 
-  const events = data?.events || [];
+  const events = (data?.events || []).filter(e => {
+    const matchesSearch = e.title.toLowerCase().includes(searchText.toLowerCase()) || 
+      e.organizer?.name?.toLowerCase().includes(searchText.toLowerCase());
+    const matchesType = typeFilter === 'ALL' || e.eventType === typeFilter;
+    return matchesSearch && matchesType;
+  });
 
   const columns = [
     {
@@ -79,7 +86,31 @@ export default function SuperAdminEvents() {
           <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, rgb(67, 56, 202) 0%, rgb(139, 92, 246) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(67, 56, 202, 0.2)' }}>
             <GlobalOutlined style={{ color: 'white', fontSize: '24px' }} />
           </div>
-          <Title level={2} style={{ margin: 0, fontWeight: 800 }}>All Events</Title>
+          <div style={{ flex: 1 }}>
+            <Title level={2} style={{ margin: 0, fontWeight: 800 }}>All Events</Title>
+          </div>
+          <Space size="middle" style={{ flexWrap: 'wrap' }}>
+            <Input
+              placeholder="Search events or organizers..."
+              prefix={<SearchOutlined style={{ color: '#94A3B8' }} />}
+              onChange={e => setSearchText(e.target.value)}
+              style={{ width: '280px', borderRadius: '12px', height: '40px' }}
+              allowClear
+            />
+            <Select
+              defaultValue="ALL"
+              style={{ width: 180, height: '40px' }}
+              onChange={setTypeFilter}
+              options={[
+                { value: 'ALL', label: 'All Types' },
+                { value: 'CONFERENCE', label: 'Conference' },
+                { value: 'WORKSHOP', label: 'Workshop' },
+                { value: 'CONCERT', label: 'Concert' },
+                { value: 'SPORTS', label: 'Sports' },
+                { value: 'EXHIBITION', label: 'Exhibition' },
+              ]}
+            />
+          </Space>
         </div>
 
         <Card bordered={false} style={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }} bodyStyle={{ padding: 0 }}>

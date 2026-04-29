@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { GET_EVENTS } from '@/features/events/graphql/queries';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { Table, Typography, Card, ConfigProvider, Tag } from 'antd';
-import { ScanOutlined } from '@ant-design/icons';
+import { Table, Typography, Card, ConfigProvider, Tag, Input, Select, Space } from 'antd';
+import { ScanOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -13,6 +13,8 @@ const { Title } = Typography;
 export default function SuperAdminTickets() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const [searchText, setSearchText] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   useEffect(() => {
     if (!authLoading && (!user || user.role !== 'SUPER_ADMIN')) {
@@ -36,7 +38,13 @@ export default function SuperAdminTickets() {
       eventTitle: event.title,
       organizerName: event.organizer?.name || 'Unknown'
     }))
-  ).sort((a, b) => {
+  ).filter(t => {
+    const matchesSearch = t.eventTitle.toLowerCase().includes(searchText.toLowerCase()) || 
+      t.user?.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+      t.user?.email?.toLowerCase().includes(searchText.toLowerCase());
+    const matchesStatus = statusFilter === 'ALL' || t.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  }).sort((a, b) => {
     const bDate = new Date(isNaN(Number(b.createdAt)) ? b.createdAt : Number(b.createdAt)).getTime();
     const aDate = new Date(isNaN(Number(a.createdAt)) ? a.createdAt : Number(a.createdAt)).getTime();
     return bDate - aDate;
@@ -120,7 +128,29 @@ export default function SuperAdminTickets() {
           <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, rgb(67, 56, 202) 0%, rgb(139, 92, 246) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(67, 56, 202, 0.2)' }}>
             <ScanOutlined style={{ color: 'white', fontSize: '24px' }} />
           </div>
-          <Title level={2} style={{ margin: 0, fontWeight: 800 }}>All Purchased Tickets</Title>
+          <div style={{ flex: 1 }}>
+            <Title level={2} style={{ margin: 0, fontWeight: 800 }}>All Purchased Tickets</Title>
+          </div>
+          <Space size="middle" style={{ flexWrap: 'wrap' }}>
+            <Input
+              placeholder="Search by event or buyer..."
+              prefix={<SearchOutlined style={{ color: '#94A3B8' }} />}
+              onChange={e => setSearchText(e.target.value)}
+              style={{ width: '280px', borderRadius: '12px', height: '40px' }}
+              allowClear
+            />
+            <Select
+              defaultValue="ALL"
+              style={{ width: 160, height: '40px' }}
+              onChange={setStatusFilter}
+              options={[
+                { value: 'ALL', label: 'All Status' },
+                { value: 'CONFIRMED', label: 'Confirmed' },
+                { value: 'CHECKED_IN', label: 'Checked In' },
+                { value: 'CANCELLED', label: 'Cancelled' },
+              ]}
+            />
+          </Space>
         </div>
 
         <Card bordered={false} style={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }} bodyStyle={{ padding: 0 }}>

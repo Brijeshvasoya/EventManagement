@@ -31,6 +31,7 @@
     "node-cron": "^4.2.1",
     "pdfkit": "^0.18.0",
     "qrcode": "^1.5.4",
+    "razorpay": "^2.9.6",
     "react-qr-barcode-scanner": "^2.1.25",
     "resend": "^4.0.0",
     "stripe": "^22.0.0",

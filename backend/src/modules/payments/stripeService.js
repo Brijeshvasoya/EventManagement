@@ -125,3 +125,60 @@ exports.confirmPlanPurchase = async (sessionId, planId, user) => {
   const token = signToken({ id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name, isPlanPurchased: fullUser.isPlanPurchased, planId: fullUser.planId, planExpiresAt: fullUser.planExpiresAt });
   return { token, user: fullUser };
 };
+
+exports.createConnectAccount = async (user) => {
+  requireAuth(user);
+  const User = require('../../models/User');
+  const fullUser = await User.findById(user.id);
+  if (!fullUser) throw new Error('User not found');
+
+  if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock') {
+    let accountId = fullUser.stripeAccountId;
+    
+    if (!accountId) {
+      const account = await stripe.accounts.create({
+        type: 'express',
+        email: fullUser.email,
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+      });
+      accountId = account.id;
+      fullUser.stripeAccountId = accountId;
+      await fullUser.save();
+    }
+
+    const APP_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: `${APP_URL}/transactions?stripe=refresh`,
+      return_url: `${APP_URL}/transactions?stripe=success`,
+      type: 'account_onboarding',
+    });
+
+    return accountLink.url;
+  }
+
+  return 'https://connect.stripe.com/setup/s/mock_onboarding_link';
+};
+
+exports.createTransfer = async (payout, organizer) => {
+  if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock') {
+    if (!organizer.stripeAccountId) {
+      throw new Error('Organizer has not linked a Stripe account');
+    }
+
+    const transfer = await stripe.transfers.create({
+      amount: Math.round(payout.amount * 100),
+      currency: 'inr',
+      destination: organizer.stripeAccountId,
+      description: `Payout for request ${payout._id}`,
+      metadata: { payoutId: payout._id.toString() }
+    });
+
+    return transfer;
+  }
+  return { id: 'tr_mock_' + Date.now() };
+};
+

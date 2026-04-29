@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { Table, Tag, Typography, Card, Row, Col, Statistic, ConfigProvider } from 'antd';
-import { UserOutlined, CrownOutlined, SafetyCertificateOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { Table, Tag, Card, Row, Col, Statistic, ConfigProvider, Input, Select, Space, Typography } from 'antd';
+import { UserOutlined, CrownOutlined, SafetyCertificateOutlined, CheckCircleOutlined, CloseCircleOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons';
 
 const { Title } = Typography;
 
@@ -26,6 +26,8 @@ const GET_ALL_USERS = gql`
 export default function SuperAdmin() {
   const { user } = useAuth();
   const router = useRouter();
+  const [searchText, setSearchText] = useState('');
+  const [roleFilter, setRoleFilter] = useState('ALL');
 
   useEffect(() => {
     if (user && user.role !== 'SUPER_ADMIN') {
@@ -39,25 +41,34 @@ export default function SuperAdmin() {
 
   if (!user || user.role !== 'SUPER_ADMIN') return null;
 
-  const users = data?.allUsers || [];
+  const users = (data?.allUsers || []).filter(u => {
+    const matchesSearch = u.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchText.toLowerCase());
+    const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
   console.log("🚀 ~ SuperAdmin ~ users:", users)
 
   const columns = [
     {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      render: text => <span style={{ fontWeight: 600 }}>{text}</span>,
-    },
-    {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
+      title: 'User',
+      key: 'user',
+      fixed: 'left',
+      width: 250,
+      render: (_, record) => (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ fontWeight: 700, color: '#1E293B' }}>{record.name}</span>
+          <Typography.Text type="secondary" style={{ fontSize: '0.8rem' }} ellipsis={{ tooltip: record.email }}>
+            {record.email}
+          </Typography.Text>
+        </div>
+      ),
     },
     {
       title: 'Role',
       dataIndex: 'role',
       key: 'role',
+      width: 150,
       render: role => {
         let color = 'blue';
         let icon = <UserOutlined />;
@@ -70,6 +81,7 @@ export default function SuperAdmin() {
     {
       title: 'Plan Status',
       key: 'plan',
+      width: 150,
       render: (_, record) => {
         if (record.role !== 'ORGANIZER') return '-';
         if (record.isPlanPurchased) {
@@ -82,6 +94,7 @@ export default function SuperAdmin() {
       title: 'Joined',
       dataIndex: 'createdAt',
       key: 'createdAt',
+      width: 150,
       render: text => {
         if (!text) return '-';
         const num = Number(text);
@@ -129,8 +142,29 @@ export default function SuperAdmin() {
         </Row>
 
         <Card bordered={false} style={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }} bodyStyle={{ padding: 0 }}>
-          <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9' }}>
+          <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
             <Title level={4} style={{ margin: 0, fontWeight: 700 }}>System Users</Title>
+            <Space size="middle" style={{ flexWrap: 'wrap' }}>
+              <Input
+                placeholder="Search users..."
+                prefix={<SearchOutlined style={{ color: '#94A3B8' }} />}
+                onChange={e => setSearchText(e.target.value)}
+                style={{ width: '250px', borderRadius: '10px' }}
+                allowClear
+              />
+              <Select
+                defaultValue="ALL"
+                style={{ width: 150 }}
+                onChange={setRoleFilter}
+                options={[
+                  { value: 'ALL', label: 'All Roles' },
+                  { value: 'USER', label: 'Users' },
+                  { value: 'ORGANIZER', label: 'Organizers' },
+                  { value: 'ADMIN', label: 'Admins' },
+                  { value: 'SUPER_ADMIN', label: 'Super Admins' },
+                ]}
+              />
+            </Space>
           </div>
           <div style={{ overflowX: 'auto' }}>
             <Table
@@ -138,8 +172,8 @@ export default function SuperAdmin() {
               dataSource={users}
               rowKey="id"
               loading={loading}
-              pagination={{ pageSize: 10, responsive: true }}
-              style={{ padding: '16px 24px 24px' }}
+              pagination={{ pageSize: 10, showSizeChanger: true }}
+              style={{ padding: '0 24px 24px' }}
               scroll={{ x: 800 }}
             />
           </div>
