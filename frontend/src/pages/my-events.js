@@ -53,7 +53,7 @@ export default function MyEvents() {
         title: event.title,
         description: event.description,
         location: event.location,
-        date: dayjs(parseInt(event.date) || event.date),
+        date: dayjs(isNaN(Number(event.date)) ? event.date : Number(event.date)),
         eventType: event.eventType
     });
     setIsEditModalOpen(true);
@@ -213,7 +213,7 @@ export default function MyEvents() {
                       {event.eventType}
                     </div>
                   </div>
-                  <p style={{ color: '#6B7280', margin: '0 0 16px 0', fontSize: '0.9rem', flex: 1 }}>{dayjs(parseInt(event.date) || event.date).format('MMM D, YYYY')}</p>
+                  <p style={{ color: '#6B7280', margin: '0 0 16px 0', fontSize: '0.9rem', flex: 1 }}>{dayjs(isNaN(Number(event.date)) ? event.date : Number(event.date)).format('MMM D, YYYY')}</p>
                   
                   <div style={{ display: 'flex', gap: '20px', borderTop: '1px solid #F3F4F6', paddingTop: '16px', alignItems: 'center' }}>
                     <div style={{ flex: 1 }}>

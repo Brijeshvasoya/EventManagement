@@ -1,6 +1,7 @@
 import { useContext, useState } from 'react';
 import { GlobalActionsContext } from '../components/GlobalActions';
 import { useQuery, useMutation } from '@apollo/client/react';
+import { gql } from '@apollo/client';
 import { GET_MY_BOOKINGS, CANCEL_BOOKING, GET_MY_ANALYTICS, GET_MY_EVENTS, GET_EVENTS, REDEEM_REWARD } from '@/features/events/graphql/queries';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
@@ -15,6 +16,12 @@ import { EnvironmentOutlined, CalendarOutlined, DownloadOutlined, QrcodeOutlined
 
 const { Title, Text: AntText } = Typography;
 
+const GET_ALL_USERS = gql`
+  query GetAllUsers {
+    allUsers { id role isPlanPurchased planId }
+  }
+`;
+
 export default function Dashboard() {
   const { user, loading: authLoading, setUser } = useAuth();
   const router = useRouter();
@@ -26,13 +33,14 @@ export default function Dashboard() {
   const { refetchGlobalNotifications } = useContext(GlobalActionsContext);
 
   const isOrganizer = user?.role === 'ORGANIZER' || user?.role === 'ADMIN';
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const { data: bookingData, loading: bookingLoading, refetch } = useQuery(GET_MY_BOOKINGS, {
     fetchPolicy: 'cache-and-network'
   });
 
   const { data: analyticsData } = useQuery(GET_MY_ANALYTICS, {
-    skip: !user || user.role === 'USER', fetchPolicy: 'cache-and-network'
+    skip: !user || user.role === 'USER' || isSuperAdmin, fetchPolicy: 'cache-and-network'
   });
 
   const { data: myEventsData, loading: eventsLoading } = useQuery(GET_MY_EVENTS, {
@@ -41,8 +49,16 @@ export default function Dashboard() {
 
   const { data: allEventsData } = useQuery(GET_EVENTS, {
     variables: { limit: 5 },
-    skip: isOrganizer,
+    skip: isOrganizer || isSuperAdmin,
     fetchPolicy: 'cache-and-network'
+  });
+
+  const { data: allUsersData } = useQuery(GET_ALL_USERS, {
+    skip: !isSuperAdmin, fetchPolicy: 'network-only'
+  });
+
+  const { data: allEventsDashboardData } = useQuery(GET_EVENTS, {
+    skip: !isSuperAdmin, fetchPolicy: 'network-only'
   });
 
   const [cancel] = useMutation(CANCEL_BOOKING);
@@ -131,6 +147,167 @@ export default function Dashboard() {
 
   const bookings = bookingData?.myBookings || [];
   const now = new Date();
+
+  if (isSuperAdmin) {
+    const events = allEventsDashboardData?.events || [];
+    const users = allUsersData?.allUsers || [];
+    
+    let organizerRevenue = 0;
+    let totalTicketsSold = 0;
+    
+    const monthlyMap = {};
+    
+    const eventsWithRev = events.map(e => {
+      let eventRev = 0;
+      let eventTickets = 0;
+      console.log("DASHBOARD EVENT:", e.title, "ATTENDEES:", e.attendees);
+      e.attendees?.forEach(att => {
+        if (att.status !== 'CANCELLED') {
+          const amt = (att.amountPaid || 0);
+          eventRev += amt;
+          eventTickets += (att.quantity || 1);
+          
+          const date = new Date(isNaN(Number(att.createdAt)) ? att.createdAt : Number(att.createdAt));
+          const monthKey = date.toLocaleString('default', { month: 'short' });
+          if (!monthlyMap[monthKey]) monthlyMap[monthKey] = 0;
+          monthlyMap[monthKey] += amt;
+        }
+      });
+      organizerRevenue += eventRev;
+      totalTicketsSold += eventTickets;
+      return { title: e.title, revenue: eventRev, tickets: eventTickets };
+    });
+    
+    let platformPlanRevenue = 0;
+    users.forEach(u => {
+      if (u.role === 'ORGANIZER' && u.isPlanPurchased) {
+        if (u.planId === 'BASIC') platformPlanRevenue += 9.99;
+        if (u.planId === 'PRO') platformPlanRevenue += 29.99;
+      }
+    });
+
+    const monthlyDataArray = Object.keys(monthlyMap).map(k => ({ name: k, Revenue: monthlyMap[k] }));
+    const topEvents = eventsWithRev.sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+
+    const totalUsers = users.filter(u => u.role === 'USER').length;
+    const totalOrganizers = users.filter(u => u.role === 'ORGANIZER').length;
+
+    return (
+      <>
+        <Head><title>Super Admin Dashboard | EventHub</title></Head>
+        <div style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <div className="header-responsive" style={{ marginBottom: '32px', background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)', borderRadius: '32px', color: 'white', padding: '32px', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)' }}>
+            <h1 style={{ margin: 0, fontSize: '2.2rem', fontWeight: 800, color: 'white', letterSpacing: '-0.5px' }}>Platform Dashboard</h1>
+            <p style={{ color: 'rgba(255,255,255,0.7)', margin: '4px 0 0 0', fontSize: '1rem' }}>Welcome back, Super Admin. Here is the platform overview.</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
+            <Card variant="borderless" style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '24px' }}>💳</span>
+                </div>
+                <div>
+                  <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Platform Revenue</div>
+                  <div style={{ color: '#1B2A4E', fontSize: '1.6rem', fontWeight: 800 }}>${Number(platformPlanRevenue).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                </div>
+              </div>
+            </Card>
+
+            <Card variant="borderless" style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '24px' }}>💰</span>
+                </div>
+                <div>
+                  <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Organizer Revenue</div>
+                  <div style={{ color: '#1B2A4E', fontSize: '1.6rem', fontWeight: 800 }}>${Number(organizerRevenue).toLocaleString()}</div>
+                </div>
+              </div>
+            </Card>
+
+            <Card variant="borderless" style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '24px' }}>🎟️</span>
+                </div>
+                <div>
+                  <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Tickets Sold</div>
+                  <div style={{ color: '#1B2A4E', fontSize: '1.6rem', fontWeight: 800 }}>{totalTicketsSold.toLocaleString()}</div>
+                </div>
+              </div>
+            </Card>
+
+            <Card variant="borderless" style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(139, 92, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '24px' }}>👥</span>
+                </div>
+                <div>
+                  <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Total Users</div>
+                  <div style={{ color: '#1B2A4E', fontSize: '1.6rem', fontWeight: 800 }}>{totalUsers.toLocaleString()}</div>
+                </div>
+              </div>
+            </Card>
+
+            <Card variant="borderless" style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '24px' }}>🏢</span>
+                </div>
+                <div>
+                  <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Organizers</div>
+                  <div style={{ color: '#1B2A4E', fontSize: '1.6rem', fontWeight: 800 }}>{totalOrganizers.toLocaleString()}</div>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+            <Card title={<span style={{ fontWeight: 800, fontSize: '1.2rem', color: '#1B2A4E' }}>Revenue Growth</span>} bordered={false} style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+              <div style={{ height: 300, width: '100%' }}>
+                {monthlyDataArray.length > 0 ? (
+                  <ResponsiveContainer>
+                    <BarChart data={monthlyDataArray}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} dx={-10} tickFormatter={(val) => `$${val}`} />
+                      <Tooltip cursor={{ fill: '#F8FAFB' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
+                      <Bar dataKey="Revenue" fill="#4338CA" radius={[6, 6, 0, 0]} maxBarSize={50} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Empty description="No revenue data available" style={{ marginTop: '50px' }} />
+                )}
+              </div>
+            </Card>
+
+            <Card title={<span style={{ fontWeight: 800, fontSize: '1.2rem', color: '#1B2A4E' }}>Top Performing Events</span>} bordered={false} style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }} bodyStyle={{ padding: '0 24px 24px 24px' }}>
+              <List
+                dataSource={topEvents}
+                renderItem={(item, i) => (
+                  <List.Item style={{ padding: '16px 0', borderBottom: i === topEvents.length - 1 ? 'none' : '1px solid #F1F5F9' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#F8FAFB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#4338CA' }}>
+                          #{i + 1}
+                        </div>
+                        <div style={{ fontWeight: 700, color: '#1B2A4E', fontSize: '1.05rem' }}>{item.title}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontWeight: 800, color: '#10B981', fontSize: '1.1rem' }}>${item.revenue.toLocaleString()}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#6B7280', fontWeight: 600 }}>{item.tickets} tickets</div>
+                      </div>
+                    </div>
+                  </List.Item>
+                )}
+              />
+            </Card>
+          </div>
+        </div>
+      </>
+    );
+  }
 
 
 
@@ -302,7 +479,7 @@ export default function Dashboard() {
         </div>
 
         {isOrganizer ? (() => {
-          const upcomingEvents = myEventsData?.myEvents?.filter(e => new Date(parseInt(e.date) || e.date) >= now) || [];
+          const upcomingEvents = myEventsData?.myEvents?.filter(e => new Date(isNaN(Number(e.date)) ? e.date : Number(e.date)) >= now) || [];
           // Dynamic calculations from DB
           const totalCapacity = myEventsData?.myEvents?.reduce((acc, ev) => acc + (ev.capacity || 0), 0) || 0;
           const ticketsSold = analyticsData?.myAnalytics?.ticketsSold || 0;
@@ -465,7 +642,7 @@ export default function Dashboard() {
                       <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: 800, color: '#1B2A4E' }}>{e.title}</h4>
                       <div style={{ color: '#6B7280', fontSize: '0.85rem', marginBottom: '16px' }}>{e.location}</div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#9CA3AF', fontSize: '0.85rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CalendarOutlined /> {new Date(parseInt(e.date) || e.date).toLocaleDateString()}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CalendarOutlined /> {new Date(isNaN(Number(e.date)) ? e.date : Number(e.date)).toLocaleDateString()}</div>
                         <div style={{ color: 'rgb(67, 56, 202)', fontWeight: 800, fontSize: '1rem' }}>$ {Number(e.ticketTypes?.[0]?.price || 30).toLocaleString()}</div>
                       </div>
                     </div>
@@ -497,7 +674,7 @@ export default function Dashboard() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1B2A4E', fontWeight: 600, fontSize: '0.9rem', background: '#F3F4F6', padding: '8px 16px', borderRadius: '12px' }}>
                             <CalendarOutlined />
-                            <span>{new Date(parseInt(upcomingEvents[0].date) || upcomingEvents[0].date).toLocaleDateString()}</span>
+                            <span>{new Date(isNaN(Number(upcomingEvents[0].date)) ? upcomingEvents[0].date : Number(upcomingEvents[0].date)).toLocaleDateString()}</span>
                           </div>
                           <Button type="primary" onClick={() => router.push(`/events/${upcomingEvents[0].id}`)} style={{ background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px', padding: '0 24px', fontWeight: 700, height: '40px', border: 'none', boxShadow: '0 4px 12px rgba(49, 46, 129, 0.3)' }}>View Details</Button>
                         </div>
@@ -515,7 +692,7 @@ export default function Dashboard() {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1B2A4E', fontWeight: 600, fontSize: '0.9rem', background: '#F3F4F6', padding: '8px 16px', borderRadius: '12px' }}>
                               <CalendarOutlined />
-                              <span>{new Date(parseInt(upcomingEvents[1]?.date) || upcomingEvents[1]?.date).toLocaleDateString()}</span>
+                              <span>{new Date(isNaN(Number(upcomingEvents[1]?.date)) ? upcomingEvents[1]?.date : Number(upcomingEvents[1]?.date)).toLocaleDateString()}</span>
                             </div>
                             <Button type="primary" onClick={() => router.push(`/events/${upcomingEvents[1]?.id}`)} style={{ background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px', padding: '0 24px', fontWeight: 700, height: '40px', border: 'none', boxShadow: '0 4px 12px rgba(49, 46, 129, 0.3)' }}>View Details</Button>
                           </div>
@@ -574,7 +751,7 @@ export default function Dashboard() {
             </div>
           );
         })() : (() => {
-          const upcomingBookings = bookings.filter(b => b.event && new Date(parseInt(b.event.date) || b.event.date) >= now);
+          const upcomingBookings = bookings.filter(b => b.event && new Date(isNaN(Number(b.event.date)) ? b.event.date : Number(b.event.date)) >= now);
           const featuredBooking = upcomingBookings[0];
           const totalSpent = bookings.reduce((acc, b) => acc + (b.amountPaid || 0), 0);
 
@@ -597,7 +774,7 @@ export default function Dashboard() {
             d.setMonth(d.getMonth() - i);
             const monthName = d.toLocaleString('default', { month: 'short' });
             const count = bookings.filter(b => {
-              const bDate = new Date(parseInt(b.event?.date) || b.event?.date);
+              const bDate = new Date(isNaN(Number(b.event?.date)) ? b.event?.date : Number(b.event?.date));
               return bDate.getMonth() === d.getMonth() && bDate.getFullYear() === d.getFullYear();
             }).length;
             last6Months.push({ name: monthName, "Total Tickets": count });
@@ -759,8 +936,8 @@ export default function Dashboard() {
                                   <div className="grid-cols-2" style={{ gap: '30px' }}>
                                     <div>
                                       <p style={{ color: '#6366F1', fontWeight: '700', textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '1px', marginBottom: '8px' }}>Date & Time</p>
-                                      <p style={{ fontSize: '1.4rem', fontWeight: '700', color: '#334155', margin: 0 }}>{new Date(parseInt(b.event.date) || b.event.date).toLocaleDateString()}</p>
-                                      <p style={{ fontSize: '1.2rem', fontWeight: '600', color: '#64748B', marginTop: '4px' }}>{new Date(parseInt(b.event.date) || b.event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '09:00 AM'}</p>
+                                      <p style={{ fontSize: '1.4rem', fontWeight: '700', color: '#334155', margin: 0 }}>{new Date(isNaN(Number(b.event.date)) ? b.event.date : Number(b.event.date)).toLocaleDateString()}</p>
+                                      <p style={{ fontSize: '1.2rem', fontWeight: '600', color: '#64748B', marginTop: '4px' }}>{new Date(isNaN(Number(b.event.date)) ? b.event.date : Number(b.event.date)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '09:00 AM'}</p>
                                     </div>
                                     <div>
                                       <p style={{ color: '#6366F1', fontWeight: '700', textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '1px', marginBottom: '8px' }}>Location</p>
@@ -834,7 +1011,7 @@ export default function Dashboard() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1B2A4E', fontWeight: 600, fontSize: '0.9rem', background: '#F8F9FA', padding: '10px 18px', borderRadius: '14px' }}>
                             <CalendarOutlined style={{ color: '#1B2A4E' }} />
-                            <span>{new Date(parseInt(displayEvent.date) || displayEvent.date).toLocaleDateString()}</span>
+                            <span>{new Date(isNaN(Number(displayEvent.date)) ? displayEvent.date : Number(displayEvent.date)).toLocaleDateString()}</span>
                           </div>
                           <Button
                             type="primary"

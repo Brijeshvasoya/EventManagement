@@ -86,7 +86,7 @@ export default function Browse() {
             title: event.title,
             description: event.description,
             location: event.location,
-            date: dayjs(parseInt(event.date) || event.date),
+            date: dayjs(isNaN(Number(event.date)) ? event.date : Number(event.date)),
             eventType: event.eventType
         });
         setIsEditModalOpen(true);
@@ -235,7 +235,7 @@ export default function Browse() {
                                 <div className="grid-cols-2" style={{ gap: '12px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
                                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.9rem' }}>
                                         <CalendarOutlined style={{ color: 'var(--primary-color)', marginTop: '3px' }} />
-                                        <span style={{ lineHeight: 1.4 }}>{new Date(parseInt(e?.date) || e?.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+                                        <span style={{ lineHeight: 1.4 }}>{new Date(isNaN(Number(e?.date)) ? e?.date : Number(e?.date)).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.9rem' }}>
                                         <EnvironmentOutlined style={{ color: 'var(--secondary-color)', marginTop: '3px' }} />
@@ -275,7 +275,7 @@ export default function Browse() {
     );
 
     const upcomingEvents = allEvents.filter(e => {
-        const isUpcoming = new Date(parseInt(e?.date) || e?.date) >= now;
+        const isUpcoming = new Date(isNaN(Number(e?.date)) ? e?.date : Number(e?.date)) >= now;
         if (user?.role === 'ORGANIZER') {
             return isUpcoming && e?.organizer?.id === user.id;
         }
@@ -283,7 +283,7 @@ export default function Browse() {
     });
 
     const completedEvents = allEvents.filter(e => {
-        const isPast = new Date(parseInt(e?.date) || e?.date) < now;
+        const isPast = new Date(isNaN(Number(e?.date)) ? e?.date : Number(e?.date)) < now;
         if (user?.role === 'ORGANIZER') {
             return isPast && e?.organizer?.id === user.id;
         }

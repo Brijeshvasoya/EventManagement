@@ -140,7 +140,7 @@ export default function EventDetailsPage() {
       title: 'Booked On',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date) => <span style={{ color: 'var(--text-secondary)' }}>{dayjs(parseInt(date) || date).format('MMM D, YYYY')}</span>
+      render: (date) => <span style={{ color: 'var(--text-secondary)' }}>{dayjs(isNaN(Number(date)) ? date : Number(date)).format('MMM D, YYYY')}</span>
     }
   ];
 
@@ -195,7 +195,7 @@ export default function EventDetailsPage() {
         qty: a.quantity,
         paid: `$${Number(a.amountPaid).toLocaleString()}`,
         status: a.status,
-        date: dayjs(parseInt(a.createdAt) || a.createdAt).format('YYYY-MM-DD HH:mm')
+        date: dayjs(isNaN(Number(a.createdAt)) ? a.createdAt : Number(a.createdAt)).format('YYYY-MM-DD HH:mm')
       });
     });
 
@@ -241,7 +241,7 @@ export default function EventDetailsPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
               {[
-                { icon: <CalendarOutlined style={{ color: 'var(--primary-color)' }} />, label: 'Date & Time', value: dayjs(parseInt(event.date) || event.date).format('MMMM D, YYYY h:mm A') },
+                { icon: <CalendarOutlined style={{ color: 'var(--primary-color)' }} />, label: 'Date & Time', value: dayjs(isNaN(Number(event.date)) ? event.date : Number(event.date)).format('MMMM D, YYYY h:mm A') },
                 { icon: <EnvironmentOutlined style={{ color: 'var(--secondary-color)' }} />, label: 'Venue', value: event.location },
                 { icon: <TeamOutlined style={{ color: '#ff8b3d' }} />, label: 'Capacity', value: `${event.bookedCount} / ${event.capacity} Guests` },
                 { icon: <StarFilled style={{ color: '#FBBF24' }} />, label: 'Organizer Rating', value: `${event.organizer?.name} (${event.organizer?.averageRating?.toFixed(1) || '0.0'})` }
@@ -317,14 +317,14 @@ export default function EventDetailsPage() {
                   <Tag color="green" style={{ fontSize: '1rem', padding: '12px 20px', borderRadius: '12px', display: 'block', textAlign: 'center', marginBottom: '16px' }}>
                     <CheckCircleOutlined /> You have booked a ticket for this event
                   </Tag>
-                  {new Date(parseInt(event.date) || event.date) >= new Date() && (
+                  {new Date(isNaN(Number(event.date)) ? event.date : Number(event.date)) >= new Date() && (
                     <Popconfirm title="Are you sure you want to cancel?" onConfirm={handleCancel}>
                       <Button danger icon={<CloseCircleOutlined />} size="large" block style={{ borderRadius: '12px', height: '50px', cursor: 'pointer' }}>Cancel Reservation</Button>
                     </Popconfirm>
                   )}
                 </>
               ) : (
-                new Date(parseInt(event.date) || event.date) >= new Date() ? (
+                new Date(isNaN(Number(event.date)) ? event.date : Number(event.date)) >= new Date() ? (
                   <Button
                     type="primary"
                     size="large"

@@ -1,5 +1,5 @@
 const typeDefs = `#graphql
-  type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int averageRating: Float numReviews: Int redeemedRewards: [String] isPlanPurchased: Boolean planId: String }
+  type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int averageRating: Float numReviews: Int redeemedRewards: [String] isPlanPurchased: Boolean planId: String totalWithdrawn: Float }
   type TicketType { name: String! price: Float! capacity: Int! }
   type Feedback { id: ID! booking: Booking! event: Event! organizer: User! user: User! rating: Int! comment: String createdAt: String! }
   type Event { id: ID! title: String! description: String! date: String! location: String! capacity: Int! imageUrl: String organizer: User! isBooked: Boolean eventType: String status: String ticketTypes: [TicketType] bookedCount: Int attendees: [Booking!] vendors: [Vendor!] }
@@ -10,6 +10,7 @@ const typeDefs = `#graphql
   type MonthlyData { n: String! c: Float! p: Float! }
   type AnalyticsStats { totalRevenue: Float! ticketsSold: Int! cancelledTickets: Int! confirmedBookingsCount: Int! monthlyData: [MonthlyData!]! }
   type PublicBookingFeedback { id: ID! eventTitle: String! organizerName: String! status: String! existingRating: Int existingComment: String }
+  type Payout { id: ID! organizer: User! amount: Float! status: String! createdAt: String! }
   
   input TicketTypeInput { name: String! price: Float! capacity: Int! }
   input CreateEventInput { title: String! description: String! date: String! location: String! capacity: Int imageUrl: String eventType: String ticketTypes: [TicketTypeInput] vendorIds: [ID] }
@@ -29,6 +30,8 @@ const typeDefs = `#graphql
     unreadNotificationCount: Int!
     feedbackInfo(bookingId: ID!): PublicBookingFeedback!
     allUsers: [User!]!
+    myPayouts: [Payout!]!
+    allPayouts: [Payout!]!
   }
   
   type Mutation {
@@ -54,6 +57,8 @@ const typeDefs = `#graphql
     resetPassword(token: String!, password: String!): Boolean!
     submitFeedback(bookingId: ID!, rating: Int!, comment: String): Feedback!
     logout: Boolean!
+    requestPayout(amount: Float!): Payout!
+    approvePayout(payoutId: ID!): Payout!
   }
 
   type Subscription {

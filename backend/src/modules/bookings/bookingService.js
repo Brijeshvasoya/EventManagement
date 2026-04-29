@@ -234,7 +234,7 @@ const bookingService = {
     if (!event) throw new Error('Event not found');
 
     // Only the organizer or an admin should see the attendee list
-    if (event.organizer.toString() !== user.id && user.role !== 'ADMIN') {
+    if (event.organizer.toString() !== user.id && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
       return null;
     }
 

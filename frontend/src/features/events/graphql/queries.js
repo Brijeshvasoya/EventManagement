@@ -13,7 +13,7 @@ export const GET_EVENTS = gql`
     events(limit: $limit, offset: $offset) {
       id title description date location capacity imageUrl eventType bookedCount
       ticketTypes { name price capacity }
-      organizer { id name }
+      organizer { id name email totalWithdrawn }
       isBooked
       attendees { id user { id name email } quantity amountPaid ticketType status createdAt }
       vendors { id name category cost contactInfo }

@@ -36,6 +36,16 @@ const resolvers = {
       if (!user || user.role !== 'SUPER_ADMIN') throw new GraphQLError('Unauthorized');
       const User = require('../models/User');
       return await User.find({ role: { $ne: 'SUPER_ADMIN' } }).sort({ createdAt: -1 });
+    },
+    myPayouts: async (_, __, { user }) => {
+      if (!user || user.role !== 'ORGANIZER') return [];
+      const Payout = require('../models/Payout');
+      return Payout.find({ organizer: user.id }).sort({ createdAt: -1 });
+    },
+    allPayouts: async (_, __, { user }) => {
+      if (!user || user.role !== 'SUPER_ADMIN') return [];
+      const Payout = require('../models/Payout');
+      return Payout.find().sort({ createdAt: -1 });
     }
   },
   Mutation: {
@@ -131,12 +141,35 @@ const resolvers = {
     resetPassword: (_, { token, password }) => authService.resetPassword(token, password),
     submitFeedback: (_, args) => bookingService.submitFeedback(args),
     logout: () => true,
+    requestPayout: async (_, { amount }, { user }) => {
+      if (!user || user.role !== 'ORGANIZER') throw new Error('Unauthorized');
+      const Payout = require('../models/Payout');
+      const payout = new Payout({ organizer: user.id, amount });
+      await payout.save();
+      return payout;
+    },
+    approvePayout: async (_, { payoutId }, { user }) => {
+      if (!user || user.role !== 'SUPER_ADMIN') throw new Error('Unauthorized');
+      const Payout = require('../models/Payout');
+      const payout = await Payout.findById(payoutId);
+      if (!payout) throw new Error('Payout not found');
+      payout.status = 'COMPLETED';
+      await payout.save();
+      return payout;
+    },
   },
   Feedback: {
     booking: (parent, _, { loaders }) => loaders.bookingLoader.load(parent.booking.toString()),
     event: (parent, _, { loaders }) => loaders.eventLoader.load(parent.event.toString()),
     organizer: (parent, _, { loaders }) => loaders.userLoader.load(parent.organizer.toString()),
     user: (parent, _, { loaders }) => loaders.userLoader.load(parent.user.toString()),
+  },
+  Payout: {
+    organizer: (parent, _, { loaders }) => {
+      const id = parent.organizer._id ? parent.organizer._id.toString() : parent.organizer.toString();
+      return loaders.userLoader.load(id);
+    },
+    createdAt: (parent) => parent.createdAt ? (typeof parent.createdAt === 'string' ? parent.createdAt : parent.createdAt.toISOString()) : null
   },
   Vendor: {
     organizer: (parent, _, { loaders }) => {
@@ -236,6 +269,19 @@ const resolvers = {
     averageRating: async (parent) => {
       if (parent.role !== 'ORGANIZER') return null;
       return parent.averageRating || 0;
+    },
+    totalWithdrawn: async (parent) => {
+      if (parent.role !== 'ORGANIZER') return 0;
+      try {
+        const Payout = require('../models/Payout');
+        const payouts = await Payout.aggregate([
+          { $match: { organizer: parent._id || parent.id, status: 'COMPLETED' } },
+          { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+        return payouts.length > 0 ? payouts[0].total : 0;
+      } catch (e) {
+        return 0;
+      }
     }
   },
   Subscription: {

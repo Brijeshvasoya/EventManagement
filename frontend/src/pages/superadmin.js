@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 import { useAuth } from '@/context/AuthContext';
@@ -27,7 +27,7 @@ export default function SuperAdmin() {
   const { user } = useAuth();
   const router = useRouter();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (user && user.role !== 'SUPER_ADMIN') {
       router.replace('/dashboard');
     }
@@ -40,6 +40,7 @@ export default function SuperAdmin() {
   if (!user || user.role !== 'SUPER_ADMIN') return null;
 
   const users = data?.allUsers || [];
+  console.log("🚀 ~ SuperAdmin ~ users:", users)
 
   const columns = [
     {
@@ -81,7 +82,12 @@ export default function SuperAdmin() {
       title: 'Joined',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: text => new Date(parseInt(text) || text).toLocaleDateString(),
+      render: text => {
+        if (!text) return '-';
+        const num = Number(text);
+        const date = new Date(isNaN(num) ? text : num);
+        return date.toLocaleDateString();
+      }
     }
   ];
 

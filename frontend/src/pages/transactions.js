@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client/react';
-import { GET_MY_EVENTS, GET_MY_ANALYTICS } from '@/features/events/graphql/queries';
+import { GET_MY_EVENTS, GET_MY_ANALYTICS, GET_EVENTS } from '@/features/events/graphql/queries';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import { Table, Tag, Card, Row, Col, Statistic, Empty, Button } from 'antd';
@@ -9,6 +9,11 @@ import dayjs from 'dayjs';
 export default function Transactions() {
   const { user, loading: authLoading } = useAuth();
   
+  const { data: allEventsData, loading: loadingAllEvents } = useQuery(GET_EVENTS, {
+    fetchPolicy: 'cache-and-network',
+    skip: !user || user.role !== 'SUPER_ADMIN'
+  });
+
   const { data: analyticsData } = useQuery(GET_MY_ANALYTICS, {
     skip: !user || (user.role !== 'ORGANIZER' && user.role !== 'ADMIN')
   });
@@ -18,7 +23,7 @@ export default function Transactions() {
     skip: !user || (user.role !== 'ORGANIZER' && user.role !== 'ADMIN')
   });
 
-  if (authLoading || loading) return (
+  if (authLoading || loading || loadingAllEvents) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
       <div style={{
         width: '48px', height: '48px', borderRadius: '12px',
@@ -27,16 +32,24 @@ export default function Transactions() {
     </div>
   );
 
-  const stats = analyticsData?.myAnalytics || { totalRevenue: 0, ticketsSold: 0 };
+  let stats = analyticsData?.myAnalytics || { totalRevenue: 0, ticketsSold: 0 };
   
+  const targetEvents = user?.role === 'SUPER_ADMIN' ? allEventsData?.events : eventsData?.myEvents;
+
   // Flatten attendees across all events into a single transactions array
-  const allTransactions = eventsData?.myEvents?.flatMap(event => 
+  const allTransactions = targetEvents?.flatMap(event => 
     event.attendees?.map(attendee => ({
       ...attendee,
       eventTitle: event.title,
       eventId: event.id
     })) || []
-  ).sort((a, b) => parseInt(b.createdAt) - parseInt(a.createdAt)) || [];
+  ).sort((a, b) => (isNaN(Number()) ? new Date().getTime() : Number()) - (isNaN(Number()) ? new Date().getTime() : Number())) || [];
+
+  if (user?.role === 'SUPER_ADMIN') {
+    const totalRevenue = allTransactions.reduce((sum, t) => sum + (t.status !== 'CANCELLED' ? (t.amountPaid || 0) : 0), 0);
+    const ticketsSold = allTransactions.reduce((sum, t) => sum + (t.status !== 'CANCELLED' ? (t.quantity || 1) : 0), 0);
+    stats = { totalRevenue, ticketsSold };
+  }
 
   const columns = [
     {
@@ -94,7 +107,11 @@ export default function Transactions() {
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 160,
-      render: (date) => <span style={{ color: '#6B7280', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{dayjs(parseInt(date) || date).format('MMM D, YYYY h:mm A')}</span>
+      render: (date) => {
+        const num = Number(date);
+        const validDate = isNaN(num) ? date : num;
+        return <span style={{ color: '#6B7280', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{dayjs(validDate).format('MMM D, YYYY h:mm A')}</span>;
+      }
     },
     {
       title: 'Status',

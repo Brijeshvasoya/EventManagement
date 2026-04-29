@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TopbarMobileIcons, DesktopHeaderActions } from './GlobalActions';
 import { Button, Avatar, Typography, ConfigProvider, theme, Drawer, Dropdown } from 'antd';
 import {
@@ -27,7 +27,7 @@ export default function AppLayout({ children }) {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!loading && user && user.role === 'ORGANIZER' && !user.isPlanPurchased && router.pathname !== '/plans' && router.pathname !== '/login' && router.pathname !== '/signup') {
       router.replace('/plans');
     }
@@ -36,22 +36,30 @@ export default function AppLayout({ children }) {
   if (loading) return null;
   if (['/login', '/signup', '/forgot-password', '/feedback'].includes(router.pathname) || router.pathname.startsWith('/reset-password') || router.pathname.startsWith('/feedback/')) return <>{children}</>;
 
-  const menuItems = [
-    { key: '/dashboard', icon: <AppstoreOutlined />, label: 'Dashboard' },
-    ...(!user || (user.role !== 'ORGANIZER' && user.role !== 'ADMIN') ? [
-      { key: '/browse', icon: <GlobalOutlined />, label: 'Browse Events' }
-    ] : []),
-    ...(user?.role === 'ORGANIZER' || user?.role === 'ADMIN' ? [
-      { key: '/my-events', icon: <CalendarOutlined />, label: 'My Events' },
-      { key: '/transactions', icon: <DollarCircleOutlined />, label: 'Transactions' },
-      { key: '/events/create', icon: <PlusCircleOutlined />, label: 'Create Event' },
-      { key: '/vendors', icon: <ShopOutlined />, label: 'Vendors' },
-      { key: '/verify', icon: <ScanOutlined />, label: 'Scan Ticket' }
-    ] : []),
-    ...(user?.role === 'SUPER_ADMIN' ? [
-      { key: '/superadmin', icon: <UserOutlined />, label: 'Super Admin' }
-    ] : [])
-  ];
+  let menuItems = [];
+  if (user?.role === 'SUPER_ADMIN') {
+    menuItems = [
+      { key: '/dashboard', icon: <AppstoreOutlined />, label: 'Dashboard' },
+      { key: '/superadmin/events', icon: <GlobalOutlined />, label: 'All Events' },
+      { key: '/superadmin', icon: <UserOutlined />, label: 'Total Users' },
+      { key: '/superadmin/payments', icon: <DollarCircleOutlined />, label: 'Payment Tracking' },
+      { key: '/superadmin/tickets', icon: <ScanOutlined />, label: 'All Tickets' }
+    ];
+  } else {
+    menuItems = [
+      { key: '/dashboard', icon: <AppstoreOutlined />, label: 'Dashboard' },
+      ...(!user || (user.role !== 'ORGANIZER' && user.role !== 'ADMIN') ? [
+        { key: '/browse', icon: <GlobalOutlined />, label: 'Browse Events' }
+      ] : []),
+      ...(user?.role === 'ORGANIZER' || user?.role === 'ADMIN' ? [
+        { key: '/my-events', icon: <CalendarOutlined />, label: 'My Events' },
+        { key: '/transactions', icon: <DollarCircleOutlined />, label: 'Transactions' },
+        { key: '/events/create', icon: <PlusCircleOutlined />, label: 'Create Event' },
+        { key: '/vendors', icon: <ShopOutlined />, label: 'Vendors' },
+        { key: '/verify', icon: <ScanOutlined />, label: 'Scan Ticket' }
+      ] : [])
+    ];
+  }
 
   if (user?.role === 'ORGANIZER' && !user?.isPlanPurchased) {
     menuItems.length = 0; // Clear all menus
@@ -61,7 +69,8 @@ export default function AppLayout({ children }) {
   const selectedKey = router.pathname === '/' ? '/dashboard' : router.pathname;
 
   const NavItem = ({ item, isMobile = false }) => {
-    const isActive = selectedKey === item.key || (selectedKey.startsWith(item.key) && item.key !== '/');
+    const isActive = selectedKey === item.key ||
+      (selectedKey.startsWith(item.key + '/') && item.key !== '/' && item.key !== '/superadmin');
     return (
       <Link href={item.key} style={{ textDecoration: 'none', width: '100%' }} onClick={() => isMobile && setMobileMenuOpen(false)}>
         <div style={{

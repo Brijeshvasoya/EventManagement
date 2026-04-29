@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Modal, Button, Popconfirm, Form, Input, DatePicker, Select, InputNumber, Space, Divider, Progress, Badge, Tag, Upload } from 'antd';
 import { EditOutlined, DeleteOutlined, ShoppingCartOutlined, UserOutlined, PlusOutlined, DeleteFilled, InboxOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
-const EventCard = React.memo(({ event, onBook, onDelete, onUpdate }) => {
+const EventCard = memo(({ event, onBook, onDelete, onUpdate }) => {
   const { user } = useAuth();
   const dateObj = new Date(parseInt(event.date) || event.date);
-  
+
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isBookModalVisible, setIsBookModalVisible] = useState(false);
   const [editForm] = Form.useForm();
@@ -84,37 +84,37 @@ const EventCard = React.memo(({ event, onBook, onDelete, onUpdate }) => {
             borderRadius: '20px 20px 0 0'
           }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <h2 style={{ margin: 0 }}>{event.title}</h2>
-              <Tag color="blue">{event.eventType}</Tag>
+            <h2 style={{ margin: 0 }}>{event.title}</h2>
+            <Tag color="blue">{event.eventType}</Tag>
           </div>
           <div className="event-meta">
-            {dateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric'})} • {event.location}
+            {dateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })} • {event.location}
           </div>
           <p className="event-desc">{event.description.length > 100 ? event.description.substring(0, 100) + '...' : event.description}</p>
-          
+
           <div style={{ margin: '1rem 0' }}>
-             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#6B7280', marginBottom: '4px' }}>
-                <span>Inventory Space</span>
-                <span>{bookedCount} / {event.capacity} Booked</span>
-             </div>
-             <Progress percent={percentFilled} strokeColor="#4F46E5" showInfo={false} size="small" />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#6B7280', marginBottom: '4px' }}>
+              <span>Inventory Space</span>
+              <span>{bookedCount} / {event.capacity} Booked</span>
+            </div>
+            <Progress percent={percentFilled} strokeColor="#4F46E5" showInfo={false} size="small" />
           </div>
 
           <div className="event-footer">
             <span className="organizer-badge"><UserOutlined /> {event.organizer.name}</span>
-            
+
             {user?.id === event.organizer.id ? (
               <div style={{ display: 'flex', gap: '8px' }}>
-                 <Button type="default" icon={<EditOutlined />} onClick={handleEditClick} />
-                 <Popconfirm 
-                    title="Delete Event" 
-                    description="Are you absolutely sure you want to delete this event?"
-                    onConfirm={onDelete}
-                    okText="Yes"
-                    cancelText="No"
-                 >
-                   <Button danger icon={<DeleteOutlined />} />
-                 </Popconfirm>
+                <Button type="default" icon={<EditOutlined />} onClick={handleEditClick} />
+                <Popconfirm
+                  title="Delete Event"
+                  description="Are you absolutely sure you want to delete this event?"
+                  onConfirm={onDelete}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button danger icon={<DeleteOutlined />} />
+                </Popconfirm>
               </div>
             ) : user ? (
               <div>
@@ -127,7 +127,7 @@ const EventCard = React.memo(({ event, onBook, onDelete, onUpdate }) => {
                 )}
               </div>
             ) : (
-              <span className="text-muted" style={{fontSize: '0.9rem'}}>Login to book</span>
+              <span className="text-muted" style={{ fontSize: '0.9rem' }}>Login to book</span>
             )}
           </div>
         </div>
@@ -141,25 +141,25 @@ const EventCard = React.memo(({ event, onBook, onDelete, onUpdate }) => {
         footer={null}
       >
         <p style={{ color: '#6B7280', marginBottom: '24px' }}>Choose your ticket tier and quantity for <strong>{event.title}</strong>.</p>
-        
-        <Form 
-            form={bookForm} 
-            layout="vertical" 
-            onFinish={handleBookSubmit}
-            initialValues={{ ticketType: ticketTypes[0]?.name, quantity: 1 }}
+
+        <Form
+          form={bookForm}
+          layout="vertical"
+          onFinish={handleBookSubmit}
+          initialValues={{ ticketType: ticketTypes[0]?.name, quantity: 1 }}
         >
           <Form.Item name="ticketType" label="Select Ticket Tier" rules={[{ required: true }]}>
-             <Select size="large">
-               {ticketTypes.map(t => (
-                 <Select.Option key={t.name} value={t.name}>
-                   {t.name} - ${Number(t.price).toLocaleString()}
-                 </Select.Option>
-               ))}
-             </Select>
+            <Select size="large">
+              {ticketTypes.map(t => (
+                <Select.Option key={t.name} value={t.name}>
+                  {t.name} - ${Number(t.price).toLocaleString()}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
 
           <Form.Item name="quantity" label="Quantity" rules={[{ required: true }]}>
-             <InputNumber min={1} max={Math.min(10, remainingCount)} size="large" style={{ width: '100%' }} />
+            <InputNumber min={1} max={Math.min(10, remainingCount)} size="large" style={{ width: '100%' }} />
           </Form.Item>
 
           <Divider />
@@ -167,7 +167,7 @@ const EventCard = React.memo(({ event, onBook, onDelete, onUpdate }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <span style={{ fontSize: '1.1rem', fontWeight: 600 }}>Total Amount:</span>
             <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4F46E5' }}>
-                ${((currentTicket?.price || 0) * selectedQuantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ${((currentTicket?.price || 0) * selectedQuantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
 
@@ -191,55 +191,55 @@ const EventCard = React.memo(({ event, onBook, onDelete, onUpdate }) => {
         ]}
       >
         <Form form={editForm} layout="vertical" onFinish={handleUpdateSubmit} onValuesChange={() => setIsDirty(true)}>
-           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-             <Form.Item name="title" label="Event Title" rules={[{required: true}]}>
-               <Input />
-             </Form.Item>
-             <Form.Item name="eventType" label="Event Category">
-               <Select>
-                 <Select.Option value="WEDDING">Wedding</Select.Option>
-                 <Select.Option value="CORPORATE">Corporate</Select.Option>
-                 <Select.Option value="BIRTHDAY">Birthday</Select.Option>
-                 <Select.Option value="SEMINAR">Seminar</Select.Option>
-                 <Select.Option value="OTHER">Other</Select.Option>
-               </Select>
-             </Form.Item>
-           </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <Form.Item name="title" label="Event Title" rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
+            <Form.Item name="eventType" label="Event Category">
+              <Select>
+                <Select.Option value="WEDDING">Wedding</Select.Option>
+                <Select.Option value="CORPORATE">Corporate</Select.Option>
+                <Select.Option value="BIRTHDAY">Birthday</Select.Option>
+                <Select.Option value="SEMINAR">Seminar</Select.Option>
+                <Select.Option value="OTHER">Other</Select.Option>
+              </Select>
+            </Form.Item>
+          </div>
 
-           <Form.Item label="Event Image">
-              <Upload.Dragger 
-                multiple={false} 
-                showUploadList={false} 
-                onChange={handleImageChange}
-                style={{ background: '#F9FAFB', borderRadius: '8px' }}
-              >
-                {imageUrl ? (
-                  <img src={imageUrl} alt="Event" style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '4px' }} />
-                ) : (
-                  <div>
-                    <p className="ant-upload-drag-icon"><InboxOutlined /></p>
-                    <p className="ant-upload-text">Click or drag image to this area to upload</p>
-                  </div>
-                )}
-              </Upload.Dragger>
-           </Form.Item>
+          <Form.Item label="Event Image">
+            <Upload.Dragger
+              multiple={false}
+              showUploadList={false}
+              onChange={handleImageChange}
+              style={{ background: '#F9FAFB', borderRadius: '8px' }}
+            >
+              {imageUrl ? (
+                <img src={imageUrl} alt="Event" style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '4px' }} />
+              ) : (
+                <div>
+                  <p className="ant-upload-drag-icon"><InboxOutlined /></p>
+                  <p className="ant-upload-text">Click or drag image to this area to upload</p>
+                </div>
+              )}
+            </Upload.Dragger>
+          </Form.Item>
 
-           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-             <Form.Item name="date" label="Date & Time" rules={[{required: true}]}>
-               <DatePicker showTime style={{width: '100%'}} />
-             </Form.Item>
-             <Form.Item name="location" label="Location" rules={[{required: true}]}>
-               <Input />
-             </Form.Item>
-           </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <Form.Item name="date" label="Date & Time" rules={[{ required: true }]}>
+              <DatePicker showTime style={{ width: '100%' }} />
+            </Form.Item>
+            <Form.Item name="location" label="Location" rules={[{ required: true }]}>
+              <Input />
+            </Form.Item>
+          </div>
 
-           <Form.Item name="description" label="Description" rules={[{required: true}]}>
-             <Input.TextArea rows={3} />
-           </Form.Item>
+          <Form.Item name="description" label="Description" rules={[{ required: true }]}>
+            <Input.TextArea rows={3} />
+          </Form.Item>
 
-           <Divider titlePlacement="left" style={{ margin: '8px 0' }}>Ticket Tiers & Pricing</Divider>
-           
-           <Form.List name="ticketTypes">
+          <Divider titlePlacement="left" style={{ margin: '8px 0' }}>Ticket Tiers & Pricing</Divider>
+
+          <Form.List name="ticketTypes">
             {(fields, { add, remove }) => (
               <>
                 {fields.map(({ key, name, ...restField }) => (
@@ -265,12 +265,12 @@ const EventCard = React.memo(({ event, onBook, onDelete, onUpdate }) => {
                     >
                       <InputNumber placeholder="Capacity" style={{ width: '100%' }} />
                     </Form.Item>
-                    <DeleteFilled 
-                        style={{ color: '#F43F5E', cursor: 'pointer' }} 
-                        onClick={() => {
-                            if(fields.length > 1) remove(name);
-                            setIsDirty(true);
-                        }} 
+                    <DeleteFilled
+                      style={{ color: '#F43F5E', cursor: 'pointer' }}
+                      onClick={() => {
+                        if (fields.length > 1) remove(name);
+                        setIsDirty(true);
+                      }}
                     />
                   </Space>
                 ))}
