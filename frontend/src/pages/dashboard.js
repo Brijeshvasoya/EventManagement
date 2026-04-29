@@ -181,7 +181,7 @@ export default function Dashboard() {
     let platformPlanRevenue = 0;
     users.forEach(u => {
       if (u.role === 'ORGANIZER' && u.isPlanPurchased) {
-        if (u.planId === 'BASIC') platformPlanRevenue += 7999;
+        if (u.planId === 'BASIC') platformPlanRevenue += 799;
         if (u.planId === 'PRO') platformPlanRevenue += 24999;
       }
     });
