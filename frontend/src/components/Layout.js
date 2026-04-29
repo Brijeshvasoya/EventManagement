@@ -14,7 +14,8 @@ import {
   MenuOutlined,
   CalendarOutlined,
   DollarCircleOutlined,
-  ScanOutlined
+  ScanOutlined,
+  CreditCardOutlined
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -27,11 +28,27 @@ export default function AppLayout({ children }) {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const isPlanExpired = user?.role === 'ORGANIZER' &&
+    user?.isPlanPurchased &&
+    user?.planExpiresAt &&
+    new Date(user.planExpiresAt) < new Date();
+
   useEffect(() => {
-    if (!loading && user && user.role === 'ORGANIZER' && !user.isPlanPurchased && router.pathname !== '/plans' && router.pathname !== '/login' && router.pathname !== '/signup') {
-      router.replace('/plans');
+    if (!loading && user && user.role === 'ORGANIZER') {
+      // Block access if no plan or plan expired
+      if ((!user.isPlanPurchased || isPlanExpired) &&
+        router.pathname !== '/plans' &&
+        router.pathname !== '/billing' &&
+        router.pathname !== '/login' &&
+        router.pathname !== '/signup') {
+        router.replace('/plans');
+      }
+      // Block access to /plans if plan is active — redirect to /billing instead
+      if (user.isPlanPurchased && !isPlanExpired && router.pathname === '/plans') {
+        router.replace('/billing');
+      }
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, isPlanExpired]);
 
   if (loading) return null;
   if (['/login', '/signup', '/forgot-password', '/feedback'].includes(router.pathname) || router.pathname.startsWith('/reset-password') || router.pathname.startsWith('/feedback/')) return <>{children}</>;
@@ -56,7 +73,8 @@ export default function AppLayout({ children }) {
         { key: '/transactions', icon: <DollarCircleOutlined />, label: 'Transactions' },
         { key: '/events/create', icon: <PlusCircleOutlined />, label: 'Create Event' },
         { key: '/vendors', icon: <ShopOutlined />, label: 'Vendors' },
-        { key: '/verify', icon: <ScanOutlined />, label: 'Scan Ticket' }
+        { key: '/verify', icon: <ScanOutlined />, label: 'Scan Ticket' },
+        { key: '/billing', icon: <CreditCardOutlined />, label: 'Billing' }
       ] : [])
     ];
   }

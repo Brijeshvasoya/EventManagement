@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client/react';
+import { useMutation, useQuery, gql } from '@apollo/client';
 import { CREATE_EVENT, GET_MY_VENDORS } from '@/features/events/graphql/queries';
 import { Select, ConfigProvider, theme, Form, Input, InputNumber, Button, Divider, Typography, Space, Avatar } from 'antd';
 import { useRouter } from 'next/router';
@@ -15,6 +15,14 @@ import {
 
 const { Title, Text } = Typography;
 
+const BASIC_PLAN_LIMIT = 5;
+
+const GET_MY_EVENTS_COUNT = gql`
+  query GetMyEventsCount {
+    myEvents { id }
+  }
+`;
+
 export default function CreateEvent() {
   const { user } = useAuth();
   const router = useRouter();
@@ -26,10 +34,20 @@ export default function CreateEvent() {
   const [imageFile, setImageFile] = useState(null);
   const [previewImage, setPreviewImage] = useState('');
 
+  const isBasicPlan = user?.role === 'ORGANIZER' && user?.planId === 'BASIC';
+
+  const { data: myEventsData } = useQuery(GET_MY_EVENTS_COUNT, {
+    fetchPolicy: 'cache-and-network',
+    skip: !isBasicPlan
+  });
+
   const { data: vendorData, loading: vendorLoading } = useQuery(GET_MY_VENDORS, {
     fetchPolicy: 'cache-and-network',
     skip: !user || (user.role !== 'ORGANIZER' && user.role !== 'ADMIN')
   });
+
+  const eventCount = myEventsData?.myEvents?.length ?? 0;
+  const isLimitReached = isBasicPlan && eventCount >= BASIC_PLAN_LIMIT;
 
   if (!user || user.role === 'USER') {
     return (
@@ -149,7 +167,62 @@ export default function CreateEvent() {
     >
       <Head><title>Create Event | EventHub</title></Head>
 
-      <div>
+      {/* Basic Plan Limit Banner */}
+      {isBasicPlan && (
+        <div style={{
+          background: isLimitReached
+            ? 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)'
+            : 'linear-gradient(135deg, rgba(67,56,202,0.05) 0%, rgba(67,56,202,0.1) 100%)',
+          border: `1px solid ${isLimitReached ? 'rgba(239,68,68,0.3)' : 'rgba(67,56,202,0.2)'}`,
+          borderRadius: '16px',
+          padding: '16px 24px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '1.5rem' }}>{isLimitReached ? '🚫' : '📊'}</span>
+            <div>
+              <div style={{
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                color: isLimitReached ? '#dc2626' : 'rgb(67,56,202)',
+                marginBottom: '2px'
+              }}>
+                {isLimitReached
+                  ? 'Basic Plan Limit Reached'
+                  : `Basic Plan: ${eventCount} / ${BASIC_PLAN_LIMIT} Events Used`}
+              </div>
+              <div style={{ fontSize: '0.82rem', color: '#6b7280' }}>
+                {isLimitReached
+                  ? 'You have used all 5 event slots. Upgrade to Pro for unlimited events.'
+                  : `You can create ${BASIC_PLAN_LIMIT - eventCount} more event${BASIC_PLAN_LIMIT - eventCount !== 1 ? 's' : ''} on the Basic plan.`}
+              </div>
+            </div>
+          </div>
+          {isLimitReached && (
+            <Button
+              type="primary"
+              onClick={() => router.push('/plans')}
+              style={{
+                background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 100%)',
+                border: 'none',
+                borderRadius: '10px',
+                fontWeight: 700,
+                height: '40px',
+                paddingInline: '20px'
+              }}
+            >
+              🚀 Upgrade to Pro
+            </Button>
+          )}
+        </div>
+      )}
+
+      <div style={{ opacity: isLimitReached ? 0.5 : 1, pointerEvents: isLimitReached ? 'none' : 'auto' }}>
 
         {/* Top Header Card (Matching Profile - Compact) */}
         <div className="header-responsive" style={{

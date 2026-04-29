@@ -1,6 +1,9 @@
 const Event = require('../../models/Event');
 const Vendor = require('../../models/Vendor');
+const User = require('../../models/User');
 const { requireRole } = require('../../utils/authGuard');
+
+const BASIC_PLAN_EVENT_LIMIT = 5;
 
 exports.getEvents = async ({ limit = 50, offset = 0 }) => {
   return Event.find().sort({ date: -1 }).skip(offset).limit(limit);
@@ -10,8 +13,22 @@ exports.getEventById = async (id) => Event.findById(id);
 
 exports.createEvent = async (input, user) => {
   requireRole(user, ['ORGANIZER', 'ADMIN']);
+
+  // Enforce Basic plan event limit for organizers
+  if (user.role === 'ORGANIZER') {
+    const organizer = await User.findById(user.id).select('planId');
+    if (organizer && organizer.planId === 'BASIC') {
+      const existingCount = await Event.countDocuments({ organizer: user.id });
+      if (existingCount >= BASIC_PLAN_EVENT_LIMIT) {
+        throw new Error(
+          `Basic plan allows a maximum of ${BASIC_PLAN_EVENT_LIMIT} events. ` +
+          `Please upgrade to the Pro plan to create unlimited events.`
+        );
+      }
+    }
+  }
+
   const { vendorIds, ...eventData } = input;
-  
   const event = new Event({ ...eventData, organizer: user.id });
   await event.save();
 

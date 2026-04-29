@@ -61,8 +61,8 @@ exports.createPlanCheckoutSession = async (planId, user) => {
 
   let amount = 0;
   let planName = '';
-  if (planId === 'BASIC') { amount = 999; planName = 'Basic Plan'; }
-  else if (planId === 'PRO') { amount = 2999; planName = 'Pro Plan'; }
+  if (planId === 'BASIC') { amount = 79900; planName = 'Basic Plan'; }
+  else if (planId === 'PRO') { amount = 249900; planName = 'Pro Plan'; }
   else throw new Error('Invalid plan');
 
   if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock') {
@@ -70,7 +70,7 @@ exports.createPlanCheckoutSession = async (planId, user) => {
       payment_method_types: ['card'],
       line_items: [{
         price_data: {
-          currency: 'usd',
+          currency: 'inr',
           product_data: { name: planName },
           unit_amount: amount
         },
@@ -99,9 +99,26 @@ exports.confirmPlanPurchase = async (sessionId, planId, user) => {
 
   fullUser.isPlanPurchased = true;
   fullUser.planId = planId;
+  const startDate = new Date();
+  const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  fullUser.planExpiresAt = endDate;
   await fullUser.save();
-  
+
+  // Record the invoice
+  const PlanInvoice = require('../../models/PlanInvoice');
+  const amount = planId === 'BASIC' ? 799 : 2499;
+  await PlanInvoice.create({
+    organizer: fullUser._id,
+    planId,
+    amount,
+    currency: 'INR',
+    status: 'PAID',
+    stripeSessionId: sessionId,
+    planStartDate: startDate,
+    planEndDate: endDate,
+  });
+
   const { signToken } = require('../../utils/jwt');
-  const token = signToken({ id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name, isPlanPurchased: fullUser.isPlanPurchased, planId: fullUser.planId });
+  const token = signToken({ id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name, isPlanPurchased: fullUser.isPlanPurchased, planId: fullUser.planId, planExpiresAt: fullUser.planExpiresAt });
   return { token, user: fullUser };
 };

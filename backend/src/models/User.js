@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
   numReviews: { type: Number, default: 0 },
   isPlanPurchased: { type: Boolean, default: false },
   planId: { type: String },
+  planExpiresAt: { type: Date },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

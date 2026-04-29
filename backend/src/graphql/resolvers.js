@@ -46,6 +46,32 @@ const resolvers = {
       if (!user || user.role !== 'SUPER_ADMIN') return [];
       const Payout = require('../models/Payout');
       return Payout.find().sort({ createdAt: -1 });
+    },
+    myBilling: async (_, __, { user }) => {
+      if (!user || user.role !== 'ORGANIZER') throw new GraphQLError('Unauthorized');
+      const User = require('../models/User');
+      const PlanInvoice = require('../models/PlanInvoice');
+      const fullUser = await User.findById(user.id);
+      const invoices = await PlanInvoice.find({ organizer: user.id }).sort({ createdAt: -1 });
+      const isPlanActive = fullUser.isPlanPurchased &&
+        fullUser.planExpiresAt &&
+        new Date(fullUser.planExpiresAt) > new Date();
+      return {
+        currentPlan: fullUser.planId || null,
+        planExpiresAt: fullUser.planExpiresAt ? fullUser.planExpiresAt.toISOString() : null,
+        isPlanActive: !!isPlanActive,
+        invoices: invoices.map(inv => ({
+          id: inv._id.toString(),
+          planId: inv.planId,
+          amount: inv.amount,
+          currency: inv.currency,
+          status: inv.status,
+          stripeSessionId: inv.stripeSessionId,
+          planStartDate: inv.planStartDate.toISOString(),
+          planEndDate: inv.planEndDate.toISOString(),
+          createdAt: inv.createdAt.toISOString(),
+        }))
+      };
     }
   },
   Mutation: {

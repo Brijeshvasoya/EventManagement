@@ -11,6 +11,8 @@ const typeDefs = `#graphql
   type AnalyticsStats { totalRevenue: Float! ticketsSold: Int! cancelledTickets: Int! confirmedBookingsCount: Int! monthlyData: [MonthlyData!]! }
   type PublicBookingFeedback { id: ID! eventTitle: String! organizerName: String! status: String! existingRating: Int existingComment: String }
   type Payout { id: ID! organizer: User! amount: Float! status: String! createdAt: String! }
+  type PlanInvoice { id: ID! planId: String! amount: Float! currency: String! status: String! stripeSessionId: String planStartDate: String! planEndDate: String! createdAt: String! }
+  type BillingInfo { currentPlan: String planExpiresAt: String isPlanActive: Boolean invoices: [PlanInvoice!]! }
   
   input TicketTypeInput { name: String! price: Float! capacity: Int! }
   input CreateEventInput { title: String! description: String! date: String! location: String! capacity: Int imageUrl: String eventType: String ticketTypes: [TicketTypeInput] vendorIds: [ID] }
@@ -32,6 +34,7 @@ const typeDefs = `#graphql
     allUsers: [User!]!
     myPayouts: [Payout!]!
     allPayouts: [Payout!]!
+    myBilling: BillingInfo!
   }
   
   type Mutation {
