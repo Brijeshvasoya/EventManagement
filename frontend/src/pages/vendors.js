@@ -115,10 +115,10 @@ export default function VendorManagement() {
       ),
     },
     {
-      title: 'Cost (USD)',
+      title: 'Cost (INR)',
       dataIndex: 'cost',
       key: 'cost',
-      render: (cost) => <span style={{ color: 'var(--secondary-color)', fontWeight: 'bold' }}>${cost}</span>,
+      render: (cost) => <span style={{ color: 'var(--secondary-color)', fontWeight: 'bold' }}>₹{cost}</span>,
     },
     {
       title: 'Contact Info',
@@ -236,7 +236,7 @@ export default function VendorManagement() {
               prefix={<DollarOutlined />}
               style={{ width: '100%' }}
               placeholder="Price in USD"
-              formatter={value => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              formatter={value => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
               parser={value => value.replace(/\$\s?|(,*)/g, '')}
             />
           </Form.Item>

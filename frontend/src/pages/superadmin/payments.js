@@ -79,25 +79,25 @@ export default function SuperAdminPayments() {
       title: 'Total Revenue',
       dataIndex: 'totalRevenue',
       key: 'totalRevenue',
-      render: (rev) => <span style={{ fontWeight: 800, color: '#10B981' }}>${Number(rev).toLocaleString()}</span>
+      render: (rev) => <span style={{ fontWeight: 800, color: '#10B981' }}>₹{Number(rev).toLocaleString()}</span>
     },
     {
       title: 'Platform Fee (10%)',
       key: 'fee',
-      render: (_, record) => <span style={{ fontWeight: 700, color: '#F59E0B' }}>${Number(record.totalRevenue * 0.1).toLocaleString()}</span>
+      render: (_, record) => <span style={{ fontWeight: 700, color: '#F59E0B' }}>₹{Number(record.totalRevenue * 0.1).toLocaleString()}</span>
     },
     {
       title: 'Available Payout',
       key: 'availablePayout',
       render: (_, record) => {
         const available = (record.totalRevenue * 0.9) - record.totalWithdrawn;
-        return <span style={{ fontWeight: 700, color: '#6366F1' }}>${Number(Math.max(0, available)).toLocaleString()}</span>;
+        return <span style={{ fontWeight: 700, color: '#6366F1' }}>₹{Number(Math.max(0, available)).toLocaleString()}</span>;
       }
     },
     {
       title: 'Actual Paid Out',
       key: 'paidOut',
-      render: (_, record) => <span style={{ fontWeight: 800, color: '#8B5CF6' }}>${Number(record.totalWithdrawn).toLocaleString()}</span>
+      render: (_, record) => <span style={{ fontWeight: 800, color: '#8B5CF6' }}>₹{Number(record.totalWithdrawn).toLocaleString()}</span>
     }
   ];
 

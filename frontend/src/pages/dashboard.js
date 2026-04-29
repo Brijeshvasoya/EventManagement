@@ -151,12 +151,12 @@ export default function Dashboard() {
   if (isSuperAdmin) {
     const events = allEventsDashboardData?.events || [];
     const users = allUsersData?.allUsers || [];
-    
+
     let organizerRevenue = 0;
     let totalTicketsSold = 0;
-    
+
     const monthlyMap = {};
-    
+
     const eventsWithRev = events.map(e => {
       let eventRev = 0;
       let eventTickets = 0;
@@ -166,7 +166,7 @@ export default function Dashboard() {
           const amt = (att.amountPaid || 0);
           eventRev += amt;
           eventTickets += (att.quantity || 1);
-          
+
           const date = new Date(isNaN(Number(att.createdAt)) ? att.createdAt : Number(att.createdAt));
           const monthKey = date.toLocaleString('default', { month: 'short' });
           if (!monthlyMap[monthKey]) monthlyMap[monthKey] = 0;
@@ -177,12 +177,12 @@ export default function Dashboard() {
       totalTicketsSold += eventTickets;
       return { title: e.title, revenue: eventRev, tickets: eventTickets };
     });
-    
+
     let platformPlanRevenue = 0;
     users.forEach(u => {
       if (u.role === 'ORGANIZER' && u.isPlanPurchased) {
-        if (u.planId === 'BASIC') platformPlanRevenue += 9.99;
-        if (u.planId === 'PRO') platformPlanRevenue += 29.99;
+        if (u.planId === 'BASIC') platformPlanRevenue += 7999;
+        if (u.planId === 'PRO') platformPlanRevenue += 24999;
       }
     });
 
@@ -209,7 +209,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Platform Revenue</div>
-                  <div style={{ color: '#1B2A4E', fontSize: '1.6rem', fontWeight: 800 }}>${Number(platformPlanRevenue).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                  <div style={{ color: '#1B2A4E', fontSize: '1.6rem', fontWeight: 800 }}>₹{Number(platformPlanRevenue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                 </div>
               </div>
             </Card>
@@ -221,7 +221,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Organizer Revenue</div>
-                  <div style={{ color: '#1B2A4E', fontSize: '1.6rem', fontWeight: 800 }}>${Number(organizerRevenue).toLocaleString()}</div>
+                  <div style={{ color: '#1B2A4E', fontSize: '1.6rem', fontWeight: 800 }}>₹{Number(organizerRevenue).toLocaleString()}</div>
                 </div>
               </div>
             </Card>
@@ -271,7 +271,7 @@ export default function Dashboard() {
                     <BarChart data={monthlyDataArray}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} dx={-10} tickFormatter={(val) => `$${val}`} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} dx={-10} tickFormatter={(val) => `₹${val}`} />
                       <Tooltip cursor={{ fill: '#F8FAFB' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
                       <Bar dataKey="Revenue" fill="#4338CA" radius={[6, 6, 0, 0]} maxBarSize={50} />
                     </BarChart>
@@ -295,7 +295,7 @@ export default function Dashboard() {
                         <div style={{ fontWeight: 700, color: '#1B2A4E', fontSize: '1.05rem' }}>{item.title}</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 800, color: '#10B981', fontSize: '1.1rem' }}>${item.revenue.toLocaleString()}</div>
+                        <div style={{ fontWeight: 800, color: '#10B981', fontSize: '1.1rem' }}>₹{item.revenue.toLocaleString()}</div>
                         <div style={{ fontSize: '0.8rem', color: '#6B7280', fontWeight: 600 }}>{item.tickets} tickets</div>
                       </div>
                     </div>
@@ -579,7 +579,7 @@ export default function Dashboard() {
                     <div style={{ marginBottom: '24px' }}>
                       <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Total Revenue</div>
                       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '16px' }}>
-                        <div style={{ color: '#1B2A4E', fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}>${Number(totalRevenue).toLocaleString()}</div>
+                        <div style={{ color: '#1B2A4E', fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}>₹{Number(totalRevenue).toLocaleString()}</div>
                         <div style={{ color: '#10B981', background: '#D1FAE5', padding: '2px 8px', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 700, marginBottom: '4px' }}>Active</div>
                       </div>
                     </div>
@@ -591,7 +591,7 @@ export default function Dashboard() {
                           <XAxis dataKey="n" stroke="#9CA3AF" axisLine={false} tickLine={false} fontSize={12} dy={10} />
                           <YAxis stroke="#9CA3AF" axisLine={false} tickLine={false} fontSize={12} tickFormatter={(v) => `${(v / 1000)}k`} />
                           <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
-                          <Bar dataKey="c" fill="rgb(67, 56, 202)" radius={[6, 6, 6, 6]} barSize={12} name="Total Rev ($)" />
+                          <Bar dataKey="c" fill="rgb(67, 56, 202)" radius={[6, 6, 6, 6]} barSize={12} name="Total Revenue (₹)" />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -643,7 +643,7 @@ export default function Dashboard() {
                       <div style={{ color: '#6B7280', fontSize: '0.85rem', marginBottom: '16px' }}>{e.location}</div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#9CA3AF', fontSize: '0.85rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CalendarOutlined /> {new Date(isNaN(Number(e.date)) ? e.date : Number(e.date)).toLocaleDateString()}</div>
-                        <div style={{ color: 'rgb(67, 56, 202)', fontWeight: 800, fontSize: '1rem' }}>$ {Number(e.ticketTypes?.[0]?.price || 30).toLocaleString()}</div>
+                        <div style={{ color: 'rgb(67, 56, 202)', fontWeight: 800, fontSize: '1rem' }}>₹{Number(e.ticketTypes?.[0]?.price || 30).toLocaleString()}</div>
                       </div>
                     </div>
                   ))}
@@ -768,7 +768,6 @@ export default function Dashboard() {
 
           // DYNAMIC BOOKING TRENDS (Last 6 months)
           const last6Months = [];
-          console.log("🚀 ~ Dashboard ~ last6Months:", last6Months)
           for (let i = 5; i >= 0; i--) {
             const d = new Date();
             d.setMonth(d.getMonth() - i);
@@ -893,7 +892,7 @@ export default function Dashboard() {
                             </div>
                             <div style={{ textAlign: 'right' }}>
                               <div style={{ color: '#6B7280', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Ticket Info</div>
-                              <div style={{ fontWeight: 800, color: b.status === 'CANCELLED' ? '#EF4444' : '#1B2A4E', fontSize: '1.2rem' }}>${Number(b.amountPaid).toLocaleString()}</div>
+                              <div style={{ fontWeight: 800, color: b.status === 'CANCELLED' ? '#EF4444' : '#1B2A4E', fontSize: '1.2rem' }}>₹{Number(b.amountPaid).toLocaleString()}</div>
                               <div style={{ color: '#94A3B8', fontSize: '0.75rem' }}>{b.ticketType} x {b.quantity}</div>
                             </div>
                           </div>
@@ -951,7 +950,7 @@ export default function Dashboard() {
                                     </div>
                                     <div>
                                       <p style={{ color: '#6366F1', fontWeight: '700', textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '1px', marginBottom: '8px' }}>Order Total</p>
-                                      <p style={{ fontSize: '1.6rem', fontWeight: '800', color: b.status === 'CANCELLED' ? '#EF4444' : '#1E293B', margin: 0 }}>${Number(b.amountPaid || 0).toLocaleString()} <span style={{ fontSize: '1rem', fontWeight: '600', color: '#64748B' }}>USD</span></p>
+                                      <p style={{ fontSize: '1.6rem', fontWeight: '800', color: b.status === 'CANCELLED' ? '#EF4444' : '#1E293B', margin: 0 }}>₹{Number(b.amountPaid || 0).toLocaleString()} <span style={{ fontSize: '1rem', fontWeight: '600', color: '#64748B' }}>INR</span></p>
                                     </div>
                                     <div>
                                       <p style={{ color: '#6366F1', fontWeight: '700', textTransform: 'uppercase', fontSize: '0.9rem', letterSpacing: '1px', marginBottom: '8px' }}>Quantity</p>
@@ -1038,7 +1037,7 @@ export default function Dashboard() {
                   <h4 style={{ margin: '0 0 16px 0', color: '#1B2A4E', fontWeight: 800 }}>Reward Summary</h4>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                     <span style={{ color: '#6B7280' }}>Total Spend</span>
-                    <span style={{ fontWeight: 800, color: '#1B2A4E' }}>${Number(totalSpent).toLocaleString()}</span>
+                    <span style={{ fontWeight: 800, color: '#1B2A4E' }}>₹{Number(totalSpent).toLocaleString()}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                     <span style={{ color: '#6B7280' }}>Level</span>

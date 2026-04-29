@@ -256,7 +256,7 @@ const EventCard = memo(({ event, onBook, onDelete, onUpdate }) => {
                       name={[name, 'price']}
                       rules={[{ required: true, message: 'Missing price' }]}
                     >
-                      <InputNumber placeholder="Price" prefix="$" style={{ width: '100%' }} />
+                      <InputNumber placeholder="Price" prefix="₹" style={{ width: '100%' }} />
                     </Form.Item>
                     <Form.Item
                       {...restField}

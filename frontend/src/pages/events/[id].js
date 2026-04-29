@@ -13,12 +13,12 @@ import {
   Select, InputNumber, Popconfirm
 } from 'antd';
 import {
-  CalendarOutlined, EnvironmentOutlined, TeamOutlined,
-  DollarCircleOutlined, ShopOutlined, UserOutlined,
-  MailOutlined, ArrowLeftOutlined, CheckCircleOutlined,
-  CloseCircleOutlined, InfoCircleOutlined, DownloadOutlined, StarFilled
+  CalendarOutlined, EnvironmentOutlined, TeamOutlined, ShopOutlined, UserOutlined,
+  MailOutlined, CheckCircleOutlined,
+  CloseCircleOutlined, DownloadOutlined, StarFilled
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import { IndianRupeeIcon } from 'lucide-react';
 
 const { Title: AntTitle, Text: AntText } = Typography;
 
@@ -134,7 +134,7 @@ export default function EventDetailsPage() {
       title: 'Paid',
       dataIndex: 'amountPaid',
       key: 'amountPaid',
-      render: (amt) => <AntText strong style={{ color: 'var(--secondary-color)' }}>${Number(amt).toLocaleString()}</AntText>
+      render: (amt) => <AntText strong style={{ color: 'var(--secondary-color)' }}>₹{Number(amt).toLocaleString()}</AntText>
     },
     {
       title: 'Booked On',
@@ -161,7 +161,7 @@ export default function EventDetailsPage() {
       title: 'Cost',
       dataIndex: 'cost',
       key: 'cost',
-      render: (amt) => <AntText strong style={{ color: 'var(--primary-color)' }}>${Number(amt).toLocaleString()}</AntText>
+      render: (amt) => <AntText strong style={{ color: 'var(--primary-color)' }}>₹{Number(amt).toLocaleString()}</AntText>
     },
     {
       title: 'Contact',
@@ -193,7 +193,7 @@ export default function EventDetailsPage() {
         email: a.user.email,
         ticket: a.ticketType,
         qty: a.quantity,
-        paid: `$${Number(a.amountPaid).toLocaleString()}`,
+        paid: `₹${Number(a.amountPaid).toLocaleString()}`,
         status: a.status,
         date: dayjs(isNaN(Number(a.createdAt)) ? a.createdAt : Number(a.createdAt)).format('YYYY-MM-DD HH:mm')
       });
@@ -344,7 +344,7 @@ export default function EventDetailsPage() {
             <>
               <Row gutter={[16, 16]} style={{ marginBottom: '2rem' }}>
                 {[
-                  { title: 'Total Revenue', value: totalRevenue, precision: 2, prefix: <DollarCircleOutlined style={{ color: 'var(--secondary-color)' }} />, color: 'var(--secondary-color)' },
+                  { title: 'Total Revenue', value: totalRevenue, precision: 2, prefix: <IndianRupeeIcon style={{ color: 'var(--secondary-color)' }} />, color: 'var(--secondary-color)' },
                   { title: 'Tickets Sold', value: totalTickets, prefix: <TeamOutlined style={{ color: 'var(--primary-color)' }} />, color: 'var(--primary-color)' },
                   { title: 'Vendors', value: event.vendors?.length || 0, prefix: <ShopOutlined style={{ color: '#ff8b3d' }} />, color: '#ff8b3d' }
                 ].map((stat, i) => (
