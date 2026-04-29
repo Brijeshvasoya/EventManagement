@@ -178,7 +178,7 @@ export default function AppLayout({ children }) {
           </div>
 
           {/* Navigation Items */}
-          <nav style={{ padding: '0 16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <nav style={{ padding: '0 16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', lineHeight: "0.5" }}>
             {menuItems.map(item => <NavItem key={item.key} item={item} />)}
           </nav>
 
@@ -186,13 +186,13 @@ export default function AppLayout({ children }) {
           <div style={{ padding: '24px', borderTop: '1px solid var(--glass-border)', background: 'transparent' }}>
             {user ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {/* <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <Avatar size={44} style={{ background: 'var(--gradient-main)' }} icon={<UserOutlined />} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>{user.role}</div>
                   </div>
-                </div>
+                </div> */}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <Button type="primary" icon={<SettingOutlined style={{ color: 'white' }} />} onClick={() => router.push('/profile')} style={{ flex: 1, borderRadius: '12px', background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 100%)', border: 'none' }} />
                   <div

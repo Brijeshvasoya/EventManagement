@@ -228,7 +228,7 @@ export function DesktopHeaderActions() {
   if (!mounted || !user) return null;
 
   return (
-    <div className="desktop-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+    <div className="desktop-actions" style={{ display: 'flex', alignItems: 'center' }}>
       <div style={{ display: 'flex', gap: '12px' }}>
         <Badge count={unreadCount} offset={[-2, 6]}>
           <div
@@ -239,12 +239,9 @@ export function DesktopHeaderActions() {
             <BellOutlined style={{ fontSize: '20px' }} />
           </div>
         </Badge>
-        <div className="hover-bounce" style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#1B2A4E', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.2)' }} onClick={() => setIsProfileModalVisible(true)}>
-          <SettingOutlined style={{ fontSize: '20px' }} />
-        </div>
       </div>
       <div className="dashboard-profile-mobile" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '12px' }}>
-        <Avatar size={44} style={{ background: '#E5E7EB', color: '#1B2A4E' }} icon={<UserOutlined />} />
+        <Avatar size={44} style={{ background: 'var(--gradient-main)', color: 'white' }} icon={<UserOutlined />} />
         <div>
           <div style={{ fontWeight: 700, color: '#1B2A4E', fontSize: '0.95rem' }}>{user.name || 'User'}</div>
           <div style={{ color: '#6B7280', fontSize: '0.8rem', textTransform: 'capitalize' }}>{user.role?.toLowerCase() || 'User'}</div>
