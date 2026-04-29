@@ -96,8 +96,8 @@ export default function SuperAdmin() {
       }}
     >
       <Head><title>Super Admin Dashboard | EventHub</title></Head>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ padding: 'max(16px, 2vw)', margin: '0 auto', boxSizing: 'border-box', width: '100%' }}>
+        <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, rgb(67, 56, 202) 0%, rgb(139, 92, 246) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(67, 56, 202, 0.2)' }}>
             <CrownOutlined style={{ color: 'white', fontSize: '24px' }} />
           </div>
@@ -126,14 +126,17 @@ export default function SuperAdmin() {
           <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9' }}>
             <Title level={4} style={{ margin: 0, fontWeight: 700 }}>System Users</Title>
           </div>
-          <Table
-            columns={columns}
-            dataSource={users}
-            rowKey="id"
-            loading={loading}
-            pagination={{ pageSize: 10 }}
-            style={{ padding: '0 24px 24px' }}
-          />
+          <div style={{ overflowX: 'auto' }}>
+            <Table
+              columns={columns}
+              dataSource={users}
+              rowKey="id"
+              loading={loading}
+              pagination={{ pageSize: 10, responsive: true }}
+              style={{ padding: '16px 24px 24px' }}
+              scroll={{ x: 800 }}
+            />
+          </div>
         </Card>
       </div>
     </ConfigProvider>

@@ -35,7 +35,7 @@ const resolvers = {
     allUsers: async (_, __, { user }) => {
       if (!user || user.role !== 'SUPER_ADMIN') throw new GraphQLError('Unauthorized');
       const User = require('../models/User');
-      return await User.find({});
+      return await User.find({ role: { $ne: 'SUPER_ADMIN' } }).sort({ createdAt: -1 });
     }
   },
   Mutation: {
@@ -111,7 +111,7 @@ const resolvers = {
       const fullUser = await User.findById(user.id);
       if (!fullUser) throw new GraphQLError('User not found');
       if (fullUser.loyaltyPoints < points) throw new GraphQLError('Not enough loyalty points');
-      
+
       fullUser.loyaltyPoints -= points;
       if (!fullUser.redeemedRewards) fullUser.redeemedRewards = [];
       fullUser.redeemedRewards.push(rewardId);
@@ -212,21 +212,21 @@ const resolvers = {
       try {
         const Booking = require('../models/Booking');
         const userId = parent._id || parent.id;
-        
+
         // Count any booking that isn't cancelled
-        const count = await Booking.countDocuments({ 
+        const count = await Booking.countDocuments({
           user: userId,
-          status: { $ne: 'CANCELLED' } 
+          status: { $ne: 'CANCELLED' }
         });
-        
+
         const storedPoints = parent.loyaltyPoints || 0;
         const hasRedeemed = parent.redeemedRewards && parent.redeemedRewards.length > 0;
-        
+
         // If 0 points and no redemptions, definitely fallback to count
         if (storedPoints === 0 && !hasRedeemed) {
           return count * 100;
         }
-        
+
         return Math.max(storedPoints, count * 100);
       } catch (e) {
         return parent.loyaltyPoints || 0;
@@ -250,7 +250,7 @@ const resolvers = {
             console.log('Subscription filter failed: No user in context');
             return false;
           }
-          
+
           if (!payload || !payload.notificationAdded) {
             console.log('Subscription filter failed: No payload');
             return false;
@@ -259,7 +259,7 @@ const resolvers = {
           // Convert everything to string for safe comparison (handling both .id and ._id)
           const recipientId = (payload.notificationAdded.recipient?._id || payload.notificationAdded.recipient || '').toString();
           const userId = (user.id || user._id || '').toString();
-          
+
           if (!recipientId || !userId) {
             console.log(`Subscription filter: Missing IDs (recipient=${recipientId}, user=${userId})`);
             return false;
