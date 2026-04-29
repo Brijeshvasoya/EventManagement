@@ -35,7 +35,8 @@ export default function AppLayout({ children }) {
 
   useEffect(() => {
     if (!loading && user && user.role === 'ORGANIZER') {
-      // Block access if no plan or plan expired
+      // Block access to all routes if no plan purchased or plan expired
+      // Allow /plans and /billing always so organizer can subscribe or view invoices
       if ((!user.isPlanPurchased || isPlanExpired) &&
         router.pathname !== '/plans' &&
         router.pathname !== '/billing' &&
@@ -43,10 +44,7 @@ export default function AppLayout({ children }) {
         router.pathname !== '/signup') {
         router.replace('/plans');
       }
-      // Block access to /plans if plan is active — redirect to /billing instead
-      if (user.isPlanPurchased && !isPlanExpired && router.pathname === '/plans') {
-        router.replace('/billing');
-      }
+      // Active organizers can freely visit /plans (read-only locked view)
     }
   }, [user, loading, router, isPlanExpired]);
 
@@ -74,13 +72,14 @@ export default function AppLayout({ children }) {
         { key: '/events/create', icon: <PlusCircleOutlined />, label: 'Create Event' },
         { key: '/vendors', icon: <ShopOutlined />, label: 'Vendors' },
         { key: '/verify', icon: <ScanOutlined />, label: 'Scan Ticket' },
-        { key: '/billing', icon: <CreditCardOutlined />, label: 'Billing' }
+        { key: '/billing', icon: <CreditCardOutlined />, label: 'Billing' },
+        { key: '/plans', icon: <AppstoreOutlined />, label: 'Plans' }
       ] : [])
     ];
   }
 
   if (user?.role === 'ORGANIZER' && !user?.isPlanPurchased) {
-    menuItems.length = 0; // Clear all menus
+    menuItems.length = 0; // Clear all menus — no plan yet
     menuItems.push({ key: '/plans', icon: <AppstoreOutlined />, label: 'Choose Plan' });
   }
 
@@ -300,24 +299,39 @@ export default function AppLayout({ children }) {
           </div>
         </Drawer>
 
-        {/* MAIN CONTENT AREA */}
-        <main className="page-content block-reveal" style={{
-          flex: 1,
-          padding: '24px 40px',
-          maxWidth: '100%',
-          minWidth: 0,
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
-          {/* Mobile spacer */}
-          <div className="mobile-only" style={{ height: '70px', flexShrink: 0 }} />
+        {/* RIGHT COLUMN — sticky header + scrollable content */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
 
-          <div className="desktop-only" style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
+          {/* STICKY DESKTOP HEADER */}
+          <div className="desktop-only" style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 200,
+            display: 'flex',
+            justifyContent: 'flex-end',
+            padding: '16px 40px',
+            background: 'var(--bg-color)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+          }}>
             <DesktopHeaderActions />
           </div>
 
-          {children}
-        </main>
+          {/* MAIN CONTENT AREA */}
+          <main className="page-content block-reveal" style={{
+            flex: 1,
+            padding: '0 40px 40px',
+            maxWidth: '100%',
+            minWidth: 0,
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {/* Mobile spacer */}
+            <div className="mobile-only" style={{ height: '70px', flexShrink: 0 }} />
+
+            {children}
+          </main>
+        </div>
       </div>
 
       <style jsx global>{`

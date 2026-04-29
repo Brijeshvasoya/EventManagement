@@ -7,7 +7,7 @@ import Head from 'next/head';
 import toast from 'react-hot-toast';
 import { Button, Tag } from 'antd';
 import {
-  CreditCardOutlined, CheckCircleFilled, ClockCircleOutlined,
+  CreditCardOutlined, CheckCircleFilled,
   RocketOutlined, CrownOutlined, WarningOutlined, FileTextOutlined
 } from '@ant-design/icons';
 
@@ -18,15 +18,8 @@ const GET_MY_BILLING = gql`
       planExpiresAt
       isPlanActive
       invoices {
-        id
-        planId
-        amount
-        currency
-        status
-        stripeSessionId
-        planStartDate
-        planEndDate
-        createdAt
+        id planId amount currency status stripeSessionId
+        planStartDate planEndDate createdAt
       }
     }
   }
@@ -34,9 +27,7 @@ const GET_MY_BILLING = gql`
 
 const CONFIRM_PLAN_PURCHASE = gql`
   mutation ConfirmPlanPurchase($sessionId: String!, $planId: String!) {
-    confirmPlanPurchase(sessionId: $sessionId, planId: $planId) {
-      token
-    }
+    confirmPlanPurchase(sessionId: $sessionId, planId: $planId) { token }
   }
 `;
 
@@ -47,8 +38,7 @@ function formatDate(iso) {
 
 function daysLeft(iso) {
   if (!iso) return 0;
-  const diff = new Date(iso) - new Date();
-  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  return Math.max(0, Math.ceil((new Date(iso) - new Date()) / (1000 * 60 * 60 * 24)));
 }
 
 export default function BillingPage() {
@@ -56,9 +46,11 @@ export default function BillingPage() {
   const router = useRouter();
   const confirmCalledRef = useRef(false);
   const [confirmPurchase] = useMutation(CONFIRM_PLAN_PURCHASE);
-  const { data, loading, refetch } = useQuery(GET_MY_BILLING, { fetchPolicy: 'cache-and-network', skip: !user || user.role !== 'ORGANIZER' });
+  const { data, loading, refetch } = useQuery(GET_MY_BILLING, {
+    fetchPolicy: 'cache-and-network',
+    skip: !user || user.role !== 'ORGANIZER'
+  });
 
-  // Confirm plan purchase when redirected from Stripe
   useEffect(() => {
     const confirm = async () => {
       const { success, sessionId, planId } = router.query;
@@ -69,7 +61,6 @@ export default function BillingPage() {
           const { data: d } = await confirmPurchase({ variables: { sessionId, planId } });
           toast.success('Plan purchased successfully! 🚀');
           login(d.confirmPlanPurchase.token);
-          // Remove query params and refetch billing
           router.replace('/billing', undefined, { shallow: true });
           refetch();
         } catch (err) {
@@ -85,108 +76,70 @@ export default function BillingPage() {
   const billing = data?.myBilling;
   const invoices = billing?.invoices || [];
   const remaining = daysLeft(billing?.planExpiresAt);
+  const isActive = billing?.isPlanActive;
 
   return (
     <>
       <Head><title>Billing | EventHub</title></Head>
 
-      {/* Page Header */}
-      <div style={{
-        background: 'var(--card-bg)',
-        borderRadius: '24px',
-        padding: '28px 32px',
-        marginBottom: '24px',
-        border: '1px solid var(--glass-border)',
-        boxShadow: 'var(--shadow-card)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '16px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{
-            width: 56, height: 56, borderRadius: '16px',
-            background: 'var(--gradient-main)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 8px 20px rgba(67,56,202,0.25)'
-          }}>
-            <CreditCardOutlined style={{ fontSize: '1.6rem', color: 'white' }} />
+      {/* Header */}
+      <div className="billing-header">
+        <div className="billing-header-left">
+          <div className="header-icon">
+            <CreditCardOutlined style={{ fontSize: '1.5rem', color: 'white' }} />
           </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
-              Billing & Invoices
-            </h1>
-            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              Manage your subscription and view payment history
-            </p>
+            <h1 className="header-title">Billing & Invoices</h1>
+            <p className="header-sub">Manage your subscription and view payment history</p>
           </div>
         </div>
-        <Button
-          type="primary"
-          icon={<RocketOutlined />}
-          onClick={() => router.push('/plans')}
-          style={{
-            height: 44, borderRadius: 12, fontWeight: 700,
-            background: 'var(--gradient-main)', border: 'none',
-            boxShadow: '0 6px 16px rgba(67,56,202,0.3)'
-          }}
-        >
-          {billing?.isPlanActive ? 'Renew / Upgrade' : 'Choose Plan'}
-        </Button>
+        {/* Only show "Choose Plan" if no active plan */}
+        {!isActive && (
+          <Button
+            type="primary"
+            icon={<RocketOutlined />}
+            onClick={() => router.push('/plans')}
+            className="header-btn"
+          >
+            Choose Plan
+          </Button>
+        )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px', alignItems: 'start' }}>
+      {/* Body Grid */}
+      <div className="billing-grid">
 
-        {/* Current Plan Card */}
-        <div style={{
-          background: 'var(--card-bg)',
-          borderRadius: '24px',
-          padding: '28px',
-          border: billing?.isPlanActive
-            ? '1px solid rgba(67,56,202,0.2)'
-            : '1px solid rgba(239,68,68,0.2)',
-          boxShadow: billing?.isPlanActive ? 'var(--shadow-glow)' : '0 4px 16px rgba(239,68,68,0.1)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-            {billing?.isPlanActive
-              ? <CheckCircleFilled style={{ color: '#10b981', fontSize: '1.1rem' }} />
-              : <WarningOutlined style={{ color: '#ef4444', fontSize: '1.1rem' }} />}
-            <span style={{
-              fontWeight: 700, fontSize: '0.8rem', letterSpacing: '0.06em',
-              textTransform: 'uppercase',
-              color: billing?.isPlanActive ? '#10b981' : '#ef4444'
-            }}>
-              {loading ? 'Loading...' : billing?.isPlanActive ? 'Active Subscription' : 'No Active Plan'}
+        {/* ── Current Plan Card ── */}
+        <div className={`plan-card ${isActive ? 'plan-card--active' : 'plan-card--inactive'}`}>
+          <div className="plan-status-row">
+            {isActive
+              ? <CheckCircleFilled style={{ color: '#10b981', fontSize: '1rem' }} />
+              : <WarningOutlined style={{ color: '#ef4444', fontSize: '1rem' }} />}
+            <span className={`plan-status-label ${isActive ? 'label--active' : 'label--inactive'}`}>
+              {loading ? 'Loading…' : isActive ? 'Active Subscription' : 'No Active Plan'}
             </span>
           </div>
 
           {billing?.currentPlan ? (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+              <div className="plan-name-row">
                 {billing.currentPlan === 'PRO'
-                  ? <CrownOutlined style={{ color: 'rgb(67,56,202)', fontSize: '1.4rem' }} />
-                  : <FileTextOutlined style={{ color: '#64748b', fontSize: '1.4rem' }} />}
-                <span style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-primary)' }}>
+                  ? <CrownOutlined style={{ color: 'rgb(67,56,202)', fontSize: '1.3rem' }} />
+                  : <FileTextOutlined style={{ color: '#64748b', fontSize: '1.3rem' }} />}
+                <span className="plan-name">
                   {billing.currentPlan === 'PRO' ? 'Pro Plan' : 'Basic Plan'}
                 </span>
               </div>
 
-              <div style={{
-                background: billing?.isPlanActive ? 'rgba(67,56,202,0.04)' : 'rgba(239,68,68,0.04)',
-                borderRadius: '12px', padding: '14px 16px', marginBottom: '20px'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Valid until</span>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                    {formatDate(billing.planExpiresAt)}
-                  </span>
+              <div className={`plan-meta ${isActive ? 'meta--active' : 'meta--inactive'}`}>
+                <div className="meta-row">
+                  <span className="meta-label">Valid until</span>
+                  <span className="meta-value">{formatDate(billing.planExpiresAt)}</span>
                 </div>
-                {billing?.isPlanActive && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Days remaining</span>
-                    <span style={{
-                      fontSize: '0.85rem', fontWeight: 700,
+                {isActive && (
+                  <div className="meta-row">
+                    <span className="meta-label">Days remaining</span>
+                    <span className="meta-value" style={{
                       color: remaining <= 5 ? '#ef4444' : remaining <= 10 ? '#f59e0b' : '#10b981'
                     }}>
                       {remaining} day{remaining !== 1 ? 's' : ''}
@@ -195,76 +148,56 @@ export default function BillingPage() {
                 )}
               </div>
 
-              {remaining <= 7 && billing?.isPlanActive && (
-                <div style={{
-                  background: 'linear-gradient(135deg, #fff7ed, #ffedd5)',
-                  border: '1px solid rgba(234,88,12,0.2)',
-                  borderRadius: '10px', padding: '10px 14px',
-                  fontSize: '0.82rem', color: '#c2410c', fontWeight: 600, marginBottom: '16px'
-                }}>
+              {remaining <= 7 && isActive && (
+                <div className="renew-warning">
                   ⚠️ Renew soon to avoid service interruption
                 </div>
               )}
 
-              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.8 }}>
+              <ul className="plan-features">
                 {(billing.currentPlan === 'BASIC'
-                  ? ['✓ Up to 5 events/month', '✓ Basic analytics', '✓ Standard support']
-                  : ['✓ Unlimited events', '✓ Advanced analytics', '✓ Priority support']
-                ).map((l, i) => <div key={i}>{l}</div>)}
-              </div>
+                  ? ['Up to 5 events/month', 'Basic analytics', 'Standard support']
+                  : ['Unlimited events', 'Advanced analytics', 'Priority 24/7 support']
+                ).map((f, i) => (
+                  <li key={i} className="plan-feature-item">
+                    <CheckCircleFilled style={{ color: isActive ? 'rgb(67,56,202)' : '#94a3b8', fontSize: '0.85rem' }} />
+                    {f}
+                  </li>
+                ))}
+              </ul>
             </>
           ) : (
-            <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-muted)' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📋</div>
-              <div style={{ fontWeight: 600, marginBottom: '8px', color: 'var(--text-primary)' }}>No active plan</div>
-              <div style={{ fontSize: '0.85rem' }}>Choose a plan to start creating events</div>
+            <div className="no-plan">
+              <div className="no-plan-icon">📋</div>
+              <div className="no-plan-title">No active plan</div>
+              <div className="no-plan-sub">Choose a plan to start creating events</div>
             </div>
           )}
         </div>
 
-        {/* Invoice History */}
-        <div style={{
-          background: 'var(--card-bg)',
-          borderRadius: '24px',
-          padding: '28px',
-          border: '1px solid var(--glass-border)',
-          boxShadow: 'var(--shadow-card)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+        {/* ── Invoice History ── */}
+        <div className="invoices-card">
+          <div className="invoices-header">
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                Invoice History
-              </h2>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+              <h2 className="invoices-title">Invoice History</h2>
+              <p className="invoices-sub">
                 {invoices.length} invoice{invoices.length !== 1 ? 's' : ''} found
               </p>
             </div>
           </div>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading invoices...</div>
+            <div className="invoices-empty">Loading invoices…</div>
           ) : invoices.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🧾</div>
-              <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>No invoices yet</div>
-              <div style={{ fontSize: '0.85rem' }}>Your billing history will appear here after your first purchase</div>
+            <div className="invoices-empty">
+              <div className="empty-icon">🧾</div>
+              <div className="empty-title">No invoices yet</div>
+              <div className="empty-sub">Your billing history will appear here after your first purchase</div>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {/* Header row */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 120px 100px 80px',
-                gap: '12px',
-                padding: '8px 16px',
-                background: 'var(--bg-color)',
-                borderRadius: '10px',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: 'var(--text-muted)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em'
-              }}>
+            <div className="invoice-list">
+              {/* Table header — hidden on mobile */}
+              <div className="invoice-row invoice-row--header">
                 <span>Plan</span>
                 <span>Period</span>
                 <span>Amount</span>
@@ -273,53 +206,38 @@ export default function BillingPage() {
               </div>
 
               {invoices.map((inv) => (
-                <div key={inv.id} style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr 120px 100px 80px',
-                  gap: '12px',
-                  padding: '14px 16px',
-                  background: 'var(--bg-color)',
-                  borderRadius: '14px',
-                  border: '1px solid var(--glass-border)',
-                  alignItems: 'center',
-                  transition: 'box-shadow 0.2s ease',
-                  cursor: 'default'
-                }}
-                  onMouseEnter={e => e.currentTarget.style.boxShadow = 'var(--shadow-md)'}
-                  onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
-                >
-                  {/* Plan name */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div key={inv.id} className="invoice-row invoice-row--data">
+                  {/* Plan */}
+                  <div className="inv-plan">
                     {inv.planId === 'PRO'
                       ? <CrownOutlined style={{ color: 'rgb(67,56,202)' }} />
                       : <FileTextOutlined style={{ color: '#64748b' }} />}
-                    <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.9rem' }}>
-                      {inv.planId === 'PRO' ? 'Pro Plan' : 'Basic Plan'}
-                    </span>
+                    <span>{inv.planId === 'PRO' ? 'Pro Plan' : 'Basic Plan'}</span>
                   </div>
 
                   {/* Period */}
-                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                    <div>{formatDate(inv.planStartDate)}</div>
-                    <div style={{ color: 'var(--text-muted)' }}>→ {formatDate(inv.planEndDate)}</div>
+                  <div className="inv-period">
+                    <span>{formatDate(inv.planStartDate)}</span>
+                    <span className="inv-period-arrow">→ {formatDate(inv.planEndDate)}</span>
                   </div>
 
                   {/* Amount */}
-                  <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)' }}>
+                  <div className="inv-amount">
                     ₹{inv.amount.toLocaleString('en-IN')}
                   </div>
 
                   {/* Status */}
                   <div>
-                    <Tag color={inv.status === 'PAID' ? 'success' : 'error'} style={{ borderRadius: '6px', fontWeight: 700, fontSize: '0.75rem' }}>
+                    <Tag
+                      color={inv.status === 'PAID' ? 'success' : 'error'}
+                      style={{ borderRadius: 6, fontWeight: 700, fontSize: '0.72rem' }}
+                    >
                       {inv.status}
                     </Tag>
                   </div>
 
-                  {/* Invoice date */}
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    {formatDate(inv.createdAt)}
-                  </div>
+                  {/* Date */}
+                  <div className="inv-date">{formatDate(inv.createdAt)}</div>
                 </div>
               ))}
             </div>
@@ -328,10 +246,244 @@ export default function BillingPage() {
       </div>
 
       <style jsx>{`
-        @media (max-width: 768px) {
-          div[style*="grid-template-columns: 1fr 2fr"] {
-            grid-template-columns: 1fr !important;
+        /* ── Layout ── */
+        .billing-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 16px;
+          background: var(--card-bg);
+          border: 1px solid var(--glass-border);
+          border-radius: 24px;
+          padding: 24px 28px;
+          margin-bottom: 24px;
+          box-shadow: var(--shadow-card);
+        }
+        .billing-header-left {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .header-icon {
+          width: 52px; height: 52px;
+          border-radius: 14px;
+          background: var(--gradient-main);
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+          box-shadow: 0 8px 20px rgba(67,56,202,0.25);
+        }
+        .header-title {
+          margin: 0;
+          font-size: 1.5rem;
+          font-weight: 900;
+          color: var(--text-primary);
+          letter-spacing: -0.5px;
+        }
+        .header-sub {
+          margin: 2px 0 0;
+          color: var(--text-secondary);
+          font-size: 0.88rem;
+        }
+        :global(.header-btn) {
+          height: 44px !important;
+          border-radius: 12px !important;
+          font-weight: 700 !important;
+          background: var(--gradient-main) !important;
+          border: none !important;
+          box-shadow: 0 6px 16px rgba(67,56,202,0.3) !important;
+        }
+
+        .billing-grid {
+          display: grid;
+          grid-template-columns: 340px 1fr;
+          gap: 24px;
+          align-items: start;
+        }
+
+        /* ── Plan Card ── */
+        .plan-card {
+          background: var(--card-bg);
+          border-radius: 24px;
+          padding: 28px;
+          box-shadow: var(--shadow-card);
+        }
+        .plan-card--active {
+          border: 1px solid rgba(67,56,202,0.2);
+          box-shadow: var(--shadow-glow);
+        }
+        .plan-card--inactive {
+          border: 1px solid rgba(239,68,68,0.2);
+          box-shadow: 0 4px 16px rgba(239,68,68,0.08);
+        }
+
+        .plan-status-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 20px;
+        }
+        .plan-status-label {
+          font-size: 0.75rem;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+        .label--active  { color: #10b981; }
+        .label--inactive { color: #ef4444; }
+
+        .plan-name-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 16px;
+        }
+        .plan-name {
+          font-size: 1.7rem;
+          font-weight: 900;
+          color: var(--text-primary);
+        }
+
+        .plan-meta {
+          border-radius: 12px;
+          padding: 14px 16px;
+          margin-bottom: 16px;
+        }
+        .meta--active   { background: rgba(67,56,202,0.05); }
+        .meta--inactive { background: rgba(239,68,68,0.05); }
+
+        .meta-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 4px 0;
+        }
+        .meta-label { font-size: 0.84rem; color: var(--text-secondary); }
+        .meta-value { font-size: 0.84rem; font-weight: 700; color: var(--text-primary); }
+
+        .renew-warning {
+          background: linear-gradient(135deg, #fff7ed, #ffedd5);
+          border: 1px solid rgba(234,88,12,0.2);
+          border-radius: 10px;
+          padding: 10px 14px;
+          font-size: 0.82rem;
+          color: #c2410c;
+          font-weight: 600;
+          margin-bottom: 16px;
+        }
+
+        .plan-features {
+          list-style: none;
+          padding: 0; margin: 0;
+          display: flex; flex-direction: column; gap: 10px;
+        }
+        .plan-feature-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.85rem;
+          color: var(--text-secondary);
+        }
+
+        .no-plan {
+          text-align: center;
+          padding: 24px 0;
+          color: var(--text-muted);
+        }
+        .no-plan-icon  { font-size: 2.5rem; margin-bottom: 10px; }
+        .no-plan-title { font-weight: 700; font-size: 1rem; color: var(--text-primary); margin-bottom: 6px; }
+        .no-plan-sub   { font-size: 0.85rem; }
+
+        /* ── Invoices Card ── */
+        .invoices-card {
+          background: var(--card-bg);
+          border: 1px solid var(--glass-border);
+          border-radius: 24px;
+          padding: 28px;
+          box-shadow: var(--shadow-card);
+        }
+        .invoices-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 20px;
+        }
+        .invoices-title { margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--text-primary); }
+        .invoices-sub   { margin: 2px 0 0; font-size: 0.82rem; color: var(--text-muted); }
+
+        .invoices-empty {
+          text-align: center;
+          padding: 48px 20px;
+          color: var(--text-muted);
+        }
+        .empty-icon  { font-size: 2.5rem; margin-bottom: 10px; }
+        .empty-title { font-weight: 700; font-size: 1rem; color: var(--text-primary); margin-bottom: 6px; }
+        .empty-sub   { font-size: 0.85rem; }
+
+        /* ── Invoice Table ── */
+        .invoice-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .invoice-row {
+          display: grid;
+          grid-template-columns: 1.2fr 1.4fr 100px 90px 80px;
+          gap: 12px;
+          align-items: center;
+          padding: 10px 16px;
+          border-radius: 12px;
+        }
+        .invoice-row--header {
+          background: var(--bg-color);
+          font-size: 0.72rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: var(--text-muted);
+        }
+        .invoice-row--data {
+          background: var(--bg-color);
+          border: 1px solid var(--glass-border);
+          transition: box-shadow 0.2s;
+        }
+        .invoice-row--data:hover { box-shadow: var(--shadow-md); }
+
+        .inv-plan {
+          display: flex; align-items: center; gap: 8px;
+          font-weight: 700; font-size: 0.9rem; color: var(--text-primary);
+        }
+        .inv-period {
+          display: flex; flex-direction: column;
+          font-size: 0.82rem; color: var(--text-secondary);
+        }
+        .inv-period-arrow { color: var(--text-muted); }
+        .inv-amount {
+          font-weight: 800; font-size: 0.95rem; color: var(--text-primary);
+        }
+        .inv-date { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+          .billing-grid {
+            grid-template-columns: 1fr;
           }
+        }
+
+        @media (max-width: 640px) {
+          .billing-header { padding: 18px 20px; }
+          .header-title   { font-size: 1.25rem; }
+          .plan-card, .invoices-card { padding: 20px; }
+
+          /* Stack invoice rows on mobile */
+          .invoice-row--header { display: none; }
+          .invoice-row--data {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto auto;
+            gap: 8px;
+            padding: 14px;
+          }
+          .inv-plan   { grid-column: 1 / -1; }
+          .inv-period { grid-column: 1 / 2; }
+          .inv-amount { grid-column: 2 / 3; justify-self: end; }
+          .inv-date   { grid-column: 1 / 2; }
         }
       `}</style>
     </>

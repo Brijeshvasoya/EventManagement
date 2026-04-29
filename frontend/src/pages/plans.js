@@ -23,13 +23,15 @@ export default function PlansPage() {
     user?.planExpiresAt &&
     new Date(user.planExpiresAt) < new Date();
 
+  const isActivePlan = user?.isPlanPurchased && !isPlanExpired;
+  const currentPlanId = user?.planId;
+
   useEffect(() => {
     if (!user) { router.replace('/login'); return; }
     if (user.role === 'SUPER_ADMIN') { router.replace('/superadmin'); return; }
     if (user.role !== 'ORGANIZER' && user.role !== 'SUPER_ADMIN') { router.replace('/dashboard'); return; }
-    // Only redirect if plan is active (not expired) — send to billing, not dashboard
-    if (user.isPlanPurchased && !isPlanExpired) { router.replace('/billing'); }
-  }, [user, router, isPlanExpired]);
+    // Active organizers can view plans page (read-only), no redirect
+  }, [user, router]);
 
   const handleSubscribe = async (planId) => {
     try {
@@ -38,7 +40,7 @@ export default function PlansPage() {
     } catch (err) { toast.error(err.message); }
   };
 
-  if (!user || user.role !== 'ORGANIZER' || (user.isPlanPurchased && !isPlanExpired)) return null;
+  if (!user || user.role !== 'ORGANIZER') return null;
 
   const basicFeatures = [
     'Create up to 5 events/month',
@@ -92,22 +94,45 @@ export default function PlansPage() {
 
           {/* Header */}
           <div className="plans-header">
-            <div className="plans-eyebrow">
-              <ThunderboltOutlined style={{ marginRight: 6 }} />
-              Organizer Plans
+          {/* Active plan — locked notice */}
+          {isActivePlan && (
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(67,56,202,0.06), rgba(67,56,202,0.12))',
+              border: '1px solid rgba(67,56,202,0.2)',
+              borderRadius: '16px',
+              padding: '14px 22px',
+              marginBottom: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              fontSize: '0.9rem',
+              color: 'rgb(67,56,202)',
+              fontWeight: 600,
+            }}>
+              <span style={{ fontSize: '1.3rem' }}>🔒</span>
+              <span>You have an active <strong>{currentPlanId === 'PRO' ? 'Pro' : 'Basic'} Plan</strong>. Plan changes are available after your current plan expires.</span>
             </div>
-            <h1 className="plans-title">Choose Your Plan</h1>
-            <p className="plans-subtitle">
-              Unlock powerful tools to create and manage unforgettable events.
-            </p>
+          )}
+
+          <div className="plans-eyebrow">
+            <ThunderboltOutlined style={{ marginRight: 6 }} />
+            Organizer Plans
           </div>
+          <h1 className="plans-title">Choose Your Plan</h1>
+          <p className="plans-subtitle">
+            Unlock powerful tools to create and manage unforgettable events.
+          </p>
+        </div>
 
           {/* Cards */}
           <div className="plans-grid">
 
             {/* Basic */}
-            <div className="plan-card">
+            <div className={`plan-card ${isActivePlan && currentPlanId === 'BASIC' ? 'plan-card-current' : ''}`}>
               <div className="card-top-bar basic-bar" />
+              {isActivePlan && currentPlanId === 'BASIC' && (
+                <div className="current-badge">✓ Current Plan</div>
+              )}
               <div className="plan-label">Basic</div>
               <div className="plan-price-row">
                 <span className="currency">₹</span>
@@ -127,24 +152,32 @@ export default function PlansPage() {
               <Button
                 size="large"
                 block
-                loading={creating}
-                onClick={() => handleSubscribe('BASIC')}
+                disabled={isActivePlan}
+                loading={!isActivePlan && creating}
+                onClick={() => !isActivePlan && handleSubscribe('BASIC')}
                 className="btn-basic-action"
               >
-                Get Started
+                {isActivePlan && currentPlanId === 'BASIC' ? '✓ Active' : isActivePlan ? 'Locked' : 'Get Started'}
               </Button>
+              {isActivePlan && (
+                <p className="locked-note">Available after plan expiry</p>
+              )}
             </div>
 
             {/* Pro */}
-            <div className="plan-card plan-card-pro">
+            <div className={`plan-card plan-card-pro ${isActivePlan && currentPlanId === 'PRO' ? 'plan-card-current' : ''}`}>
               <div className="card-top-bar pro-bar" />
-              <div className="pro-badge">
-                <CrownOutlined style={{ marginRight: 5 }} /> Most Popular
-              </div>
+              {isActivePlan && currentPlanId === 'PRO' ? (
+                <div className="current-badge current-badge-pro">✓ Current Plan</div>
+              ) : (
+                <div className="pro-badge">
+                  <CrownOutlined style={{ marginRight: 5 }} /> Most Popular
+                </div>
+              )}
               <div className="plan-label pro-label">Pro</div>
               <div className="plan-price-row">
                 <span className="currency">₹</span>
-                <span className="price-amount">2499</span>
+                <span className="price-amount">2,499</span>
                 <span className="price-period">/month</span>
               </div>
               <p className="plan-desc">Everything you need to run events like a professional.</p>
@@ -161,13 +194,17 @@ export default function PlansPage() {
                 type="primary"
                 size="large"
                 block
-                loading={creating}
-                onClick={() => handleSubscribe('PRO')}
-                icon={<RocketOutlined />}
+                disabled={isActivePlan}
+                loading={!isActivePlan && creating}
+                onClick={() => !isActivePlan && handleSubscribe('PRO')}
+                icon={isActivePlan ? null : <RocketOutlined />}
                 className="btn-pro-action"
               >
-                Upgrade to Pro
+                {isActivePlan && currentPlanId === 'PRO' ? '✓ Active' : isActivePlan ? 'Locked' : 'Upgrade to Pro'}
               </Button>
+              {isActivePlan && (
+                <p className="locked-note">Available after plan expiry</p>
+              )}
             </div>
 
           </div>
@@ -334,6 +371,41 @@ export default function PlansPage() {
           border-radius: 20px;
           border: 1px solid rgba(67,56,202,0.2);
           z-index: 2;
+        }
+
+        .current-badge {
+          position: absolute;
+          top: 20px; right: 20px;
+          display: inline-flex;
+          align-items: center;
+          background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.2));
+          color: #059669;
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          padding: 4px 12px;
+          border-radius: 20px;
+          border: 1px solid rgba(16,185,129,0.25);
+          z-index: 2;
+        }
+
+        .current-badge-pro {
+          background: linear-gradient(135deg, rgba(67,56,202,0.1), rgba(67,56,202,0.18));
+          color: rgb(67,56,202);
+          border: 1px solid rgba(67,56,202,0.2);
+        }
+
+        .plan-card-current {
+          border-color: rgba(16,185,129,0.3) !important;
+          box-shadow: 0 0 0 2px rgba(16,185,129,0.12), 0 20px 60px rgba(16,185,129,0.08) !important;
+        }
+
+        .locked-note {
+          margin: 8px 0 0;
+          text-align: center;
+          font-size: 0.78rem;
+          color: var(--text-muted);
         }
 
         /* Plan label */
