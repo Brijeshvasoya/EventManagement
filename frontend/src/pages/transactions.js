@@ -3,12 +3,13 @@ import { GET_MY_EVENTS, GET_MY_ANALYTICS, GET_EVENTS } from '@/features/events/g
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import { Table, Tag, Card, Row, Col, Statistic, Empty, Button } from 'antd';
-import { DollarCircleOutlined, TagOutlined, DownloadOutlined } from '@ant-design/icons';
+import { TagOutlined, DownloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import { IndianRupee } from 'lucide-react';
 
 export default function Transactions() {
   const { user, loading: authLoading } = useAuth();
-  
+
   const { data: allEventsData, loading: loadingAllEvents } = useQuery(GET_EVENTS, {
     fetchPolicy: 'cache-and-network',
     skip: !user || user.role !== 'SUPER_ADMIN'
@@ -33,11 +34,11 @@ export default function Transactions() {
   );
 
   let stats = analyticsData?.myAnalytics || { totalRevenue: 0, ticketsSold: 0 };
-  
+
   const targetEvents = user?.role === 'SUPER_ADMIN' ? allEventsData?.events : eventsData?.myEvents;
 
   // Flatten attendees across all events into a single transactions array
-  const allTransactions = targetEvents?.flatMap(event => 
+  const allTransactions = targetEvents?.flatMap(event =>
     event.attendees?.map(attendee => ({
       ...attendee,
       eventTitle: event.title,
@@ -94,9 +95,9 @@ export default function Transactions() {
       key: 'amountPaid',
       width: 110,
       render: (amt, record) => (
-        <span style={{ 
-          fontWeight: 800, 
-          color: record.status === 'CANCELLED' ? '#EF4444' : '#10B981' 
+        <span style={{
+          fontWeight: 800,
+          color: record.status === 'CANCELLED' ? '#EF4444' : '#10B981'
         }}>
           ${Number(amt).toLocaleString()}
         </span>
@@ -138,7 +139,7 @@ export default function Transactions() {
       <Row gutter={[24, 24]}>
         <Col xs={24} md={12}>
           <Card variant="borderless" style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-            <Statistic title={<span style={{ fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Lifetime Revenue</span>} value={stats.totalRevenue} precision={2} prefix={<DollarCircleOutlined />} styles={{ content: { color: '#10B981', fontWeight: 900, fontSize: '2.5rem' } }} />
+            <Statistic title={<span style={{ fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '1px' }}>Lifetime Revenue</span>} value={stats.totalRevenue} precision={2} prefix={<IndianRupee />} styles={{ content: { color: '#10B981', fontWeight: 900, fontSize: '2.5rem' } }} />
           </Card>
         </Col>
         <Col xs={24} md={12}>
@@ -154,12 +155,12 @@ export default function Transactions() {
       </div>
 
       <div className="table-responsive" style={{ background: '#FFF', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', padding: '24px' }}>
-        <Table 
-          columns={columns} 
-          dataSource={allTransactions} 
-          rowKey="id" 
+        <Table
+          columns={columns}
+          dataSource={allTransactions}
+          rowKey="id"
           scroll={{ x: 800 }}
-          pagination={{ pageSize: 15, placement: 'bottomCenter' }} 
+          pagination={{ pageSize: 15, placement: 'bottomCenter' }}
           locale={{ emptyText: <Empty description="No transactions found." /> }}
         />
       </div>
