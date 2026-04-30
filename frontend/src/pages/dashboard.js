@@ -2,17 +2,18 @@ import { useContext, useState } from 'react';
 import { GlobalActionsContext } from '../components/GlobalActions';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
-import { GET_MY_BOOKINGS, CANCEL_BOOKING, GET_MY_ANALYTICS, GET_MY_EVENTS, GET_EVENTS, REDEEM_REWARD } from '@/features/events/graphql/queries';
+import { GET_MY_BOOKINGS, CANCEL_BOOKING, GET_MY_ANALYTICS, GET_MY_EVENTS, GET_EVENTS, REDEEM_REWARD, GET_MY_PROMO_CODES } from '@/features/events/graphql/queries';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Spin, Card, Empty, Button, Tag, Divider, Modal, Form, Input, Typography, Avatar, Drawer, Badge, List, Progress } from 'antd';
+import { Spin, Card, Empty, Button, Tag, Divider, Modal, Form, Input, Typography, Avatar, Drawer, Badge, List, Progress, Space } from 'antd';
 import { EnvironmentOutlined, CalendarOutlined, DownloadOutlined, QrcodeOutlined, CrownOutlined, CheckCircleFilled, UserOutlined, MailOutlined, SettingOutlined, AppstoreOutlined, ArrowRightOutlined, EyeOutlined, BellOutlined, CheckOutlined, RocketOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 
 const { Title, Text: AntText } = Typography;
 
@@ -479,7 +480,8 @@ export default function Dashboard() {
         </div>
 
         {isOrganizer ? (() => {
-          const upcomingEvents = myEventsData?.myEvents?.filter(e => new Date(isNaN(Number(e.date)) ? e.date : Number(e.date)) >= now) || [];
+          const upcomingEvents = (myEventsData?.myEvents?.filter(e => new Date(isNaN(Number(e.date)) ? e.date : Number(e.date)) >= now) || [])
+            .sort((a, b) => new Date(isNaN(Number(a.date)) ? a.date : Number(a.date)) - new Date(isNaN(Number(b.date)) ? b.date : Number(b.date)));
           // Dynamic calculations from DB
           const totalCapacity = myEventsData?.myEvents?.reduce((acc, ev) => acc + (ev.capacity || 0), 0) || 0;
           const ticketsSold = analyticsData?.myAnalytics?.ticketsSold || 0;
@@ -596,6 +598,52 @@ export default function Dashboard() {
                       </ResponsiveContainer>
                     </div>
                   </Card>
+
+                  {/* TICKET TYPE DISTRIBUTION PIE CHART */}
+                  <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                      <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Ticket Type Distribution</h3>
+                    </div>
+                    <div style={{ height: '220px', width: '100%' }}>
+                      {(() => {
+                        const distribution = {};
+                        myEventsData?.myEvents?.forEach(ev => {
+                          ev.attendees?.forEach(att => {
+                            if (att.status !== 'CANCELLED') {
+                              distribution[att.ticketType] = (distribution[att.ticketType] || 0) + att.quantity;
+                            }
+                          });
+                        });
+                        const pieData = Object.entries(distribution).map(([name, value]) => ({ name, value }));
+                        const COLORS = ['#8338EC', '#3A86FF', '#FB5607', '#FF006E', '#FFBE0B'];
+
+                        return pieData.length > 0 ? (
+                          <ResponsiveContainer>
+                            <PieChart>
+                              <Pie
+                                data={pieData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={40}
+                                outerRadius={60}
+                                fill="#8884d8"
+                                paddingAngle={5}
+                                dataKey="value"
+                              >
+                                {pieData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                              </Pie>
+                              <Tooltip />
+                              <Legend verticalAlign="bottom" height={36} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <Empty description="No ticket sales data" style={{ marginTop: '20px' }} />
+                        );
+                      })()}
+                    </div>
+                  </Card>
                 </div>
 
                 {/* POPULAR EVENTS PROGRESS BARS */}
@@ -630,12 +678,12 @@ export default function Dashboard() {
 
                 {/* ALL EVENTS ROW */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
-                  <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.2rem' }}>All Events</h3>
-                  <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }} onClick={() => router.push('/browse')}>View All Event</div>
+                  <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.2rem' }}>My Events</h3>
+                  <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }} onClick={() => router.push('/my-events')}>View All Event</div>
                 </div>
                 <div className="grid-cols-auto-320" style={{ gap: '20px' }}>
                   {myEventsData?.myEvents.slice(0, 3).map(e => (
-                    <div key={e.id} className="hover-bounce" style={{ background: '#FFF', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', padding: '16px' }}>
+                    <div key={e.id} className="hover-bounce" style={{ background: '#FFF', cursor: 'pointer', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', padding: '16px' }} onClick={() => { router.push(`/events/${e.id}`) }}>
                       <div style={{ position: 'relative', height: '140px', borderRadius: '16px', overflow: 'hidden', marginBottom: '16px', background: `url(${e.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover` }}>
                         <Tag style={{ position: 'absolute', top: '12px', left: '12px', background: 'rgba(255,255,255,0.9)', color: '#1B2A4E', border: 'none', borderRadius: '100px', fontWeight: 700, padding: '4px 12px', textTransform: 'capitalize' }}>{e.category || 'Event'}</Tag>
                       </div>
@@ -653,6 +701,7 @@ export default function Dashboard() {
                     </div>
                   )}
                 </div>
+
               </div>
 
               {/* RIGHT COLUMN: Upcoming Event & Activity */}
@@ -751,7 +800,9 @@ export default function Dashboard() {
             </div>
           );
         })() : (() => {
-          const upcomingBookings = bookings.filter(b => b.event && new Date(isNaN(Number(b.event.date)) ? b.event.date : Number(b.event.date)) >= now);
+          const upcomingBookings = bookings
+            .filter(b => b.event && new Date(isNaN(Number(b.event.date)) ? b.event.date : Number(b.event.date)) >= now)
+            .sort((a, b) => new Date(isNaN(Number(a.event.date)) ? a.event.date : Number(a.event.date)) - new Date(isNaN(Number(b.event.date)) ? b.event.date : Number(b.event.date)));
           const featuredBooking = upcomingBookings[0];
           const totalSpent = bookings.reduce((acc, b) => acc + (b.amountPaid || 0), 0);
 
@@ -981,13 +1032,38 @@ export default function Dashboard() {
                     </div>
                   )}
                 </div>
+
+                {/* FEATURED / UPCOMING EVENTS ON PLATFORM */}
+                {!isOrganizer && !isSuperAdmin && allEventsData?.events?.length > 0 && (
+                  <div style={{ marginTop: '32px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                      <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.3rem' }}>Upcoming on EventHub</h3>
+                      <Button type="text" onClick={() => router.push('/browse')} style={{ color: 'rgb(67, 56, 202)', fontWeight: 700 }}>View All</Button>
+                    </div>
+                    <div className="grid-cols-auto-320" style={{ gap: '20px' }}>
+                      {allEventsData.events.filter(e => new Date(isNaN(Number(e.date)) ? e.date : Number(e.date)) >= now).slice(0, 3).map(e => (
+                        <div key={e.id} className="hover-bounce" style={{ background: '#FFF', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', padding: '16px', border: '1px solid #F1F5F9' }}>
+                          <div style={{ position: 'relative', height: '140px', borderRadius: '16px', overflow: 'hidden', marginBottom: '16px', background: `url(${e.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover` }}>
+                            <Tag style={{ position: 'absolute', top: '12px', left: '12px', background: 'rgba(255,255,255,0.9)', color: '#1B2A4E', border: 'none', borderRadius: '100px', fontWeight: 700, padding: '4px 12px' }}>{e.eventType || 'Event'}</Tag>
+                          </div>
+                          <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: 800, color: '#1B2A4E' }}>{e.title}</h4>
+                          <div style={{ color: '#6B7280', fontSize: '0.85rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '4px' }}><EnvironmentOutlined /> {e.location}</div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ color: '#9CA3AF', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}><CalendarOutlined /> {new Date(isNaN(Number(e.date)) ? e.date : Number(e.date)).toLocaleDateString()}</div>
+                            <Button type="primary" size="small" onClick={() => router.push(`/events/${e.id}`)} style={{ borderRadius: '8px', background: 'var(--gradient-main)', border: 'none', fontWeight: 600 }}>Book Now</Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* RIGHT COLUMN */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.2rem' }}>Upcoming Event</h3>
                 {(() => {
-                  const displayEvent = featuredBooking?.event;
+                  const displayEvent = featuredBooking?.event || allEventsData?.events?.filter(e => new Date(isNaN(Number(e.date)) ? e.date : Number(e.date)) >= now).sort((a, b) => new Date(isNaN(Number(a.date)) ? a.date : Number(a.date)) - new Date(isNaN(Number(b.date)) ? b.date : Number(b.date)))[0];
                   if (!displayEvent) return (
                     <Card style={{ borderRadius: '24px', textAlign: 'center', padding: '40px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                       <Empty description="No upcoming events" />

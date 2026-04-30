@@ -25,7 +25,7 @@ export function GlobalActionsProvider({ children }) {
   const { data: countData, refetch: refetchCount } = useQuery(UNREAD_NOTIFICATION_COUNT, {
     skip: !user, fetchPolicy: 'cache-and-network'
   });
-  const { refetch: refetchBookings } = useQuery(GET_MY_BOOKINGS);
+  const { refetch: refetchBookings } = useQuery(GET_MY_BOOKINGS, { skip: !user });
 
   // Real-time Notification Subscription
   useEffect(() => {
@@ -111,6 +111,31 @@ export function GlobalActionsProvider({ children }) {
     }
   };
 
+  const handleNotificationClick = async (item) => {
+    // 1. Mark as read
+    await handleMarkRead(item.id);
+
+    // 2. Logic for Waitlist Expiry
+    if (item.type === 'TICKET_BOOKED' && item.event) {
+      const isSoldOut = item.event.bookedCount >= item.event.capacity;
+      if (isSoldOut) {
+        toast.error("Sorry, those spots were just grabbed by someone else. We'll let you know if more open up!", {
+          duration: 5000,
+          icon: '😔'
+        });
+        setIsDrawerVisible(false);
+        return;
+      }
+      router.push(`/events/${item.event.id}`);
+    } else if (item.event) {
+      router.push(`/events/${item.event.id}`);
+    } else if (item.booking) {
+      router.push('/dashboard');
+    }
+    
+    setIsDrawerVisible(false);
+  };
+
   const handleMarkAllRead = async () => {
     try {
       await markAllRead();
@@ -177,7 +202,7 @@ export function GlobalActionsProvider({ children }) {
               return (
                 <div
                   key={item.id}
-                  onClick={() => handleMarkRead(item.id)}
+                  onClick={() => handleNotificationClick(item)}
                   style={{ background: cfg.bg, padding: '16px', borderRadius: '16px', border: '1px solid #F1F5F9', transition: 'all 0.3s ease', cursor: 'pointer', display: 'flex', gap: '12px', alignItems: 'flex-start' }}
                 >
                   <div style={{ background: cfg.iconBg, color: cfg.iconColor, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: cfg.isIcon ? '16px' : '20px', flexShrink: 0 }}>

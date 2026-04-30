@@ -20,6 +20,7 @@ export const GET_EVENTS = gql`
       isBooked
       attendees { id user { id name email } quantity amountPaid ticketType status createdAt }
       vendors { id name category cost contactInfo }
+      features
     }
   }
 `;
@@ -88,11 +89,13 @@ export const UPDATE_PROFILE = gql`
 export const GET_EVENT_DETAILS = gql`
   query GetEventDetails($id: ID!) {
     event(id: $id) {
-      id title description date location capacity imageUrl eventType status bookedCount
+      id title description date location capacity imageUrl eventType status bookedCount isOnWaitlist
       organizer { id name email averageRating }
       ticketTypes { name price capacity }
       attendees { id user { id name email } quantity amountPaid ticketType status createdAt }
       vendors { id name category cost contactInfo }
+      feedbacks { id rating comment user { name } createdAt }
+      features
     }
   }
 `;
@@ -164,7 +167,7 @@ export const GET_MY_NOTIFICATIONS = gql`
     myNotifications {
       id message type read createdAt
       booking { id ticketType quantity }
-      event { id title }
+      event { id title capacity bookedCount }
     }
   }
 `;
@@ -255,6 +258,47 @@ export const UPDATE_BANK_DETAILS = gql`
   }
 `;
 
+export const VALIDATE_PROMO_CODE = gql`
+  query ValidatePromoCode($code: String!, $eventId: ID!) {
+    validatePromoCode(code: $code, eventId: $eventId) {
+      id code discountType discountValue
+    }
+  }
+`;
 
 
+export const JOIN_WAITLIST = gql`
+  mutation JoinWaitlist($eventId: ID!) {
+    joinWaitlist(eventId: $eventId)
+  }
+`;
+
+export const GET_MY_PROMO_CODES = gql`
+  query GetMyPromoCodes {
+    myPromoCodes {
+      id code discountType discountValue expiresAt usageLimit usageCount isActive
+      event { id title }
+    }
+  }
+`;
+
+export const CREATE_PROMO_CODE = gql`
+  mutation CreatePromoCode($input: PromoCodeInput!) {
+    createPromoCode(input: $input) { id code }
+  }
+`;
+
+export const UPDATE_PROMO_CODE = gql`
+  mutation UpdatePromoCode($id: ID!, $input: PromoCodeInput!) {
+    updatePromoCode(id: $id, input: $input) {
+      id code discountType discountValue expiresAt usageLimit
+    }
+  }
+`;
+
+export const DELETE_PROMO_CODE = gql`
+  mutation DeletePromoCode($id: ID!) {
+    deletePromoCode(id: $id)
+  }
+`;
 

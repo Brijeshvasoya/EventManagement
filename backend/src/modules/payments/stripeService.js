@@ -5,7 +5,7 @@ const { requireAuth } = require('../../utils/authGuard');
 const Event = require('../../models/Event');
 const Booking = require('../../models/Booking');
 
-exports.createCheckoutSession = async (eventId, ticketType, quantity, user) => {
+exports.createCheckoutSession = async (eventId, ticketType, quantity, user, promoCode) => {
   requireAuth(user);
   const APP_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
 
@@ -15,6 +15,49 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user) => {
   const ticket = event.ticketTypes.find(t => t.name === ticketType);
   if (!ticket) throw new Error('Ticket type not found for this event');
 
+  // CAPACITY VALIDATION
+  const bookedStats = await Booking.aggregate([
+    { $match: { event: event._id, status: { $in: ['CONFIRMED', 'CHECKED_IN'] } } },
+    { $group: { _id: null, total: { $sum: "$quantity" } } }
+  ]);
+  const totalBooked = bookedStats.length > 0 ? bookedStats[0].total : 0;
+
+  if (totalBooked + quantity > event.capacity) {
+    throw new Error(`Event Sold Out! Only ${Math.max(0, event.capacity - totalBooked)} total spots remaining.`);
+  }
+
+  // Per-tier capacity check
+  const typeBookedStats = await Booking.aggregate([
+    { $match: { event: event._id, ticketType, status: { $in: ['CONFIRMED', 'CHECKED_IN'] } } },
+    { $group: { _id: null, total: { $sum: "$quantity" } } }
+  ]);
+  const typeBooked = typeBookedStats.length > 0 ? typeBookedStats[0].total : 0;
+
+  if (ticket.capacity && (typeBooked + quantity > ticket.capacity)) {
+    throw new Error(`This ticket tier is sold out! Only ${Math.max(0, ticket.capacity - typeBooked)} tickets left in ${ticketType}.`);
+  }
+
+  let finalPrice = ticket.price;
+  let appliedPromoId = null;
+
+  if (promoCode) {
+    const PromoCode = require('../../models/PromoCode');
+    const promo = await PromoCode.findOne({
+      code: promoCode.toUpperCase(),
+      isActive: true,
+      expiresAt: { $gte: new Date() }
+    });
+
+    if (promo && promo.usageCount < promo.usageLimit && (!promo.eventId || promo.eventId.toString() === eventId)) {
+      if (promo.discountType === 'PERCENTAGE') {
+        finalPrice = ticket.price * (1 - promo.discountValue / 100);
+      } else {
+        finalPrice = Math.max(0, ticket.price - promo.discountValue);
+      }
+      appliedPromoId = promo._id;
+    }
+  }
+
   if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock') {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -23,16 +66,16 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user) => {
           currency: 'usd',
           product_data: {
             name: `${event.title} - ${ticketType}`,
-            description: `Quantity: ${quantity} ticket(s)`
+            description: `Quantity: ${quantity} ticket(s) ${promoCode ? `(Promo: ${promoCode})` : ''}`
           },
-          unit_amount: Math.round(ticket.price * 100)
+          unit_amount: Math.round(finalPrice * 100)
         },
         quantity: quantity,
       }],
       mode: 'payment',
       customer_email: user.email,
-      allow_promotion_codes: true,
-      metadata: { eventId, userId: user.id, ticketType, quantity: quantity.toString() },
+      allow_promotion_codes: false, // We handle it manually now
+      metadata: { eventId, userId: user.id, ticketType, quantity: quantity.toString(), promoCode: promoCode || '' },
       success_url: `${APP_URL}/checkout-success?eventId=${eventId}&ticketType=${ticketType}&quantity=${quantity}&sessionId={CHECKOUT_SESSION_ID}`,
       cancel_url: `${APP_URL}/checkout-cancel`,
     });
@@ -43,7 +86,7 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user) => {
       user: user.id,
       ticketType,
       quantity,
-      amountPaid: ticket.price * quantity,
+      amountPaid: finalPrice * quantity,
       stripePaymentId: session.id,
       status: 'PENDING',
       paymentStatus: 'PENDING'

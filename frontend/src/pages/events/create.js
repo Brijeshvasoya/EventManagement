@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { gql } from '@apollo/client';
-import { CREATE_EVENT, GET_MY_VENDORS } from '@/features/events/graphql/queries';
+import { CREATE_EVENT, UPDATE_EVENT, GET_MY_VENDORS, GET_EVENT_DETAILS } from '@/features/events/graphql/queries';
 import { Select, ConfigProvider, theme, Form, Input, InputNumber, Button, Divider, Typography, Space, Avatar } from 'antd';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -13,6 +13,8 @@ import {
   FileTextOutlined, PictureOutlined, RocketOutlined, DollarOutlined,
   TeamOutlined, ThunderboltOutlined, CheckCircleOutlined, InfoCircleOutlined
 } from '@ant-design/icons';
+import { DatePicker } from 'antd';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
@@ -27,9 +29,37 @@ const GET_MY_EVENTS_COUNT = gql`
 export default function CreateEvent() {
   const { user } = useAuth();
   const router = useRouter();
+  const { id } = router.query;
   const [form] = Form.useForm();
 
-  const [createEvent, { loading }] = useMutation(CREATE_EVENT);
+  const [createEvent, { loading: createLoading }] = useMutation(CREATE_EVENT);
+  const [updateEvent, { loading: updateLoading }] = useMutation(UPDATE_EVENT);
+
+  const { data: eventData, loading: eventLoading } = useQuery(GET_EVENT_DETAILS, {
+    variables: { id },
+    skip: !id,
+  });
+
+  useEffect(() => {
+    if (!id) {
+      form.resetFields();
+      setPreviewImage(null);
+      return;
+    };
+    if (eventData?.event) {
+      const { event } = eventData;
+      form.setFieldsValue({
+        ...event,
+        date: event.date ? dayjs(isNaN(Number(event.date)) ? event.date : Number(event.date)) : null,
+        vendorIds: event.vendors?.map(v => v.id) || []
+      });
+      setPreviewImage(event.imageUrl);
+    }
+  }, [eventData, form, id]);
+
+  const loading = createLoading || updateLoading || eventLoading;
+  const isEdit = !!id;
+
   const [aiLoading, setAiLoading] = useState(false);
   const [aiImageLoading, setAiImageLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
@@ -48,7 +78,7 @@ export default function CreateEvent() {
   });
 
   const eventCount = myEventsData?.myEvents?.length ?? 0;
-  const isLimitReached = isBasicPlan && eventCount >= BASIC_PLAN_LIMIT;
+  const isLimitReached = isBasicPlan && eventCount >= BASIC_PLAN_LIMIT && !isEdit;
 
   if (!user || user.role === 'USER') {
     return (
@@ -138,18 +168,28 @@ export default function CreateEvent() {
     }
 
     try {
-      toast.loading('Publishing Event...', { id: 'publish' });
+      toast.loading(isEdit ? 'Updating Event...' : 'Publishing Event...', { id: 'publish' });
       const totalCapacity = values.ticketTypes.reduce((acc, curr) => acc + (curr.capacity || 0), 0);
-      await createEvent({
-        variables: {
-          input: {
-            ...values,
-            imageUrl: finalImageUrl,
-            capacity: totalCapacity
-          }
-        }
-      });
-      toast.success('Event Published! 🚀', { id: 'publish' });
+
+      const formattedDate = values.date ? values.date.toISOString() : null;
+      const input = {
+        ...values,
+        date: formattedDate,
+        imageUrl: finalImageUrl,
+        capacity: totalCapacity
+      };
+
+      if (isEdit) {
+        await updateEvent({
+          variables: { id, input }
+        });
+        toast.success('Event Updated! 🚀', { id: 'publish' });
+      } else {
+        await createEvent({
+          variables: { input }
+        });
+        toast.success('Event Published! 🚀', { id: 'publish' });
+      }
       router.push('/my-events');
     } catch (err) {
       toast.error(err.message, { id: 'publish' });
@@ -252,7 +292,9 @@ export default function CreateEvent() {
               }}></div>
             </div>
             <div>
-              <Title level={3} style={{ margin: 0, fontWeight: 900, color: '#1B2A4E', letterSpacing: '-0.5px' }}>Design Your Event</Title>
+              <Title level={3} style={{ margin: 0, fontWeight: 900, color: '#1B2A4E', letterSpacing: '-0.5px' }}>
+                {isEdit ? 'Edit Your Event' : 'Design Your Event'}
+              </Title>
               <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
                 <span style={{ color: '#64748B', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
                   <ThunderboltOutlined style={{ color: 'rgb(67, 56, 202)' }} /> Organizer Tools
@@ -275,7 +317,7 @@ export default function CreateEvent() {
               boxShadow: '0 8px 16px rgba(27, 42, 78, 0.12)'
             }}
           >
-            PUBLISH EVENT
+            {isEdit ? 'UPDATE EVENT' : 'PUBLISH EVENT'}
           </Button>
         </div>
 
@@ -342,7 +384,12 @@ export default function CreateEvent() {
 
                 <div className="grid-cols-2" style={{ gap: '16px' }}>
                   <Form.Item label="DATE & TIME" name="date" rules={[{ required: true }]} style={{ marginBottom: 0 }}>
-                    <Input type="datetime-local" style={{ borderRadius: '10px' }} />
+                    <DatePicker
+                      showTime
+                      format="YYYY-MM-DD HH:mm"
+                      placeholder="Select Date & Time"
+                      style={{ width: '100%', borderRadius: '10px' }}
+                    />
                   </Form.Item>
                   <Form.Item label="LOCATION" name="location" rules={[{ required: true }]} style={{ marginBottom: 0 }}>
                     <Input prefix={<EnvironmentOutlined style={{ color: '#94A3B8', marginRight: '4px' }} />} placeholder="Venue" style={{ borderRadius: '10px' }} />
@@ -426,11 +473,20 @@ export default function CreateEvent() {
                   )}
                 </Form.List>
 
-                <Form.Item label="ASSIGN VENDORS" name="vendorIds" style={{ marginTop: '20px', marginBottom: 0 }}>
+                <Form.Item label="ASSIGN VENDORS" name="vendorIds" style={{ marginTop: '20px' }}>
                   <Select mode="multiple" placeholder="Link partners" loading={vendorLoading} style={{ borderRadius: '10px' }}>
                     {vendorData?.myVendors?.map(v => (
                       <Select.Option key={v.id} value={v.id}>{v.name}</Select.Option>
                     ))}
+                  </Select>
+                </Form.Item>
+
+                <Form.Item label="EVENT FEATURES" name="features" style={{ marginTop: '20px', marginBottom: 0 }}>
+                  <Select mode="multiple" placeholder="Select perks" style={{ borderRadius: '10px' }}>
+                    <Select.Option value="VIP_ACCESS">🔥 VIP Access Available</Select.Option>
+                    <Select.Option value="NETWORKING">🌐 Networking Sessions</Select.Option>
+                    <Select.Option value="LIVE_QA">⚡ Live Q&A Sessions</Select.Option>
+                    <Select.Option value="DIGITAL_COLLECTIBLES">🎫 Digital Collectibles</Select.Option>
                   </Select>
                 </Form.Item>
               </div>

@@ -3,7 +3,7 @@ const typeDefs = `#graphql
   type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int averageRating: Float numReviews: Int redeemedRewards: [String] isPlanPurchased: Boolean planId: String totalWithdrawn: Float availablePayout: Float bankDetails: BankDetails }
   type TicketType { name: String! price: Float! capacity: Int! }
   type Feedback { id: ID! booking: Booking! event: Event! organizer: User! user: User! rating: Int! comment: String createdAt: String! }
-  type Event { id: ID! title: String! description: String! date: String! location: String! capacity: Int! imageUrl: String organizer: User! isBooked: Boolean eventType: String status: String ticketTypes: [TicketType] bookedCount: Int attendees: [Booking!] vendors: [Vendor!] }
+  type Event { id: ID! title: String! description: String! date: String! location: String! capacity: Int! imageUrl: String organizer: User! isBooked: Boolean isOnWaitlist: Boolean eventType: String status: String ticketTypes: [TicketType] bookedCount: Int attendees: [Booking!] vendors: [Vendor!] feedbacks: [Feedback!] features: [String] }
   type Booking { id: ID! event: Event! user: User! status: String! createdAt: String! qrCode: String ticketType: String amountPaid: Float quantity: Int paymentStatus: String }
   type Vendor { id: ID! name: String! category: String! rating: Float cost: Float contactInfo: String availableDates: [String] organizer: User! events: [Event!] }
   type Notification { id: ID! recipient: User! title: String message: String! type: String! read: Boolean! booking: Booking event: Event createdAt: String! }
@@ -14,10 +14,12 @@ const typeDefs = `#graphql
   type Payout { id: ID! organizer: User! amount: Float! status: String! createdAt: String! }
   type PlanInvoice { id: ID! planId: String! amount: Float! currency: String! status: String! stripeSessionId: String planStartDate: String! planEndDate: String! createdAt: String! }
   type BillingInfo { currentPlan: String planExpiresAt: String isPlanActive: Boolean invoices: [PlanInvoice!]! }
+  type PromoCode { id: ID! code: String! discountType: String! discountValue: Float! expiresAt: String! usageLimit: Int usageCount: Int isActive: Boolean event: Event }
   
   input TicketTypeInput { name: String! price: Float! capacity: Int! }
-  input CreateEventInput { title: String! description: String! date: String! location: String! capacity: Int imageUrl: String eventType: String ticketTypes: [TicketTypeInput] vendorIds: [ID] }
+  input CreateEventInput { title: String! description: String! date: String! location: String! capacity: Int imageUrl: String eventType: String ticketTypes: [TicketTypeInput] vendorIds: [ID] features: [String] }
   input VendorInput { name: String! category: String! cost: Float! contactInfo: String availableDates: [String] eventIds: [ID] }
+  input PromoCodeInput { code: String! discountType: String! discountValue: Float! expiresAt: String! usageLimit: Int eventId: ID }
   
   type Query {
     me: User
@@ -36,6 +38,8 @@ const typeDefs = `#graphql
     myPayouts: [Payout!]!
     allPayouts: [Payout!]!
     myBilling: BillingInfo!
+    validatePromoCode(code: String!, eventId: ID!): PromoCode
+    myPromoCodes: [PromoCode!]!
   }
   
   type Mutation {
@@ -44,7 +48,7 @@ const typeDefs = `#graphql
     createEvent(input: CreateEventInput!): Event!
     bookEvent(eventId: ID!, ticketType: String, amountPaid: Float, stripePaymentId: String, quantity: Int): Booking!
     cancelBooking(bookingId: ID!): Boolean!
-    createCheckoutSession(eventId: ID!, ticketType: String!, quantity: Int!): String!
+    createCheckoutSession(eventId: ID!, ticketType: String!, quantity: Int!, promoCode: String): String!
     createPlanCheckoutSession(planId: String!): String!
     confirmPlanPurchase(sessionId: String!, planId: String!): AuthPayload!
     updateEvent(id: ID!, input: CreateEventInput!): Event!
@@ -64,6 +68,10 @@ const typeDefs = `#graphql
     requestPayout(amount: Float!): Payout!
     approvePayout(payoutId: ID!): Payout!
     updateBankDetails(accountHolderName: String!, accountNumber: String!, bankName: String!, ifscCode: String!): User!
+    joinWaitlist(eventId: ID!): Boolean!
+    createPromoCode(input: PromoCodeInput!): PromoCode!
+    updatePromoCode(id: ID!, input: PromoCodeInput!): PromoCode!
+    deletePromoCode(id: ID!): Boolean!
   }
 
   type Subscription {

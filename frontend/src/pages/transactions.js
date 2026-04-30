@@ -3,7 +3,7 @@ import { GET_MY_EVENTS, GET_MY_ANALYTICS, GET_EVENTS, GET_ME, REQUEST_PAYOUT, GE
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import { Table, Tag, Card, Row, Col, Statistic, Empty, Button, Modal, InputNumber, Form, message, Alert, Input, Space, Typography, Tooltip as AntTooltip, Select } from 'antd';
-import { TagOutlined, DownloadOutlined, WalletOutlined, HistoryOutlined, BankOutlined, CheckCircleFilled, InfoCircleOutlined, SearchOutlined, FilterOutlined, ArrowUpOutlined, CreditCardOutlined } from '@ant-design/icons';
+import { TagOutlined, DownloadOutlined, WalletOutlined, HistoryOutlined, BankOutlined, CheckCircleFilled, InfoCircleOutlined, SearchOutlined, FilterOutlined, ArrowUpOutlined, CreditCardOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { IndianRupee } from 'lucide-react';
 import { useRouter } from 'next/router';
@@ -100,7 +100,7 @@ export default function Transactions() {
     })
     .sort((a, b) => Number(b.createdAt) - Number(a.createdAt));
 
-  const filteredPayouts = (payoutData?.myPayouts || []).filter(p => 
+  const filteredPayouts = (payoutData?.myPayouts || []).filter(p =>
     payoutStatusFilter === 'ALL' || p.status === payoutStatusFilter
   );
 
@@ -182,10 +182,10 @@ export default function Transactions() {
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <Head><title>Transactions | EventHub</title></Head>
 
-      <div className="header-responsive" style={{ 
-        background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)', 
-        borderRadius: '32px', 
-        color: 'white', 
+      <div className="header-responsive" style={{
+        background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)',
+        borderRadius: '32px',
+        color: 'white',
         boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)',
         padding: '40px',
         position: 'relative',
@@ -238,10 +238,10 @@ export default function Transactions() {
                 size="large"
                 disabled={availablePayout <= 0 || !hasBankDetails}
                 onClick={() => setIsPayoutModalOpen(true)}
-                style={{ 
-                  background: '#10B981', 
-                  borderColor: '#10B981', 
-                  fontWeight: 700, 
+                style={{
+                  background: '#10B981',
+                  borderColor: '#10B981',
+                  fontWeight: 700,
                   boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
                 }}
               >
@@ -276,10 +276,10 @@ export default function Transactions() {
                 </div>
               </div>
             ) : (
-              <Button 
-                type="dashed" 
+              <Button
+                type="dashed"
                 block
-                icon={<PlusCircleOutlined />} 
+                icon={<PlusCircleOutlined />}
                 onClick={() => setIsBankModalOpen(true)}
                 style={{ height: '54px', borderRadius: '16px', color: '#4338CA', borderColor: '#4338CA' }}
               >
@@ -303,9 +303,9 @@ export default function Transactions() {
                   style={{ width: '220px', borderRadius: '12px', height: '40px' }}
                   allowClear
                 />
-                <Select 
-                  defaultValue="ALL" 
-                  style={{ width: '150px', height: '40px' }} 
+                <Select
+                  defaultValue="ALL"
+                  style={{ width: '150px', height: '40px' }}
                   onChange={setStatusFilter}
                   options={[
                     { value: 'ALL', label: 'All Status' },
@@ -317,11 +317,11 @@ export default function Transactions() {
                 />
               </div>
             </div>
-            <Table 
-              columns={columns} 
-              dataSource={allTransactions} 
-              rowKey="id" 
-              scroll={{ x: 800 }} 
+            <Table
+              columns={columns}
+              dataSource={allTransactions}
+              rowKey="id"
+              scroll={{ x: 800 }}
               pagination={{ pageSize: 10, showSizeChanger: true }}
               className="premium-table"
             />
@@ -331,10 +331,10 @@ export default function Transactions() {
           <div style={{ background: 'white', padding: '32px', borderRadius: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', height: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.4rem' }}>Payout Ledger</h3>
-              <Select 
-                defaultValue="ALL" 
+              <Select
+                defaultValue="ALL"
                 size="small"
-                style={{ width: '120px' }} 
+                style={{ width: '120px' }}
                 onChange={setPayoutStatusFilter}
                 options={[
                   { value: 'ALL', label: 'All' },
@@ -344,12 +344,12 @@ export default function Transactions() {
                 ]}
               />
             </div>
-            <Table 
-              columns={payoutColumns} 
-              dataSource={filteredPayouts} 
-              rowKey="id" 
-              pagination={{ pageSize: 8 }} 
-              size="small" 
+            <Table
+              columns={payoutColumns}
+              dataSource={filteredPayouts}
+              rowKey="id"
+              pagination={{ pageSize: 8 }}
+              size="small"
               className="premium-table"
             />
           </div>

@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { Form, Input, Button, Rate, Typography, ConfigProvider, Card, Result } from 'antd';
 import { StarFilled, MessageOutlined, SendOutlined, ArrowLeftOutlined, CheckCircleOutlined } from '@ant-design/icons';
 
-const { Title, Text } = Typography;
+const { Title, Text: AntText } = Typography;
 
 const GET_BOOKING_DETAILS = gql`
   query GetBookingForFeedback($id: ID!) {
@@ -204,9 +204,9 @@ export default function FeedbackPage() {
                   <div className="spinner-ring"></div>
                 </div>
                 <Title level={3} style={{ margin: 0, color: '#1E293B', fontWeight: 800 }}>Event Feedback</Title>
-                <Text type="secondary" style={{ fontSize: '0.9rem', display: 'block', marginTop: '4px' }}>
+                <AntText type="secondary" style={{ fontSize: '0.9rem', display: 'block', marginTop: '4px' }}>
                   Rate <strong>{booking?.eventTitle || 'the event'}</strong>
-                </Text>
+                </AntText>
                 {booking?.organizerName && (
                   <div style={{ marginTop: '8px', color: 'rgb(67, 56, 202)', fontWeight: 600, fontSize: '0.85rem' }}>
                     Organizer: {booking.organizerName}
@@ -214,9 +214,9 @@ export default function FeedbackPage() {
                 )}
               </div>
 
-              <Form 
-                layout="vertical" 
-                onFinish={onFinish} 
+              <Form
+                layout="vertical"
+                onFinish={onFinish}
                 requiredMark={false}
                 initialValues={{
                   rating: booking?.existingRating,
@@ -254,14 +254,14 @@ export default function FeedbackPage() {
                     block
                     className="pulse-btn"
                     icon={booking?.existingRating ? <CheckCircleOutlined /> : <SendOutlined />}
-                    style={{ 
-                      height: '54px', 
-                      borderRadius: '12px', 
-                      background: booking?.existingRating ? '#10B981' : 'linear-gradient(90deg, #1B2A4E 0%, #312E81 100%)', 
-                      border: 'none', 
-                      fontWeight: 800, 
-                      fontSize: '0.9rem', 
-                      color: 'white', 
+                    style={{
+                      height: '54px',
+                      borderRadius: '12px',
+                      background: booking?.existingRating ? '#10B981' : 'linear-gradient(90deg, #1B2A4E 0%, #312E81 100%)',
+                      border: 'none',
+                      fontWeight: 800,
+                      fontSize: '0.9rem',
+                      color: 'white',
                       letterSpacing: '1px',
                       opacity: booking?.existingRating ? 0.8 : 1
                     }}

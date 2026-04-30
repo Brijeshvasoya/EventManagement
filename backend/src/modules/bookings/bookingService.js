@@ -25,8 +25,34 @@ const bookingService = {
 
     // Prevent double processing the same payment session
     let booking = await Booking.findOne({ stripePaymentId });
-    let isNewBooking = false;
+    if (booking && booking.status === 'CONFIRMED') return booking;
 
+    // CAPACITY VALIDATION (Final check before confirmation)
+    const bookedStats = await Booking.aggregate([
+      { $match: { event: event._id, status: { $in: ['CONFIRMED', 'CHECKED_IN'] } } },
+      { $group: { _id: null, total: { $sum: "$quantity" } } }
+    ]);
+    const totalBooked = bookedStats.length > 0 ? bookedStats[0].total : 0;
+
+    const requestedQty = quantity || 1;
+    if (totalBooked + requestedQty > event.capacity) {
+      throw new Error(`Sold out! The event capacity has been reached.`);
+    }
+
+    // Check specific ticket type capacity
+    const ticket = event.ticketTypes.find(t => t.name === (ticketType || 'REGULAR'));
+    if (ticket && ticket.capacity) {
+      const typeBookedStats = await Booking.aggregate([
+        { $match: { event: event._id, ticketType: ticket.name, status: { $in: ['CONFIRMED', 'CHECKED_IN'] } } },
+        { $group: { _id: null, total: { $sum: "$quantity" } } }
+      ]);
+      const typeBooked = typeBookedStats.length > 0 ? typeBookedStats[0].total : 0;
+      if (typeBooked + requestedQty > ticket.capacity) {
+        throw new Error(`This ticket tier (${ticket.name}) is sold out.`);
+      }
+    }
+
+    let isNewBooking = false;
     if (booking) {
       if (booking.status === 'CONFIRMED') return booking;
 
@@ -161,7 +187,72 @@ const bookingService = {
 
     booking.status = 'CANCELLED';
     // ✅ Save booking AFTER paymentStatus is finalized — so email reads correct value
+    // ✅ Save booking AFTER paymentStatus is finalized — so email reads correct value
     await booking.save();
+
+    // Check Waitlist: Hybrid Priority Approach
+    (async () => {
+      try {
+        const Waitlist = require('../../models/Waitlist');
+        // 1. Find the first person in line
+        const nextInLine = await Waitlist.findOne({ event: booking.event, status: 'WAITING' }).sort({ createdAt: 1 }).populate('user');
+        
+        if (nextInLine) {
+          const event = await Event.findById(booking.event);
+          
+          // Helper to notify a user
+          const sendSpotNotification = async (userId, eventTitle, isExclusive = false) => {
+            const urgencyMsg = isExclusive 
+              ? `You have an <b>exclusive 5-minute window</b> to grab this spot!` 
+              : `It's first-come, first-served! ⚡`;
+
+            await notificationService.createNotification({
+              recipient: userId,
+              title: 'Spot Available! 🎟️',
+              message: `Good news! A spot has opened up for "<b>${eventTitle}</b>". ${urgencyMsg} Book now before it's gone!`,
+              type: 'TICKET_BOOKED',
+              eventId: event._id
+            });
+          };
+
+          // 2. Notify the first person immediately (Exclusive window)
+          await sendSpotNotification(nextInLine.user._id, event.title, true);
+          nextInLine.status = 'NOTIFIED';
+          await nextInLine.save();
+
+          // 3. Wait 5 minutes, then notify everyone else if spots are still open
+          setTimeout(async () => {
+            try {
+              // Re-check capacity
+              const currentEvent = await Event.findById(booking.event);
+              const bookedStats = await Booking.aggregate([
+                { $match: { event: currentEvent._id, status: { $in: ['CONFIRMED', 'CHECKED_IN'] } } },
+                { $group: { _id: null, total: { $sum: "$quantity" } } }
+              ]);
+              const totalBooked = bookedStats.length > 0 ? bookedStats[0].total : 0;
+
+              if (totalBooked < currentEvent.capacity) {
+                // Spots still available! Notify the rest of the waitlist
+                const remainingWaitlist = await Waitlist.find({ 
+                  event: currentEvent._id, 
+                  status: 'WAITING' 
+                }).populate('user');
+
+                for (const entry of remainingWaitlist) {
+                  await sendSpotNotification(entry.user._id, currentEvent.title, false);
+                  entry.status = 'NOTIFIED';
+                  await entry.save();
+                }
+              }
+            } catch (err) {
+              console.error('Waitlist secondary notification failed:', err.message);
+            }
+          }, 5 * 60 * 1000); // 5 minutes
+        }
+      } catch (err) {
+        console.error('Waitlist primary notification failed:', err.message);
+      }
+    })();
 
     // Deduct Loyalty Points on cancellation
     await User.findByIdAndUpdate(user.id, { $inc: { loyaltyPoints: -100 } });

@@ -22,7 +22,7 @@ exports.stripeWebhook = async (req, res) => {
   // 1. Success case: Checkout Session Completed
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const { eventId, userId, ticketType, quantity } = session.metadata;
+    const { eventId, userId, ticketType, quantity, promoCode } = session.metadata;
 
     try {
       await bookingService.bookEvent({
@@ -33,6 +33,15 @@ exports.stripeWebhook = async (req, res) => {
         stripePaymentId: session.id,
         paymentIntentId: session.payment_intent // Capture the PI ID
       }, { id: userId, role: 'USER' });
+
+      // Handle Promo Code usage increment
+      if (promoCode) {
+        const PromoCode = require('../../models/PromoCode');
+        await PromoCode.findOneAndUpdate(
+          { code: promoCode.toUpperCase(), isActive: true },
+          { $inc: { usageCount: 1 } }
+        );
+      }
     } catch (e) {
       console.error('❌ Webhook: Booking error -', e.message);
     }

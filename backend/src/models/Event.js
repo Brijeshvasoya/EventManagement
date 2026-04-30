@@ -10,7 +10,8 @@ const eventSchema = new mongoose.Schema({
   status: { type: String, enum: ['UPCOMING', 'COMPLETED', 'CANCELLED'], default: 'UPCOMING' },
   ticketTypes: [{ name: String, price: Number, capacity: Number }],
   organizer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-  capacity: { type: Number, required: true, default: 100 }
+  capacity: { type: Number, required: true, default: 100 },
+  features: [{ type: String }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Event', eventSchema);

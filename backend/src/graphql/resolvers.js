@@ -77,6 +77,25 @@ const resolvers = {
           createdAt: inv.createdAt.toISOString(),
         }))
       };
+    },
+    validatePromoCode: async (_, { code, eventId }) => {
+      const PromoCode = require('../models/PromoCode');
+      const promo = await PromoCode.findOne({
+        code: code.toUpperCase(),
+        isActive: true,
+        expiresAt: { $gte: new Date() }
+      });
+
+      if (!promo) throw new Error('Invalid or expired promo code');
+      if (promo.usageCount >= promo.usageLimit) throw new Error('Promo code usage limit reached');
+      if (promo.eventId && promo.eventId.toString() !== eventId) throw new Error('This code is not valid for this event');
+
+      return promo;
+    },
+    myPromoCodes: async (_, __, { user }) => {
+      if (!user || user.role !== 'ORGANIZER') throw new Error('Unauthorized');
+      const PromoCode = require('../models/PromoCode');
+      return await PromoCode.find({ organizer: user.id }).sort({ createdAt: -1 });
     }
   },
   Mutation: {
@@ -85,7 +104,7 @@ const resolvers = {
     createEvent: (_, { input }, { user }) => eventService.createEvent(input, user),
     bookEvent: (_, args, { user }) => bookingService.bookEvent(args, user),
     cancelBooking: (_, { bookingId }, { user }) => bookingService.cancelBooking(bookingId, user),
-    createCheckoutSession: (_, { eventId, ticketType, quantity }, { user }) => stripeService.createCheckoutSession(eventId, ticketType, quantity, user),
+    createCheckoutSession: (_, { eventId, ticketType, quantity, promoCode }, { user }) => stripeService.createCheckoutSession(eventId, ticketType, quantity, user, promoCode),
     createPlanCheckoutSession: (_, { planId }, { user }) => stripeService.createPlanCheckoutSession(planId, user),
     confirmPlanPurchase: (_, { sessionId, planId }, { user }) => stripeService.confirmPlanPurchase(sessionId, planId, user),
     updateEvent: (_, { id, input }, { user }) => eventService.updateEvent(id, input, user),
@@ -174,30 +193,30 @@ const resolvers = {
     logout: () => true,
     requestPayout: async (_, { amount }, { user }) => {
       if (!user || user.role !== 'ORGANIZER') throw new GraphQLError('Unauthorized');
-      
+
       const User = require('../models/User');
       const fullUser = await User.findById(user.id);
-      
+
       // Calculate available payout on the fly to ensure accuracy
       const Booking = require('../models/Booking');
       const Event = require('../models/Event');
       const Payout = require('../models/Payout');
-      
+
       const events = await Event.find({ organizer: user.id });
       const eventIds = events.map(e => e._id);
-      
+
       const bookings = await Booking.aggregate([
         { $match: { event: { $in: eventIds }, paymentStatus: 'PAID', status: { $in: ['CONFIRMED', 'CHECKED_IN'] } } },
         { $group: { _id: null, total: { $sum: "$amountPaid" } } }
       ]);
-      
+
       const totalRevenue = bookings.length > 0 ? bookings[0].total : 0;
-      
+
       const payouts = await Payout.aggregate([
         { $match: { organizer: user.id, status: { $in: ['COMPLETED', 'PENDING'] } } },
         { $group: { _id: null, total: { $sum: "$amount" } } }
       ]);
-      
+
       const totalWithdrawnAndPending = payouts.length > 0 ? payouts[0].total : 0;
       const availablePayout = Math.max(0, (totalRevenue * 0.9) - totalWithdrawnAndPending);
 
@@ -211,10 +230,10 @@ const resolvers = {
     },
     approvePayout: async (_, { payoutId }, { user }) => {
       if (!user || user.role !== 'SUPER_ADMIN') throw new GraphQLError('Unauthorized');
-      
+
       const Payout = require('../models/Payout');
       const User = require('../models/User');
-      
+
       const payout = await Payout.findById(payoutId);
       if (!payout) throw new GraphQLError('Payout not found');
       if (payout.status === 'COMPLETED') throw new GraphQLError('Payout already completed');
@@ -243,6 +262,45 @@ const resolvers = {
       );
       return updatedUser;
     },
+    joinWaitlist: async (_, { eventId }, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      const Waitlist = require('../models/Waitlist');
+      const Event = require('../models/Event');
+
+      const event = await Event.findById(eventId);
+      if (!event) throw new GraphQLError('Event not found');
+
+      const existing = await Waitlist.findOne({ event: eventId, user: user.id });
+      if (existing) throw new GraphQLError('You are already on the waitlist for this event');
+
+      await Waitlist.create({ event: eventId, user: user.id });
+      return true;
+    },
+    createPromoCode: async (_, { input }, { user }) => {
+      if (!user || user.role !== 'ORGANIZER') throw new Error('Unauthorized');
+      const PromoCode = require('../models/PromoCode');
+      return await PromoCode.create({ ...input, organizer: user.id });
+    },
+    updatePromoCode: async (_, { id, input }, { user }) => {
+      if (!user || user.role !== 'ORGANIZER') throw new Error('Unauthorized');
+      const PromoCode = require('../models/PromoCode');
+      const promo = await PromoCode.findOne({ _id: id, organizer: user.id });
+      if (!promo) throw new Error('Promo code not found or unauthorized');
+      return await PromoCode.findByIdAndUpdate(id, input, { new: true });
+    },
+    deletePromoCode: async (_, { id }, { user }) => {
+      if (!user || user.role !== 'ORGANIZER') throw new Error('Unauthorized');
+      const PromoCode = require('../models/PromoCode');
+      const result = await PromoCode.deleteOne({ _id: id, organizer: user.id });
+      return result.deletedCount > 0;
+    }
+  },
+  PromoCode: {
+    event: async (parent) => {
+      if (!parent.eventId) return null;
+      const Event = require('../models/Event');
+      return await Event.findById(parent.eventId);
+    }
   },
   Feedback: {
     booking: (parent, _, { loaders }) => loaders.bookingLoader.load(parent.booking.toString()),
@@ -277,10 +335,16 @@ const resolvers = {
       if (!user) return false;
       return bookingService.checkIfBooked(parent.id, user.id);
     },
+    isOnWaitlist: async (parent, _, { user }) => {
+      if (!user) return false;
+      const Waitlist = require('../models/Waitlist');
+      const entry = await Waitlist.findOne({ event: parent.id, user: user.id });
+      return !!entry;
+    },
     bookedCount: async (parent) => {
       const Booking = require('../models/Booking');
       const stats = await Booking.aggregate([
-        { $match: { event: parent._id || parent.id, status: 'CONFIRMED' } },
+        { $match: { event: parent._id || parent.id, status: { $in: ['CONFIRMED', 'CHECKED_IN'] } } },
         { $group: { _id: null, total: { $sum: "$quantity" } } }
       ]);
       return stats.length > 0 ? stats[0].total : 0;
@@ -291,6 +355,10 @@ const resolvers = {
     },
     vendors: async (parent) => {
       return await Vendor.find({ events: parent.id });
+    },
+    feedbacks: async (parent) => {
+      const Feedback = require('../models/Feedback');
+      return await Feedback.find({ event: parent.id }).sort({ createdAt: -1 });
     }
   },
   Booking: {
@@ -375,25 +443,25 @@ const resolvers = {
         const Booking = require('../models/Booking');
         const Event = require('../models/Event');
         const Payout = require('../models/Payout');
-        
+
         const organizerId = parent._id || parent.id;
         const events = await Event.find({ organizer: organizerId });
         const eventIds = events.map(e => e._id);
-        
+
         const bookings = await Booking.aggregate([
           { $match: { event: { $in: eventIds }, paymentStatus: 'PAID', status: { $in: ['CONFIRMED', 'CHECKED_IN'] } } },
           { $group: { _id: null, total: { $sum: "$amountPaid" } } }
         ]);
-        
+
         const totalRevenue = bookings.length > 0 ? bookings[0].total : 0;
-        
+
         const payouts = await Payout.aggregate([
           { $match: { organizer: organizerId, status: { $in: ['COMPLETED', 'PENDING'] } } },
           { $group: { _id: null, total: { $sum: "$amount" } } }
         ]);
-        
+
         const totalWithdrawnAndPending = payouts.length > 0 ? payouts[0].total : 0;
-        
+
         const available = (totalRevenue * 0.9) - totalWithdrawnAndPending;
         return Math.max(0, available);
       } catch (e) {

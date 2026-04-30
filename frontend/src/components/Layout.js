@@ -15,7 +15,8 @@ import {
   CalendarOutlined,
   DollarCircleOutlined,
   ScanOutlined,
-  CreditCardOutlined
+  CreditCardOutlined,
+  RocketOutlined
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -69,6 +70,7 @@ export default function AppLayout({ children }) {
       ...(user?.role === 'ORGANIZER' || user?.role === 'ADMIN' ? [
         { key: '/my-events', icon: <CalendarOutlined />, label: 'My Events' },
         { key: '/transactions', icon: <DollarCircleOutlined />, label: 'Transactions' },
+        { key: '/promos', icon: <RocketOutlined />, label: 'Promo Codes' },
         { key: '/events/create', icon: <PlusCircleOutlined />, label: 'Create Event' },
         { key: '/vendors', icon: <ShopOutlined />, label: 'Vendors' },
         { key: '/verify', icon: <ScanOutlined />, label: 'Scan Ticket' },
