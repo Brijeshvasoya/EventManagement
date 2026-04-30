@@ -65,10 +65,12 @@ export default function AppLayout({ children }) {
     menuItems = [
       { key: '/dashboard', icon: <AppstoreOutlined />, label: 'Dashboard' },
       ...(!user || (user.role !== 'ORGANIZER' && user.role !== 'ADMIN') ? [
-        { key: '/browse', icon: <GlobalOutlined />, label: 'Browse Events' }
+        { key: '/browse', icon: <GlobalOutlined />, label: 'Browse Events' },
+        ...(user ? [{ key: '/calendar', icon: <CalendarOutlined />, label: 'Calendar' }] : [])
       ] : []),
       ...(user?.role === 'ORGANIZER' || user?.role === 'ADMIN' ? [
         { key: '/my-events', icon: <CalendarOutlined />, label: 'My Events' },
+        { key: '/calendar', icon: <CalendarOutlined />, label: 'Calendar' },
         { key: '/transactions', icon: <DollarCircleOutlined />, label: 'Transactions' },
         { key: '/promos', icon: <RocketOutlined />, label: 'Promo Codes' },
         { key: '/events/create', icon: <PlusCircleOutlined />, label: 'Create Event' },

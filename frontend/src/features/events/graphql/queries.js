@@ -51,8 +51,8 @@ export const BOOK_EVENT = gql`
   }
 `;
 export const CREATE_CHECKOUT_SESSION = gql`
-  mutation CreateCheckoutSession($eventId: ID!, $ticketType: String!, $quantity: Int!) {
-    createCheckoutSession(eventId: $eventId, ticketType: $ticketType, quantity: $quantity)
+  mutation CreateCheckoutSession($eventId: ID!, $ticketType: String!, $quantity: Int!, $promoCode: String) {
+    createCheckoutSession(eventId: $eventId, ticketType: $ticketType, quantity: $quantity, promoCode: $promoCode)
   }
 `;
 export const GET_MY_ANALYTICS = gql`
@@ -89,7 +89,7 @@ export const UPDATE_PROFILE = gql`
 export const GET_EVENT_DETAILS = gql`
   query GetEventDetails($id: ID!) {
     event(id: $id) {
-      id title description date location capacity imageUrl eventType status bookedCount isOnWaitlist
+      id title description date location capacity imageUrl eventType status bookedCount isOnWaitlist waitlistCount
       organizer { id name email averageRating }
       ticketTypes { name price capacity }
       attendees { id user { id name email } quantity amountPaid ticketType status createdAt }

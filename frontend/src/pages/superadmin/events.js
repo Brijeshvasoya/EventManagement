@@ -31,7 +31,7 @@ export default function SuperAdminEvents() {
   if (!user || user.role !== 'SUPER_ADMIN') return null;
 
   const events = (data?.events || []).filter(e => {
-    const matchesSearch = e.title.toLowerCase().includes(searchText.toLowerCase()) || 
+    const matchesSearch = e.title.toLowerCase().includes(searchText.toLowerCase()) ||
       e.organizer?.name?.toLowerCase().includes(searchText.toLowerCase());
     const matchesType = typeFilter === 'ALL' || e.eventType === typeFilter;
     return matchesSearch && matchesType;
@@ -113,7 +113,7 @@ export default function SuperAdminEvents() {
           </Space>
         </div>
 
-        <Card bordered={false} style={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }} bodyStyle={{ padding: 0 }}>
+        <Card bordered={false} style={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }} styles={{ body: { padding: 0 } }}>
           <Table
             columns={columns}
             dataSource={events}

@@ -283,7 +283,7 @@ export default function Dashboard() {
               </div>
             </Card>
 
-            <Card title={<span style={{ fontWeight: 800, fontSize: '1.2rem', color: '#1B2A4E' }}>Top Performing Events</span>} bordered={false} style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }} bodyStyle={{ padding: '0 24px 24px 24px' }}>
+            <Card title={<span style={{ fontWeight: 800, fontSize: '1.2rem', color: '#1B2A4E' }}>Top Performing Events</span>} bordered={false} style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }} styles={{ body: { padding: '0 24px 24px 24px' } }}>
               <List
                 dataSource={topEvents}
                 renderItem={(item, i) => (

@@ -141,7 +141,7 @@ export default function SuperAdmin() {
           </Col>
         </Row>
 
-        <Card bordered={false} style={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }} bodyStyle={{ padding: 0 }}>
+        <Card bordered={false} style={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }} styles={{ body: { padding: 0 } }}>
           <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
             <Title level={4} style={{ margin: 0, fontWeight: 700 }}>System Users</Title>
             <Space size="middle" style={{ flexWrap: 'wrap' }}>

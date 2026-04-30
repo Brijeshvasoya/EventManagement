@@ -550,7 +550,7 @@ export default function EventDetailsPage() {
                   boxShadow: '0 20px 40px rgba(0,0,0,0.06)',
                   overflow: 'hidden',
                   background: 'white'
-                }} bodyStyle={{ padding: 0 }}>
+                }} styles={{ body: { padding: 0 } }}>
                   <div style={{ padding: '32px' }}>
                     <AntTitle level={4} style={{ margin: 0, fontWeight: 800 }}>Tickets</AntTitle>
                     {!isBooked && <p style={{ color: '#64748b', marginBottom: '24px' }}>Choose your tier and join the experience</p>}
@@ -766,14 +766,18 @@ export default function EventDetailsPage() {
                       </div>
                       <Progress percent={occupancyRate} strokeColor={{ '0%': '#6366f1', '100%': '#a855f7' }} showInfo={false} />
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                       <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '16px', textAlign: 'center' }}>
                         <AntText type="secondary" style={{ fontSize: '11px', textTransform: 'uppercase' }}>Tickets Sold</AntText>
                         <div style={{ fontSize: '1.2rem', fontWeight: 900 }}>{ticketsSold}</div>
                       </div>
                       <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '16px', textAlign: 'center' }}>
-                        <AntText type="secondary" style={{ fontSize: '11px', textTransform: 'uppercase' }}>Net Revenue</AntText>
-                        <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#10b981' }}>₹{totalRevenue.toLocaleString()}</div>
+                        <AntText type="secondary" style={{ fontSize: '11px', textTransform: 'uppercase' }}>Waitlist</AntText>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#f59e0b' }}>{event.waitlistCount || 0}</div>
+                      </div>
+                      <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '16px', textAlign: 'center' }}>
+                        <AntText type="secondary" style={{ fontSize: '11px', textTransform: 'uppercase' }}>Revenue</AntText>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#10b981' }}>₹{totalRevenue >= 1000 ? (totalRevenue / 1000).toFixed(1) + 'k' : totalRevenue}</div>
                       </div>
                     </div>
                     <Button block icon={<EditOutlined />} onClick={handleEditEvent} style={{ borderRadius: '12px', height: '44px', fontWeight: 600 }}>Update Event</Button>
@@ -785,7 +789,7 @@ export default function EventDetailsPage() {
               )}
 
               {/* MAP CARD */}
-              <Card style={{ borderRadius: '32px', marginTop: '24px', border: 'none', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.04)' }} bodyStyle={{ padding: 0 }}>
+              <Card style={{ borderRadius: '32px', marginTop: '24px', border: 'none', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.04)' }} styles={{ body: { padding: 0 } }}>
                 <div style={{ height: '240px' }}>
                   <iframe
                     width="100%"

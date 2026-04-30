@@ -39,7 +39,7 @@ export default function SuperAdminTickets() {
       organizerName: event.organizer?.name || 'Unknown'
     }))
   ).filter(t => {
-    const matchesSearch = t.eventTitle.toLowerCase().includes(searchText.toLowerCase()) || 
+    const matchesSearch = t.eventTitle.toLowerCase().includes(searchText.toLowerCase()) ||
       t.user?.name?.toLowerCase().includes(searchText.toLowerCase()) ||
       t.user?.email?.toLowerCase().includes(searchText.toLowerCase());
     const matchesStatus = statusFilter === 'ALL' || t.status === statusFilter;
@@ -153,7 +153,7 @@ export default function SuperAdminTickets() {
           </Space>
         </div>
 
-        <Card bordered={false} style={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }} bodyStyle={{ padding: 0 }}>
+        <Card bordered={false} style={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }} styles={{ body: { padding: 0 } }}>
           <Table
             columns={columns}
             dataSource={allTickets}

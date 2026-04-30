@@ -5,12 +5,12 @@ import { UserOutlined, SettingOutlined, BellOutlined, CheckCircleFilled, CheckOu
 import { GET_MY_NOTIFICATIONS, MARK_NOTIFICATION_AS_READ, MARK_ALL_NOTIFICATIONS_AS_READ, UPDATE_PROFILE, GET_ME, NOTIFICATION_SUBSCRIPTION, UNREAD_NOTIFICATION_COUNT, GET_MY_BOOKINGS } from '@/features/events/graphql/queries';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
-
-const { Text: AntText } = Typography;
+import { useRouter } from 'next/router';
 
 export const GlobalActionsContext = createContext({});
 
 export function GlobalActionsProvider({ children }) {
+  const router = useRouter();
   const { user, setUser } = useAuth();
 
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
@@ -132,7 +132,7 @@ export function GlobalActionsProvider({ children }) {
     } else if (item.booking) {
       router.push('/dashboard');
     }
-    
+
     setIsDrawerVisible(false);
   };
 

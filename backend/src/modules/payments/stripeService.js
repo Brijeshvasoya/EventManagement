@@ -37,7 +37,7 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user, prom
     throw new Error(`This ticket tier is sold out! Only ${Math.max(0, ticket.capacity - typeBooked)} tickets left in ${ticketType}.`);
   }
 
-  let finalPrice = ticket.price;
+  let totalAmount = ticket.price * quantity;
   let appliedPromoId = null;
 
   if (promoCode) {
@@ -50,9 +50,9 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user, prom
 
     if (promo && promo.usageCount < promo.usageLimit && (!promo.eventId || promo.eventId.toString() === eventId)) {
       if (promo.discountType === 'PERCENTAGE') {
-        finalPrice = ticket.price * (1 - promo.discountValue / 100);
+        totalAmount = totalAmount * (1 - promo.discountValue / 100);
       } else {
-        finalPrice = Math.max(0, ticket.price - promo.discountValue);
+        totalAmount = Math.max(0, totalAmount - promo.discountValue);
       }
       appliedPromoId = promo._id;
     }
@@ -63,14 +63,14 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user, prom
       payment_method_types: ['card'],
       line_items: [{
         price_data: {
-          currency: 'usd',
+          currency: 'inr',
           product_data: {
-            name: `${event.title} - ${ticketType}`,
-            description: `Quantity: ${quantity} ticket(s) ${promoCode ? `(Promo: ${promoCode})` : ''}`
+            name: `${event.title} - ${ticketType} (x${quantity})`,
+            description: `Promo Applied: ${promoCode || 'None'}`
           },
-          unit_amount: Math.round(finalPrice * 100)
+          unit_amount: Math.round(totalAmount * 100)
         },
-        quantity: quantity,
+        quantity: 1,
       }],
       mode: 'payment',
       customer_email: user.email,
@@ -86,7 +86,7 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user, prom
       user: user.id,
       ticketType,
       quantity,
-      amountPaid: finalPrice * quantity,
+      amountPaid: totalAmount,
       stripePaymentId: session.id,
       status: 'PENDING',
       paymentStatus: 'PENDING'

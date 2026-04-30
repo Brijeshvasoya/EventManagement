@@ -341,6 +341,10 @@ const resolvers = {
       const entry = await Waitlist.findOne({ event: parent.id, user: user.id });
       return !!entry;
     },
+    waitlistCount: async (parent) => {
+      const Waitlist = require('../models/Waitlist');
+      return Waitlist.countDocuments({ event: parent._id || parent.id });
+    },
     bookedCount: async (parent) => {
       const Booking = require('../models/Booking');
       const stats = await Booking.aggregate([
