@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Spin, Card, Empty, Button, Tag, Divider, Modal, Form, Input, Typography, Avatar, Drawer, Badge, List, Progress, Space } from 'antd';
+import { Spin, Card, Empty, Button, Tag, Divider, Modal, Form, Input, Typography, Avatar, Drawer, Badge, List, Progress, Space, Select } from 'antd';
 import { EnvironmentOutlined, CalendarOutlined, DownloadOutlined, QrcodeOutlined, CrownOutlined, CheckCircleFilled, UserOutlined, MailOutlined, SettingOutlined, AppstoreOutlined, ArrowRightOutlined, EyeOutlined, BellOutlined, CheckOutlined, RocketOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
@@ -30,6 +30,7 @@ export default function Dashboard() {
   const [activeBooking, setActiveBooking] = useState(null);
   const [isQRModalVisible, setIsQRModalVisible] = useState(false);
   const [isRewardsModalVisible, setIsRewardsModalVisible] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('Hosted');
 
   const { refetchGlobalNotifications } = useContext(GlobalActionsContext);
 
@@ -492,14 +493,17 @@ export default function Dashboard() {
 
           // Calculate dynamic popular event categories
           const catCount = {};
-          const totalEvents = myEventsData?.myEvents?.length || 1;
-          myEventsData?.myEvents?.forEach(e => {
-            const cat = e.category || 'General';
+          const targetEvents = categoryFilter === 'Hosted' 
+            ? (myEventsData?.myEvents || []) 
+            : (bookingData?.myBookings?.map(b => b.event) || []);
+          const totalEvents = targetEvents.length || 1;
+          targetEvents.forEach(e => {
+            const cat = e?.eventType || 'General';
             catCount[cat] = (catCount[cat] || 0) + 1;
           });
           const sortedCats = Object.entries(catCount).sort((a, b) => b[1] - a[1]);
-          const topCat1 = sortedCats[0] || ['Music', 0];
-          const topCat2 = sortedCats[1] || ['Sports', 0];
+          const topCat1 = sortedCats[0] || ['N/A', 0];
+          const topCat2 = sortedCats[1] || ['N/A', 0];
 
           return (
             <div className="grid-cols-main" style={{ gap: '24px' }}>
@@ -650,7 +654,17 @@ export default function Dashboard() {
                 <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Event Category Breakdown</h3>
-                    <Tag style={{ borderRadius: '100px', border: 'none', background: '#F3F4F6', color: '#4B5563', padding: '4px 12px', fontWeight: 600 }}>Hosted ▼</Tag>
+                    <Select 
+                      value={categoryFilter}
+                      onChange={setCategoryFilter}
+                      variant="borderless"
+                      style={{ background: '#F3F4F6', borderRadius: '100px', fontWeight: 600, minWidth: '100px' }}
+                      dropdownStyle={{ borderRadius: '12px' }}
+                      options={[
+                        { value: 'Hosted', label: 'Hosted' },
+                        { value: 'Attended', label: 'Attended' }
+                      ]}
+                    />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     <div>
