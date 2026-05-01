@@ -201,28 +201,24 @@ export default function EventDetailsPage() {
     router.push(`/events/create?id=${event.id}`);
   };
 
-  const handleShare = () => {
-    // Shared via dropdown menu
-  };
-
   const shareMenuItems = [
     {
       key: 'whatsapp',
       label: 'WhatsApp',
       icon: <WhatsAppOutlined style={{ color: '#25D366' }} />,
-      onClick: () => window.open(`https://wa.me/?text=${encodeURIComponent(`${event.title} - Check it out at: ${window.location.href}`)}`, 'whatsapp-share-dialog', 'width=600,height=600')
+      onClick: () => window.open(`https://wa.me/?text=${encodeURIComponent(`${event.title}\n\n${window.location.href}`)}`, 'whatsapp-share-dialog', 'width=600,height=600')
     },
     {
       key: 'facebook',
       label: 'Facebook',
       icon: <FacebookOutlined style={{ color: '#1877F2' }} />,
-      onClick: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, 'facebook-share-dialog', 'width=626,height=436')
+      onClick: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${event.title}\n\n${window.location.href}`)}`, 'facebook-share-dialog', 'width=626,height=436')
     },
     {
       key: 'linkedin',
       label: 'LinkedIn',
       icon: <LinkedinOutlined style={{ color: '#0A66C2' }} />,
-      onClick: () => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`, 'linkedin-share-dialog', 'width=600,height=600')
+      onClick: () => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${event.title}\n\n${window.location.href}`)}`, 'linkedin-share-dialog', 'width=600,height=600')
     },
     {
       key: 'twitter',
@@ -336,7 +332,7 @@ export default function EventDetailsPage() {
                 style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               />
             </Tooltip>
-            <Dropdown menu={{ items: shareMenuItems }} placement="bottomRight" arrow>
+            <Dropdown menu={{ items: shareMenuItems }} placement="bottomCenter" arrow>
               <Tooltip title="Share Event">
                 <Button
                   shape="circle"

@@ -348,6 +348,14 @@ const bookingService = {
     const eventDate = new Date(parseInt(booking.event.date) || booking.event.date);
     const today = new Date();
 
+    // Verification is only allowed within 2 hours before the event starts
+    const diffInMs = eventDate.getTime() - today.getTime();
+    const diffInHours = diffInMs / (1000 * 60 * 60);
+
+    if (diffInHours > 2) {
+      throw new Error('Access Denied: Ticket verification opens 2 hours before the event starts.');
+    }
+
     // Compare YYYY-MM-DD
     if (eventDate.toDateString() !== today.toDateString()) {
       throw new Error(`Access Denied: This ticket is valid for ${eventDate.toLocaleDateString()}. Verification is only permitted on the scheduled day of the event.`);

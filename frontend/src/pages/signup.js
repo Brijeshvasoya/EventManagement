@@ -21,6 +21,18 @@ export default function Signup() {
   const { login, user } = useAuth();
   const [registerM, { loading }] = useMutation(REGISTER_MUTATION);
   const router = useRouter();
+  const [form] = Form.useForm();
+
+  useEffect(() => {
+    if (router.isReady) {
+      if (router.query.name || router.query.email) {
+        form.setFieldsValue({
+          name: router.query.name || '',
+          email: router.query.email || '',
+        });
+      }
+    }
+  }, [router.isReady, router.query, form]);
 
   useEffect(() => {
     if (user) {
@@ -202,7 +214,7 @@ export default function Signup() {
               <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: 600 }}>Join the ecosystem and start creating.</p>
             </div>
 
-            <Form layout="vertical" onFinish={onFinish} size="large" requiredMark={false} initialValues={{ role: 'USER' }}>
+            <Form form={form} layout="vertical" onFinish={onFinish} size="large" requiredMark={false} initialValues={{ role: 'USER' }}>
               <div className="grid-cols-2" style={{ gap: '16px' }}>
                 <Form.Item label={<span style={{ fontWeight: 700, fontSize: '0.75rem', color: '#94A3B8' }}>FULL NAME</span>} name="name" rules={[{ required: true, message: 'Required' }]}>
                   <Input prefix={<UserOutlined style={{ color: '#94A3B8', marginRight: '8px' }} />} placeholder="Alex Thorne" className="focus-glow" style={{ background: 'white', border: '1px solid #EDEDED', borderRadius: '10px' }} />

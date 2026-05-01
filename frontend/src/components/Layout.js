@@ -50,7 +50,7 @@ export default function AppLayout({ children }) {
   }, [user, loading, router, isPlanExpired]);
 
   if (loading) return null;
-  if (['/login', '/signup', '/forgot-password', '/feedback'].includes(router.pathname) || router.pathname.startsWith('/reset-password') || router.pathname.startsWith('/feedback/')) return <>{children}</>;
+  if (['/', '/login', '/signup', '/forgot-password', '/feedback'].includes(router.pathname) || router.pathname.startsWith('/reset-password') || router.pathname.startsWith('/feedback/')) return <>{children}</>;
 
   let menuItems = [];
   if (user?.role === 'SUPER_ADMIN') {
