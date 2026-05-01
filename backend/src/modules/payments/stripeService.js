@@ -101,12 +101,34 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user, prom
 exports.createPlanCheckoutSession = async (planId, user) => {
   requireAuth(user);
   const APP_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
+  const User = require('../../models/User');
+  const fullUser = await User.findById(user.id).select('planId planExpiresAt isPlanPurchased');
 
-  let amount = 0;
-  let planName = '';
-  if (planId === 'BASIC') { amount = 79900; planName = 'Basic Plan'; }
-  else if (planId === 'PRO') { amount = 249900; planName = 'Pro Plan'; }
-  else throw new Error('Invalid plan');
+  if (planId !== 'BASIC' && planId !== 'PRO') throw new Error('Invalid plan');
+
+  // ── Prorated Upgrade Logic (BASIC → PRO mid-cycle) ──────────────────────
+  const BASIC_PRICE = 799;   // ₹ per month
+  const PRO_PRICE   = 2499;  // ₹ per month
+
+  const isActiveBasic =
+    fullUser?.isPlanPurchased &&
+    fullUser?.planId === 'BASIC' &&
+    fullUser?.planExpiresAt &&
+    new Date(fullUser.planExpiresAt) > new Date();
+
+  let finalAmount = planId === 'PRO' ? PRO_PRICE : BASIC_PRICE; // in ₹
+  let proratedCredit = 0;
+
+  if (planId === 'PRO' && isActiveBasic) {
+    // Days remaining on current Basic plan
+    const msLeft = new Date(fullUser.planExpiresAt) - new Date();
+    const daysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+    proratedCredit = Math.round((BASIC_PRICE / 30) * daysLeft);
+    finalAmount = Math.max(0, PRO_PRICE - proratedCredit);
+  }
+
+  const amountPaise = finalAmount * 100; // convert to paise
+  const planName = planId === 'PRO' ? `Pro Plan${proratedCredit > 0 ? ` (Upgrade — ₹${proratedCredit} credit applied)` : ''}` : 'Basic Plan';
 
   if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock') {
     const session = await stripe.checkout.sessions.create({
@@ -115,43 +137,57 @@ exports.createPlanCheckoutSession = async (planId, user) => {
         price_data: {
           currency: 'inr',
           product_data: { name: planName },
-          unit_amount: amount
+          unit_amount: amountPaise
         },
         quantity: 1,
       }],
       mode: 'payment',
       customer_email: user.email,
-      metadata: { userId: user.id, planId },
-      success_url: `${APP_URL}/billing?success=true&sessionId={CHECKOUT_SESSION_ID}&planId=${planId}`,
+      metadata: { userId: user.id, planId, proratedCredit: proratedCredit.toString() },
+      success_url: `${APP_URL}/billing?success=true&sessionId={CHECKOUT_SESSION_ID}&planId=${planId}&proratedCredit=${proratedCredit}`,
       cancel_url: `${APP_URL}/plans?canceled=true`,
     });
     return session.url;
   }
-  return `${APP_URL}/billing?success=true&sessionId=MOCK_SESSION_${Date.now()}&planId=${planId}`;
+  return `${APP_URL}/billing?success=true&sessionId=MOCK_SESSION_${Date.now()}&planId=${planId}&proratedCredit=${proratedCredit}`;
 };
 
-exports.confirmPlanPurchase = async (sessionId, planId, user) => {
+exports.confirmPlanPurchase = async (sessionId, planId, user, proratedCredit = 0) => {
   requireAuth(user);
   const User = require('../../models/User');
   const fullUser = await User.findById(user.id);
   if (!fullUser) throw new Error('User not found');
 
-  if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock') {
-    // In a real app, we might verify sessionId with Stripe API
+  const PlanInvoice = require('../../models/PlanInvoice');
+  const startDate = new Date();
+
+  // ── Upgrade (BASIC → PRO mid-cycle): immediate plan switch ───────────────
+  const isUpgrade = fullUser.planId === 'BASIC' && planId === 'PRO' &&
+    fullUser.isPlanPurchased && fullUser.planExpiresAt && new Date(fullUser.planExpiresAt) > new Date();
+
+  let endDate;
+  if (isUpgrade) {
+    // Pro cycle starts now and runs 30 days from today
+    endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  } else {
+    endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
   }
 
   fullUser.isPlanPurchased = true;
   fullUser.planId = planId;
-  const startDate = new Date();
-  const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
   fullUser.planExpiresAt = endDate;
+  // Clear any scheduled downgrade if organizer upgraded
+  fullUser.scheduledPlanId = null;
+  fullUser.scheduledDowngradeAt = null;
   await fullUser.save();
 
   // Record the invoice — idempotency check to prevent duplicates
-  const PlanInvoice = require('../../models/PlanInvoice');
   const existing = await PlanInvoice.findOne({ stripeSessionId: sessionId });
   if (!existing) {
-    const amount = planId === 'BASIC' ? 799 : 2499;
+    const BASIC_PRICE = 799;
+    const PRO_PRICE   = 2499;
+    const credit = Number(proratedCredit) || 0;
+    const amount = planId === 'BASIC' ? BASIC_PRICE : Math.max(0, PRO_PRICE - credit);
     await PlanInvoice.create({
       organizer: fullUser._id,
       planId,
@@ -165,7 +201,61 @@ exports.confirmPlanPurchase = async (sessionId, planId, user) => {
   }
 
   const { signToken } = require('../../utils/jwt');
-  const token = signToken({ id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name, isPlanPurchased: fullUser.isPlanPurchased, planId: fullUser.planId, planExpiresAt: fullUser.planExpiresAt });
+  const token = signToken({
+    id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name,
+    isPlanPurchased: fullUser.isPlanPurchased, planId: fullUser.planId,
+    planExpiresAt: fullUser.planExpiresAt,
+    scheduledPlanId: fullUser.scheduledPlanId,
+    scheduledDowngradeAt: fullUser.scheduledDowngradeAt,
+  });
+  return { token, user: fullUser };
+};
+
+// ── Scheduled Downgrade (PRO → BASIC end-of-cycle) ───────────────────────
+exports.scheduleDowngrade = async (targetPlanId, user) => {
+  requireAuth(user);
+  if (targetPlanId !== 'BASIC') throw new Error('Downgrade target must be BASIC');
+  const User = require('../../models/User');
+  const fullUser = await User.findById(user.id);
+  if (!fullUser) throw new Error('User not found');
+  if (fullUser.planId !== 'PRO') throw new Error('You are not on the Pro plan');
+  const isPlanActive = fullUser.isPlanPurchased && fullUser.planExpiresAt && new Date(fullUser.planExpiresAt) > new Date();
+  if (!isPlanActive) throw new Error('No active plan found');
+
+  fullUser.scheduledPlanId = 'BASIC';
+  fullUser.scheduledDowngradeAt = fullUser.planExpiresAt; // activate at cycle end
+  await fullUser.save();
+
+  const { signToken } = require('../../utils/jwt');
+  const token = signToken({
+    id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name,
+    isPlanPurchased: fullUser.isPlanPurchased, planId: fullUser.planId,
+    planExpiresAt: fullUser.planExpiresAt,
+    scheduledPlanId: fullUser.scheduledPlanId,
+    scheduledDowngradeAt: fullUser.scheduledDowngradeAt,
+  });
+  return { token, user: fullUser };
+};
+
+// ── Cancel Scheduled Downgrade ────────────────────────────────────────────
+exports.cancelScheduledDowngrade = async (user) => {
+  requireAuth(user);
+  const User = require('../../models/User');
+  const fullUser = await User.findById(user.id);
+  if (!fullUser) throw new Error('User not found');
+
+  fullUser.scheduledPlanId = null;
+  fullUser.scheduledDowngradeAt = null;
+  await fullUser.save();
+
+  const { signToken } = require('../../utils/jwt');
+  const token = signToken({
+    id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name,
+    isPlanPurchased: fullUser.isPlanPurchased, planId: fullUser.planId,
+    planExpiresAt: fullUser.planExpiresAt,
+    scheduledPlanId: null,
+    scheduledDowngradeAt: null,
+  });
   return { token, user: fullUser };
 };
 

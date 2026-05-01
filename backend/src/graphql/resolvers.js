@@ -61,10 +61,25 @@ const resolvers = {
       const isPlanActive = fullUser.isPlanPurchased &&
         fullUser.planExpiresAt &&
         new Date(fullUser.planExpiresAt) > new Date();
+
+      // Prorated upgrade preview: if user is on BASIC, calculate how much they'd pay to upgrade to PRO
+      const BASIC_PRICE = 799;
+      const PRO_PRICE   = 2499;
+      let proratedUpgradeAmount = PRO_PRICE; // default full price
+      if (fullUser.planId === 'BASIC' && isPlanActive && fullUser.planExpiresAt) {
+        const msLeft = new Date(fullUser.planExpiresAt) - new Date();
+        const daysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+        const credit = Math.round((BASIC_PRICE / 30) * daysLeft);
+        proratedUpgradeAmount = Math.max(0, PRO_PRICE - credit);
+      }
+
       return {
         currentPlan: fullUser.planId || null,
         planExpiresAt: fullUser.planExpiresAt ? fullUser.planExpiresAt.toISOString() : null,
         isPlanActive: !!isPlanActive,
+        scheduledPlanId: fullUser.scheduledPlanId || null,
+        scheduledDowngradeAt: fullUser.scheduledDowngradeAt ? fullUser.scheduledDowngradeAt.toISOString() : null,
+        proratedUpgradeAmount,
         invoices: invoices.map(inv => ({
           id: inv._id.toString(),
           planId: inv.planId,
@@ -106,7 +121,9 @@ const resolvers = {
     cancelBooking: (_, { bookingId }, { user }) => bookingService.cancelBooking(bookingId, user),
     createCheckoutSession: (_, { eventId, ticketType, quantity, promoCode }, { user }) => stripeService.createCheckoutSession(eventId, ticketType, quantity, user, promoCode),
     createPlanCheckoutSession: (_, { planId }, { user }) => stripeService.createPlanCheckoutSession(planId, user),
-    confirmPlanPurchase: (_, { sessionId, planId }, { user }) => stripeService.confirmPlanPurchase(sessionId, planId, user),
+    confirmPlanPurchase: (_, { sessionId, planId, proratedCredit }, { user }) => stripeService.confirmPlanPurchase(sessionId, planId, user, proratedCredit || 0),
+    scheduleDowngrade: (_, { targetPlanId }, { user }) => stripeService.scheduleDowngrade(targetPlanId, user),
+    cancelScheduledDowngrade: (_, __, { user }) => stripeService.cancelScheduledDowngrade(user),
     updateEvent: (_, { id, input }, { user }) => eventService.updateEvent(id, input, user),
     deleteEvent: (_, { id }, { user }) => eventService.deleteEvent(id, user),
     updateProfile: (_, { name, email, currentPassword, newPassword }, { user }) => {

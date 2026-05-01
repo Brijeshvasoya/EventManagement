@@ -14,6 +14,8 @@ const userSchema = new mongoose.Schema({
   isPlanPurchased: { type: Boolean, default: false },
   planId: { type: String },
   planExpiresAt: { type: Date },
+  scheduledPlanId: { type: String, default: null },   // plan to switch at cycle end (for downgrade)
+  scheduledDowngradeAt: { type: Date, default: null }, // when to apply the scheduled plan switch
   stripeAccountId: { type: String },
   stripeOnboardingComplete: { type: Boolean, default: false },
   bankDetails: {

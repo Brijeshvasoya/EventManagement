@@ -1,6 +1,6 @@
 const typeDefs = `#graphql
   type BankDetails { accountHolderName: String accountNumber: String bankName: String ifscCode: String }
-  type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int averageRating: Float numReviews: Int redeemedRewards: [String] isPlanPurchased: Boolean planId: String totalWithdrawn: Float availablePayout: Float bankDetails: BankDetails }
+  type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int averageRating: Float numReviews: Int redeemedRewards: [String] isPlanPurchased: Boolean planId: String scheduledPlanId: String scheduledDowngradeAt: String totalWithdrawn: Float availablePayout: Float bankDetails: BankDetails }
   type TicketType { name: String! price: Float! capacity: Int! }
   type Feedback { id: ID! booking: Booking! event: Event! organizer: User! user: User! rating: Int! comment: String createdAt: String! }
   type Event { id: ID! title: String! description: String! date: String! location: String! capacity: Int! imageUrl: String organizer: User! isBooked: Boolean isOnWaitlist: Boolean waitlistCount: Int eventType: String status: String ticketTypes: [TicketType] bookedCount: Int attendees: [Booking!] vendors: [Vendor!] feedbacks: [Feedback!] features: [String] }
@@ -13,7 +13,7 @@ const typeDefs = `#graphql
   type PublicBookingFeedback { id: ID! eventTitle: String! organizerName: String! status: String! existingRating: Int existingComment: String }
   type Payout { id: ID! organizer: User! amount: Float! status: String! createdAt: String! }
   type PlanInvoice { id: ID! planId: String! amount: Float! currency: String! status: String! stripeSessionId: String planStartDate: String! planEndDate: String! createdAt: String! }
-  type BillingInfo { currentPlan: String planExpiresAt: String isPlanActive: Boolean invoices: [PlanInvoice!]! }
+  type BillingInfo { currentPlan: String planExpiresAt: String isPlanActive: Boolean scheduledPlanId: String scheduledDowngradeAt: String proratedUpgradeAmount: Int invoices: [PlanInvoice!]! }
   type PromoCode { id: ID! code: String! discountType: String! discountValue: Float! expiresAt: String! usageLimit: Int usageCount: Int isActive: Boolean event: Event }
   
   input TicketTypeInput { name: String! price: Float! capacity: Int! }
@@ -50,7 +50,9 @@ const typeDefs = `#graphql
     cancelBooking(bookingId: ID!): Boolean!
     createCheckoutSession(eventId: ID!, ticketType: String!, quantity: Int!, promoCode: String): String!
     createPlanCheckoutSession(planId: String!): String!
-    confirmPlanPurchase(sessionId: String!, planId: String!): AuthPayload!
+    confirmPlanPurchase(sessionId: String!, planId: String!, proratedCredit: Int): AuthPayload!
+    scheduleDowngrade(targetPlanId: String!): AuthPayload!
+    cancelScheduledDowngrade: AuthPayload!
     updateEvent(id: ID!, input: CreateEventInput!): Event!
     deleteEvent(id: ID!): Boolean!
     updateProfile(name: String, email: String, currentPassword: String, newPassword: String): User!

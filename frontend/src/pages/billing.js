@@ -17,6 +17,9 @@ const GET_MY_BILLING = gql`
       currentPlan
       planExpiresAt
       isPlanActive
+      scheduledPlanId
+      scheduledDowngradeAt
+      proratedUpgradeAmount
       invoices {
         id planId amount currency status stripeSessionId
         planStartDate planEndDate createdAt
@@ -26,8 +29,8 @@ const GET_MY_BILLING = gql`
 `;
 
 const CONFIRM_PLAN_PURCHASE = gql`
-  mutation ConfirmPlanPurchase($sessionId: String!, $planId: String!) {
-    confirmPlanPurchase(sessionId: $sessionId, planId: $planId) { token }
+  mutation ConfirmPlanPurchase($sessionId: String!, $planId: String!, $proratedCredit: Int) {
+    confirmPlanPurchase(sessionId: $sessionId, planId: $planId, proratedCredit: $proratedCredit) { token }
   }
 `;
 
@@ -53,12 +56,18 @@ export default function BillingPage() {
 
   useEffect(() => {
     const confirm = async () => {
-      const { success, sessionId, planId } = router.query;
+      const { success, sessionId, planId, proratedCredit } = router.query;
       if (success === 'true' && sessionId && planId) {
         if (confirmCalledRef.current) return;
         confirmCalledRef.current = true;
         try {
-          const { data: d } = await confirmPurchase({ variables: { sessionId, planId } });
+          const { data: d } = await confirmPurchase({
+            variables: {
+              sessionId,
+              planId,
+              proratedCredit: proratedCredit ? parseInt(proratedCredit, 10) : 0
+            }
+          });
           toast.success('Plan purchased successfully! 🚀');
           login(d.confirmPlanPurchase.token);
           router.replace('/billing', undefined, { shallow: true });
@@ -77,6 +86,8 @@ export default function BillingPage() {
   const invoices = billing?.invoices || [];
   const remaining = daysLeft(billing?.planExpiresAt);
   const isActive = billing?.isPlanActive;
+  const scheduledPlanId = billing?.scheduledPlanId;
+  const scheduledDowngradeAt = billing?.scheduledDowngradeAt;
 
   return (
     <>
@@ -151,6 +162,26 @@ export default function BillingPage() {
               {remaining <= 7 && isActive && (
                 <div className="renew-warning">
                   ⚠️ Renew soon to avoid service interruption
+                </div>
+              )}
+
+              {/* Scheduled Downgrade Notice */}
+              {scheduledPlanId === 'BASIC' && scheduledDowngradeAt && (
+                <div style={{
+                  background: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
+                  border: '1px solid rgba(245,158,11,0.3)',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  fontSize: '0.82rem',
+                  color: '#92400e',
+                  fontWeight: 600,
+                  marginBottom: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8
+                }}>
+                  <span>📅</span>
+                  <span>Downgrade to Basic scheduled on <strong>{formatDate(scheduledDowngradeAt)}</strong></span>
                 </div>
               )}
 
