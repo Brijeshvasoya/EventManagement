@@ -910,7 +910,7 @@ export default function Dashboard() {
                 <div style={{ marginTop: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.3rem' }}>Your Event Passes</h3>
-                    <Button type="text" onClick={() => router.push('/my-tickets')} style={{ color: 'rgb(67, 56, 202)', fontWeight: 700 }}>Browse More</Button>
+                    <Button type="text" onClick={() => router.push('/my-tickets')} style={{ color: 'rgb(67, 56, 202)', fontWeight: 700 }}>View All</Button>
                   </div>
 
                   {upcomingBookings.length === 0 ? (
@@ -1084,60 +1084,95 @@ export default function Dashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.2rem' }}>Upcoming Event</h3>
                 {(() => {
-                  if (!featuredBooking) return (
+                  const displayEvent = featuredBooking?.event || allEventsData?.events?.filter(e => e.status !== 'COMPLETED' && new Date(isNaN(Number(e.date)) ? e.date : Number(e.date)) >= now).sort((a, b) => new Date(isNaN(Number(a.date)) ? a.date : Number(a.date)) - new Date(isNaN(Number(b.date)) ? b.date : Number(b.date)))[0];
+
+                  if (!displayEvent) return (
                     <Card style={{ borderRadius: '24px', textAlign: 'center', padding: '40px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-                      <Empty description="No upcoming event passes" />
+                      <Empty description="No upcoming events found" />
                     </Card>
                   );
 
                   const b = featuredBooking;
-                  const e = b.event;
+                  const isBooked = !!b;
 
                   return (
                     <Card styles={{ body: { padding: 0 } }} style={{ borderRadius: '24px', border: 'none', overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}>
-                      <div style={{ height: '200px', background: `url(${e.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover`, position: 'relative' }}>
-                        <Tag style={{ position: 'absolute', top: '20px', left: '20px', background: 'white', color: '#1B2A4E', border: 'none', borderRadius: '100px', fontWeight: 800, padding: '6px 16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>Your Next Entry</Tag>
+                      <div style={{ height: '200px', background: `url(${displayEvent.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover`, position: 'relative' }}>
+                        <Tag style={{ position: 'absolute', top: '20px', left: '20px', background: 'white', color: '#1B2A4E', border: 'none', borderRadius: '100px', fontWeight: 800, padding: '6px 16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                          {isBooked ? 'Your Next Entry' : 'Most Anticipated'}
+                        </Tag>
                       </div>
                       <div style={{ padding: '24px' }}>
-                        <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: '16px', marginBottom: isBooked ? '20px' : '8px', alignItems: 'center' }}>
                           <div style={{ flex: 1 }}>
-                            <h3 style={{ margin: '0 0 4px 0', color: '#1B2A4E', fontSize: '1.4rem', fontWeight: 800 }}>{e.title}</h3>
-                            <div style={{ color: '#94A3B8', fontSize: '0.9rem', fontWeight: 500 }}>{e.location}</div>
+                            <h3 style={{ margin: '0 0 4px 0', color: '#1B2A4E', fontSize: '1.4rem', fontWeight: 800 }}>{displayEvent.title}</h3>
+                            <div style={{ color: '#94A3B8', fontSize: '0.9rem', fontWeight: 500 }}>{displayEvent.location}</div>
                           </div>
-                          <Tag style={{ borderRadius: '100px', border: 'none', background: '#F0FDF4', color: '#10B981', fontWeight: 700, margin: 0 }}>Confirmed</Tag>
+                          {isBooked && <Tag style={{ borderRadius: '100px', border: 'none', background: '#F0FDF4', color: '#10B981', fontWeight: 700, margin: 0 }}>Confirmed</Tag>}
                         </div>
 
-                        <div style={{ background: '#F8FAFB', borderRadius: '20px', padding: '20px', display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
-                          <div style={{ background: 'white', padding: '8px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                            <img src={b.qrCode} style={{ width: '80px', height: '80px', cursor: 'pointer' }} onClick={() => showBigQR(b)} alt="QR" />
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pass Details</div>
-                            <div style={{ fontWeight: 800, color: '#1B2A4E', fontSize: '1.3rem', margin: '2px 0' }}>₹{Number(b.amountPaid).toLocaleString()}</div>
-                            <div style={{ color: '#64748B', fontSize: '0.85rem', fontWeight: 600 }}>{b.ticketType} x {b.quantity}</div>
-                          </div>
-                        </div>
+                        {isBooked ? (
+                          <>
+                            <div style={{ background: '#F8FAFB', borderRadius: '20px', padding: '20px', display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
+                              <div style={{ background: 'white', padding: '8px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                                <img src={b.qrCode} style={{ width: '80px', height: '80px', cursor: 'pointer' }} onClick={() => showBigQR(b)} alt="QR" />
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pass Details</div>
+                                <div style={{ fontWeight: 800, color: '#1B2A4E', fontSize: '1.3rem', margin: '2px 0' }}>₹{Number(b.amountPaid).toLocaleString()}</div>
+                                <div style={{ color: '#64748B', fontSize: '0.85rem', fontWeight: 600 }}>{b.ticketType} x {b.quantity}</div>
+                              </div>
+                            </div>
 
-                        <div style={{ display: 'flex', gap: '12px' }}>
-                          <Button
-                            block
-                            size="large"
-                            icon={<DownloadOutlined />}
-                            onClick={() => downloadTicket(b)}
-                            style={{ height: '50px', borderRadius: '14px', fontWeight: 700, background: '#F8FAFB', border: '1px solid #E2E8F0', color: '#1B2A4E' }}
-                          >
-                            Pass
-                          </Button>
-                          <Button
-                            block
-                            size="large"
-                            icon={<QrcodeOutlined />}
-                            onClick={() => downloadQRCode(b.qrCode, e.title)}
-                            style={{ height: '50px', borderRadius: '14px', fontWeight: 700, background: 'var(--gradient-main)', border: 'none', color: 'white', boxShadow: '0 4px 12px rgba(131, 56, 236, 0.2)' }}
-                          >
-                            QR
-                          </Button>
-                        </div>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                              <Button
+                                block
+                                size="large"
+                                icon={<DownloadOutlined />}
+                                onClick={() => downloadTicket(b)}
+                                style={{ height: '50px', borderRadius: '14px', fontWeight: 700, background: '#F8FAFB', border: '1px solid #E2E8F0', color: '#1B2A4E' }}
+                              >
+                                Pass
+                              </Button>
+                              <Button
+                                block
+                                size="large"
+                                icon={<QrcodeOutlined />}
+                                onClick={() => downloadQRCode(b.qrCode, displayEvent.title)}
+                                style={{ height: '50px', borderRadius: '14px', fontWeight: 700, background: 'var(--gradient-main)', border: 'none', color: 'white', boxShadow: '0 4px 12px rgba(131, 56, 236, 0.2)' }}
+                              >
+                                QR
+                              </Button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <p style={{ color: '#64748B', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>
+                              {displayEvent.description ? displayEvent.description.substring(0, 100) + '...' : `Don't miss out on "${displayEvent.title}". Join us for an unforgettable experience.`}
+                            </p>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1B2A4E', fontWeight: 600, fontSize: '0.9rem', background: '#F8F9FA', padding: '10px 18px', borderRadius: '14px' }}>
+                                <CalendarOutlined style={{ color: '#1B2A4E' }} />
+                                <span>{new Date(isNaN(Number(displayEvent.date)) ? displayEvent.date : Number(displayEvent.date)).toLocaleDateString()}</span>
+                              </div>
+                              <Button
+                                type="primary"
+                                onClick={() => router.push(`/events/${displayEvent.id}`)}
+                                style={{
+                                  background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)',
+                                  borderRadius: '12px',
+                                  fontWeight: 700,
+                                  height: '42px',
+                                  padding: '0 24px',
+                                  border: 'none',
+                                  boxShadow: '0 4px 12px rgba(49, 46, 129, 0.2)'
+                                }}
+                              >
+                                View Details
+                              </Button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </Card>
                   );
