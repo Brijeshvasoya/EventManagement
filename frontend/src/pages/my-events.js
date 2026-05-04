@@ -75,7 +75,12 @@ export default function MyEvents() {
               <div className="hover-bounce premium-event-card" onClick={() => router.push(`/events/${event.id}`)} style={{ cursor: 'pointer', display: 'flex', background: '#FFF', borderRadius: '24px', border: '1px solid #F3F4F6', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', overflow: 'hidden', height: '100%', position: 'relative' }}>
                 <div style={{ width: '180px', flexShrink: 0, background: `url(${event.imageUrl || '/event-placeholder.jpg'}) center/cover`, position: 'relative' }}>
                   <div style={{ position: 'absolute', top: 12, left: 12 }}>
-                    <Badge count={event.status === 'DRAFT' ? 'Draft' : 'Live'} color={event.status === 'DRAFT' ? '#9CA3AF' : '#10B981'} style={{ fontWeight: 800 }} />
+                    {(() => {
+                      if (event.status === 'COMPLETED') return <Badge count="Completed" color="#3B82F6" style={{ fontWeight: 800 }} />;
+                      if (event.status === 'CANCELLED') return <Badge count="Cancelled" color="#EF4444" style={{ fontWeight: 800 }} />;
+                      if (event.status === 'DRAFT') return <Badge count="Draft" color="#9CA3AF" style={{ fontWeight: 800 }} />;
+                      return <Badge count="Live" color="#10B981" style={{ fontWeight: 800 }} />;
+                    })()}
                   </div>
                 </div>
                 <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' }}>

@@ -193,7 +193,7 @@ export default function Browse() {
                                     pointerEvents: 'none'
                                 }} />
 
-                                <div style={{ position: 'absolute', top: '16px', left: '16px', display: 'flex', gap: '8px' }}>
+                                <div style={{ position: 'absolute', top: '16px', left: '16px', display: 'flex', gap: '8px', flexDirection: 'column' }}>
                                     <div style={{
                                         borderRadius: '8px',
                                         fontWeight: '900',
@@ -209,10 +209,55 @@ export default function Browse() {
                                         boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        justifyContent: 'center'
+                                        justifyContent: 'center',
+                                        width: 'fit-content'
                                     }}>
                                         {e?.eventType || 'Public'}
                                     </div>
+                                    {e?.status === 'COMPLETED' && (
+                                        <div style={{
+                                            borderRadius: '8px',
+                                            fontWeight: '900',
+                                            margin: 0,
+                                            backdropFilter: 'blur(10px)',
+                                            background: 'rgba(59, 130, 246, 0.95)',
+                                            color: 'white',
+                                            padding: '5px 12px',
+                                            fontSize: '0.75rem',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '1px',
+                                            lineHeight: 1,
+                                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            width: 'fit-content'
+                                        }}>
+                                            Completed
+                                        </div>
+                                    )}
+                                    {e?.status === 'CANCELLED' && (
+                                        <div style={{
+                                            borderRadius: '8px',
+                                            fontWeight: '900',
+                                            margin: 0,
+                                            backdropFilter: 'blur(10px)',
+                                            background: 'rgba(239, 68, 68, 0.95)',
+                                            color: 'white',
+                                            padding: '5px 12px',
+                                            fontSize: '0.75rem',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '1px',
+                                            lineHeight: 1,
+                                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            width: 'fit-content'
+                                        }}>
+                                            Cancelled
+                                        </div>
+                                    )}
                                 </div>
 
                                 {isBooked && (

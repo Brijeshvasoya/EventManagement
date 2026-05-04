@@ -66,7 +66,10 @@ export default function AppLayout({ children }) {
       { key: '/dashboard', icon: <AppstoreOutlined />, label: 'Dashboard' },
       ...(!user || (user.role !== 'ORGANIZER' && user.role !== 'ADMIN') ? [
         { key: '/browse', icon: <GlobalOutlined />, label: 'Browse Events' },
-        ...(user ? [{ key: '/calendar', icon: <CalendarOutlined />, label: 'Calendar' }] : [])
+        ...(user ? [
+          { key: '/my-tickets', icon: <CreditCardOutlined />, label: 'My Tickets' },
+          { key: '/calendar', icon: <CalendarOutlined />, label: 'Calendar' }
+        ] : [])
       ] : []),
       ...(user?.role === 'ORGANIZER' || user?.role === 'ADMIN' ? [
         { key: '/my-events', icon: <CalendarOutlined />, label: 'My Events' },

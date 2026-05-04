@@ -6,13 +6,13 @@ import { GET_MY_BOOKINGS, CANCEL_BOOKING, GET_MY_ANALYTICS, GET_MY_EVENTS, GET_E
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Spin, Card, Empty, Button, Tag, Divider, Modal, Form, Input, Typography, Avatar, Drawer, Badge, List, Progress, Space, Select } from 'antd';
-import { EnvironmentOutlined, CalendarOutlined, DownloadOutlined, QrcodeOutlined, CrownOutlined, CheckCircleFilled, UserOutlined, MailOutlined, SettingOutlined, AppstoreOutlined, ArrowRightOutlined, EyeOutlined, BellOutlined, CheckOutlined, RocketOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { Spin, Card, Empty, Button, Tag, Divider, Modal, Popconfirm, Form, Input, Typography, Avatar, Drawer, Badge, List, Progress, Space, Select } from 'antd';
+import { EnvironmentOutlined, CalendarOutlined, DownloadOutlined, QrcodeOutlined, CrownOutlined, CheckCircleFilled, UserOutlined, MailOutlined, SettingOutlined, AppstoreOutlined, ArrowRightOutlined, EyeOutlined, BellOutlined, CheckOutlined, RocketOutlined, PlusCircleOutlined, CloseCircleOutlined, DeleteOutlined } from '@ant-design/icons';
+import DigitalTicketModal from '@/features/events/components/DigitalTicketModal';
 import dayjs from 'dayjs';
 
 const { Title, Text: AntText } = Typography;
@@ -94,14 +94,12 @@ export default function Dashboard() {
   if (!user) { router.push('/login'); return null; }
 
   const handleCancel = async (id) => {
-    if (confirm('Are you sure you want to cancel this ticket?')) {
-      try {
-        await cancel({ variables: { id } });
-        toast.success('Ticket cancelled successfully');
-        refetch();
-        refetchGlobalNotifications?.();
-      } catch (e) { toast.error(e.message); }
-    }
+    try {
+      await cancel({ variables: { id } });
+      toast.success('Ticket cancelled successfully');
+      refetch();
+      refetchGlobalNotifications?.();
+    } catch (e) { toast.error(e.message); }
   };
 
   const downloadTicket = async (booking) => {
@@ -321,54 +319,13 @@ export default function Dashboard() {
 
 
 
-        {/* QR SCAN PREVIEW MODAL */}
-        <Modal
+        {/* Digital Ticket Modal */}
+        <DigitalTicketModal
           open={isQRModalVisible}
           onCancel={() => setIsQRModalVisible(false)}
-          footer={null}
-          centered
-          width={480}
-          styles={{ body: { padding: '40px', textAlign: 'center' } }}
-        >
-          <div style={{ textAlign: 'center' }}>
-            <div style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '14px',
-              background: 'var(--gradient-main)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '20px',
-              boxShadow: 'var(--shadow-glow)'
-            }}>
-              <RocketOutlined style={{ fontSize: '1.6rem', color: 'white' }} />
-            </div>
-            <h2 style={{ fontSize: '1.6rem', color: 'var(--text-primary)', fontWeight: '800', marginBottom: '8px' }}>Fast-Pass Gate Entry</h2>
-            {activeBooking?.qrCode && (
-              <div style={{
-                padding: '24px',
-                background: 'var(--glass-bg)',
-                borderRadius: '28px',
-                display: 'inline-block',
-                border: '1px solid var(--glass-border)',
-                boxShadow: '0 16px 32px rgba(0,0,0,0.2)'
-              }}>
-                <img src={activeBooking.qrCode} style={{ width: '260px', height: '260px', borderRadius: '16px' }} alt="QR" />
-              </div>
-            )}
-            <div style={{
-              marginTop: '28px',
-              padding: '16px 24px',
-              background: 'rgba(131, 56, 236, 0.06)',
-              borderRadius: '16px',
-              border: '1px solid rgba(131, 56, 236, 0.12)'
-            }}>
-              <p style={{ margin: 0, fontWeight: '700', color: 'var(--primary-color)', fontSize: '1rem' }}>{activeBooking?.event.title}</p>
-              <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>TICKET ID: #{activeBooking?.id.slice(-8).toUpperCase()}</p>
-            </div>
-          </div>
-        </Modal>
+          booking={activeBooking}
+          onCancelTicket={handleCancel}
+        />
 
         {/* EXPLORE REWARDS MODAL */}
         <Modal
@@ -700,6 +657,12 @@ export default function Dashboard() {
                     <div key={e.id} className="hover-bounce" style={{ background: '#FFF', cursor: 'pointer', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', padding: '16px' }} onClick={() => { router.push(`/events/${e.id}`) }}>
                       <div style={{ position: 'relative', height: '140px', borderRadius: '16px', overflow: 'hidden', marginBottom: '16px', background: `url(${e.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover` }}>
                         <Tag style={{ position: 'absolute', top: '12px', left: '12px', background: 'rgba(255,255,255,0.9)', color: '#1B2A4E', border: 'none', borderRadius: '100px', fontWeight: 700, padding: '4px 12px', textTransform: 'capitalize' }}>{e.category || 'Event'}</Tag>
+                        {e.status === 'COMPLETED' && (
+                          <Tag style={{ position: 'absolute', top: '12px', right: '12px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: '100px', fontWeight: 700, padding: '4px 12px' }}>Completed</Tag>
+                        )}
+                        {e.status === 'CANCELLED' && (
+                          <Tag style={{ position: 'absolute', top: '12px', right: '12px', background: '#EF4444', color: 'white', border: 'none', borderRadius: '100px', fontWeight: 700, padding: '4px 12px' }}>Cancelled</Tag>
+                        )}
                       </div>
                       <h4 style={{ margin: '0 0 8px 0', fontSize: '1.1rem', fontWeight: 800, color: '#1B2A4E' }}>{e.title}</h4>
                       <div style={{ color: '#6B7280', fontSize: '0.85rem', marginBottom: '16px' }}>{e.location}</div>
@@ -947,14 +910,14 @@ export default function Dashboard() {
                 <div style={{ marginTop: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.3rem' }}>Your Event Passes</h3>
-                    <Button type="text" onClick={() => router.push('/browse')} style={{ color: 'rgb(67, 56, 202)', fontWeight: 700 }}>Browse More</Button>
+                    <Button type="text" onClick={() => router.push('/my-tickets')} style={{ color: 'rgb(67, 56, 202)', fontWeight: 700 }}>Browse More</Button>
                   </div>
 
-                  {bookings.length === 0 ? (
-                    <Empty description="No bookings found" />
+                  {upcomingBookings.length === 0 ? (
+                    <Empty description="No upcoming event passes found" />
                   ) : (
                     <div className="grid-cols-auto-320" style={{ gap: '20px' }}>
-                      {bookings.slice(0, 6).map(b => (
+                      {upcomingBookings.slice(0, 6).map(b => (
                         <Card
                           key={b.id}
                           className="hover-bounce"
@@ -1006,6 +969,23 @@ export default function Dashboard() {
                             >
                               QR
                             </Button>
+                            {b.status !== 'CANCELLED' && (
+                              <Popconfirm
+                                title="Cancel Ticket"
+                                description="Are you sure you want to cancel this ticket?"
+                                onConfirm={() => handleCancel(b.id)}
+                                okText="Yes"
+                                cancelText="No"
+                                okButtonProps={{ danger: true }}
+                              >
+                                <Button
+                                  danger
+                                  icon={<DeleteOutlined />}
+                                  style={{ borderRadius: '12px', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FEF2F2', border: '1px solid #FEE2E2' }}
+                                  title="Cancel Ticket"
+                                />
+                              </Popconfirm>
+                            )}
                           </div>
                           {/* PDF template inside the map for each booking */}
                           <div id={`ticket-rich-template-${b.id}`} style={{ position: 'fixed', top: '-10000px', left: '-10000px', width: '800px', background: '#FFFFFF', fontFamily: "'Inter', sans-serif" }}>
@@ -1104,45 +1084,58 @@ export default function Dashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.2rem' }}>Upcoming Event</h3>
                 {(() => {
-                  const displayEvent = featuredBooking?.event || allEventsData?.events?.filter(e => new Date(isNaN(Number(e.date)) ? e.date : Number(e.date)) >= now).sort((a, b) => new Date(isNaN(Number(a.date)) ? a.date : Number(a.date)) - new Date(isNaN(Number(b.date)) ? b.date : Number(b.date)))[0];
-                  if (!displayEvent) return (
+                  if (!featuredBooking) return (
                     <Card style={{ borderRadius: '24px', textAlign: 'center', padding: '40px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-                      <Empty description="No upcoming events" />
+                      <Empty description="No upcoming event passes" />
                     </Card>
                   );
 
+                  const b = featuredBooking;
+                  const e = b.event;
+
                   return (
                     <Card styles={{ body: { padding: 0 } }} style={{ borderRadius: '24px', border: 'none', overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}>
-                      <div style={{ height: '200px', background: `url(${displayEvent.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover`, position: 'relative' }}>
-                        <Tag style={{ position: 'absolute', top: '20px', left: '20px', background: 'white', color: '#1B2A4E', border: 'none', borderRadius: '100px', fontWeight: 800, padding: '6px 16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>Most Anticipated</Tag>
+                      <div style={{ height: '200px', background: `url(${e.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover`, position: 'relative' }}>
+                        <Tag style={{ position: 'absolute', top: '20px', left: '20px', background: 'white', color: '#1B2A4E', border: 'none', borderRadius: '100px', fontWeight: 800, padding: '6px 16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>Your Next Entry</Tag>
                       </div>
                       <div style={{ padding: '24px' }}>
-                        <h3 style={{ margin: '0 0 4px 0', color: '#1B2A4E', fontSize: '1.5rem', fontWeight: 800 }}>{displayEvent.title}</h3>
-                        <div style={{ color: '#94A3B8', fontSize: '0.9rem', marginBottom: '16px', fontWeight: 500 }}>{displayEvent.location}</div>
-
-                        <p style={{ color: '#64748B', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px', height: '44px', overflow: 'hidden' }}>
-                          {displayEvent.description || `Join us for a unique experience at "${displayEvent.title}", an immersive event you won't forget.`}
-                        </p>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1B2A4E', fontWeight: 600, fontSize: '0.9rem', background: '#F8F9FA', padding: '10px 18px', borderRadius: '14px' }}>
-                            <CalendarOutlined style={{ color: '#1B2A4E' }} />
-                            <span>{new Date(isNaN(Number(displayEvent.date)) ? displayEvent.date : Number(displayEvent.date)).toLocaleDateString()}</span>
+                        <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', alignItems: 'center' }}>
+                          <div style={{ flex: 1 }}>
+                            <h3 style={{ margin: '0 0 4px 0', color: '#1B2A4E', fontSize: '1.4rem', fontWeight: 800 }}>{e.title}</h3>
+                            <div style={{ color: '#94A3B8', fontSize: '0.9rem', fontWeight: 500 }}>{e.location}</div>
                           </div>
+                          <Tag style={{ borderRadius: '100px', border: 'none', background: '#F0FDF4', color: '#10B981', fontWeight: 700, margin: 0 }}>Confirmed</Tag>
+                        </div>
+
+                        <div style={{ background: '#F8FAFB', borderRadius: '20px', padding: '20px', display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
+                          <div style={{ background: 'white', padding: '8px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                            <img src={b.qrCode} style={{ width: '80px', height: '80px', cursor: 'pointer' }} onClick={() => showBigQR(b)} alt="QR" />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pass Details</div>
+                            <div style={{ fontWeight: 800, color: '#1B2A4E', fontSize: '1.3rem', margin: '2px 0' }}>₹{Number(b.amountPaid).toLocaleString()}</div>
+                            <div style={{ color: '#64748B', fontSize: '0.85rem', fontWeight: 600 }}>{b.ticketType} x {b.quantity}</div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '12px' }}>
                           <Button
-                            type="primary"
-                            onClick={() => router.push(`/events/${displayEvent.id}`)}
-                            style={{
-                              background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)',
-                              borderRadius: '12px',
-                              fontWeight: 700,
-                              height: '42px',
-                              padding: '0 24px',
-                              border: 'none',
-                              boxShadow: '0 4px 12px rgba(49, 46, 129, 0.2)'
-                            }}
+                            block
+                            size="large"
+                            icon={<DownloadOutlined />}
+                            onClick={() => downloadTicket(b)}
+                            style={{ height: '50px', borderRadius: '14px', fontWeight: 700, background: '#F8FAFB', border: '1px solid #E2E8F0', color: '#1B2A4E' }}
                           >
-                            View Details
+                            Pass
+                          </Button>
+                          <Button
+                            block
+                            size="large"
+                            icon={<QrcodeOutlined />}
+                            onClick={() => downloadQRCode(b.qrCode, e.title)}
+                            style={{ height: '50px', borderRadius: '14px', fontWeight: 700, background: 'var(--gradient-main)', border: 'none', color: 'white', boxShadow: '0 4px 12px rgba(131, 56, 236, 0.2)' }}
+                          >
+                            QR
                           </Button>
                         </div>
                       </div>
