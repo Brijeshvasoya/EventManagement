@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 
 const EventCard = memo(({ event, onBook, onDelete, onUpdate }) => {
   const { user } = useAuth();
-  const dateObj = new Date(parseInt(event.date) || event.date);
+  const dateObj = new Date(parseInt(event?.date) || event?.date);
 
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isBookModalVisible, setIsBookModalVisible] = useState(false);
@@ -20,12 +20,12 @@ const EventCard = memo(({ event, onBook, onDelete, onUpdate }) => {
   const handleEditClick = () => {
     setImageUrl(event.imageUrl || '');
     editForm.setFieldsValue({
-      title: event.title,
-      description: event.description,
-      location: event.location,
-      eventType: event.eventType || 'OTHER',
+      title: event?.title,
+      description: event?.description,
+      location: event?.location,
+      eventType: event?.eventType || 'OTHER',
       date: dayjs(dateObj),
-      ticketTypes: event.ticketTypes?.map(t => ({ name: t.name, price: t.price, capacity: t.capacity })) || [{ name: 'REGULAR', price: 50, capacity: 100 }]
+      ticketTypes: event?.ticketTypes?.map(t => ({ name: t.name, price: t.price, capacity: t.capacity })) || [{ name: 'REGULAR', price: 50, capacity: 100 }]
     });
     setIsDirty(false);
     setIsEditModalVisible(true);
@@ -64,14 +64,14 @@ const EventCard = memo(({ event, onBook, onDelete, onUpdate }) => {
     setIsBookModalVisible(false);
   };
 
-  const ticketTypes = event.ticketTypes || [{ name: 'REGULAR', price: 50 }];
+  const ticketTypes = event?.ticketTypes || [{ name: 'REGULAR', price: 50 }];
   const selectedTicketName = Form.useWatch('ticketType', bookForm);
   const selectedQuantity = Form.useWatch('quantity', bookForm) || 1;
   const currentTicket = ticketTypes.find(t => t.name === selectedTicketName) || ticketTypes[0];
 
-  const bookedCount = event.bookedCount || 0;
-  const remainingCount = Math.max(0, event.capacity - bookedCount);
-  const percentFilled = Math.min(100, Math.round((bookedCount / event.capacity) * 100));
+  const bookedCount = event?.bookedCount || 0;
+  const remainingCount = Math.max(0, (event?.capacity || 0) - bookedCount);
+  const percentFilled = Math.min(100, Math.round((bookedCount / (event?.capacity || 1)) * 100));
 
   return (
     <>
@@ -95,15 +95,15 @@ const EventCard = memo(({ event, onBook, onDelete, onUpdate }) => {
           <div style={{ margin: '1rem 0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#6B7280', marginBottom: '4px' }}>
               <span>Inventory Space</span>
-              <span>{bookedCount} / {event.capacity} Booked</span>
+              <span>{bookedCount} / {event?.capacity} Booked</span>
             </div>
             <Progress percent={percentFilled} strokeColor="#4F46E5" showInfo={false} size="small" />
           </div>
 
           <div className="event-footer">
-            <span className="organizer-badge"><UserOutlined /> {event.organizer.name}</span>
+            <span className="organizer-badge"><UserOutlined /> {event?.organizer?.name}</span>
 
-            {user?.id === event.organizer.id ? (
+            {user?.id === event?.organizer?.id ? (
               <div style={{ display: 'flex', gap: '8px' }}>
                 <Button type="default" icon={<EditOutlined />} onClick={handleEditClick} />
                 <Popconfirm
@@ -118,7 +118,7 @@ const EventCard = memo(({ event, onBook, onDelete, onUpdate }) => {
               </div>
             ) : user ? (
               <div>
-                {event.isBooked ? (
+                {event?.isBooked ? (
                   <Button disabled type="primary" style={{ background: '#10B981', borderColor: '#10B981' }}>✓ Booked</Button>
                 ) : (
                   <Button type="primary" disabled={remainingCount <= 0} icon={<ShoppingCartOutlined />} onClick={() => setIsBookModalVisible(true)}>
@@ -140,7 +140,7 @@ const EventCard = memo(({ event, onBook, onDelete, onUpdate }) => {
         onCancel={() => setIsBookModalVisible(false)}
         footer={null}
       >
-        <p style={{ color: '#6B7280', marginBottom: '24px' }}>Choose your ticket tier and quantity for <strong>{event.title}</strong>.</p>
+        <p style={{ color: '#6B7280', marginBottom: '24px' }}>Choose your ticket tier and quantity for <strong>{event?.title}</strong>.</p>
 
         <Form
           form={bookForm}

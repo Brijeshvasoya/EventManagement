@@ -23,7 +23,6 @@ export default function Browse() {
         fetchPolicy: 'network-only',
         skip: !user
     });
-    console.log("🚀 ~ Browse ~ bookingData:", bookingData)
     const { data: vendorData, loading: vendorLoading } = useQuery(GET_MY_VENDORS, {
         skip: !user || user.role === 'USER'
     });
@@ -282,13 +281,16 @@ export default function Browse() {
         return isUpcoming;
     });
 
-    const completedEvents = allEvents.filter(e => {
-        const isPast = new Date(isNaN(Number(e?.date)) ? e?.date : Number(e?.date)) < now;
-        if (user?.role === 'ORGANIZER') {
-            return isPast && e?.organizer?.id === user.id;
-        }
-        return isPast;
-    });
+    const completedEvents = allEvents
+        .filter(e => {
+            const isPast = new Date(isNaN(Number(e?.date)) ? e?.date : Number(e?.date)) < now;
+            if (user?.role === 'ORGANIZER') {
+                return isPast && e?.organizer?.id === user.id;
+            }
+            return isPast;
+        })
+        .sort((a, b) => new Date(isNaN(Number(b?.date)) ? b?.date : Number(b?.date)) - new Date(isNaN(Number(a?.date)) ? a?.date : Number(a?.date)))
+        .slice(0, 10);
 
     // BETTER: Get Participated events directly from myBookings
     const participatedEvents = myBookings

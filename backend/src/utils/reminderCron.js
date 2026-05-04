@@ -91,18 +91,55 @@ const runReminderJob = async () => {
 };
 
 /**
- * Schedules the reminder job to run every day at 08:00 AM server time.
+ * Finds all UPCOMING events whose date has passed and marks them as COMPLETED.
+ */
+const updateEventStatuses = async () => {
+  try {
+    const now = new Date();
+    const result = await Event.updateMany(
+      { 
+        date: { $lt: now }, 
+        status: 'UPCOMING' 
+      },
+      { 
+        $set: { status: 'COMPLETED' } 
+      }
+    );
+    
+    if (result.modifiedCount > 0) {
+      console.log(`✅ [ReminderCron] Auto-completed ${result.modifiedCount} past event(s).`);
+    }
+  } catch (error) {
+    console.error('❌ [ReminderCron] Error in auto-completion:', error.message);
+  }
+};
+
+/**
+ * Schedules background jobs.
  */
 const startReminderCron = () => {
+  // 1. Run daily event reminder at 08:00 AM
   cron.schedule('0 8 * * *', async () => {
     try {
       await runReminderJob();
     } catch (err) {
-      console.error('❌ [ReminderCron] Critical error:', err.message);
+      console.error('❌ [ReminderCron] Critical error in reminder job:', err.message);
     }
   });
 
-  console.log('✅ [ReminderCron] Daily event reminder cron scheduled (runs at 08:00 AM every day).');
+  // 2. Run every day at midnight to update past events to COMPLETED
+  cron.schedule('0 0 * * *', async () => {
+    try {
+      await updateEventStatuses();
+    } catch (err) {
+      console.error('❌ [ReminderCron] Critical error in status update job:', err.message);
+    }
+  });
+
+  console.log('✅ [ReminderCron] Background jobs initialized (Daily Reminders & Auto-Completion).');
+
+  // Run once immediately on startup to sync existing past events
+  updateEventStatuses();
 };
 
 const runAbandonedCheckoutJob = async () => {

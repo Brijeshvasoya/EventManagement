@@ -172,7 +172,7 @@ export default function EventDetailsPage() {
       setIsValidatingPromo(true);
       const { data: promoData } = await validatePromoQuery({
         code: promoCodeInput,
-        eventId: event.id
+        eventId: id
       });
 
       if (promoData?.validatePromoCode) {
@@ -552,7 +552,7 @@ export default function EventDetailsPage() {
                     {!isBooked && <p style={{ color: '#64748b', marginBottom: '24px' }}>Choose your tier and join the experience</p>}
 
                     <Space direction="vertical" size={24} style={{ width: '100%' }}>
-                      {!isBooked && (
+                      {!isBooked && event?.status !== 'COMPLETED' && event?.status !== 'CANCELLED' && (event?.capacity - (event?.bookedCount || 0)) > 0 && (
                         <>
                           <div className="booking-control">
                             <AntText strong style={{ display: 'block', marginBottom: '8px', color: '#475569', fontSize: '0.8rem', textTransform: 'uppercase' }}>Select Category</AntText>
@@ -635,7 +635,41 @@ export default function EventDetailsPage() {
                         </>
                       )}
 
-                      {isBooked ? (
+                      {event.status === 'COMPLETED' ? (
+                        <Space direction="vertical" style={{ width: '100%' }}>
+                          <Button
+                            block
+                            disabled
+                            style={{
+                              height: '60px',
+                              borderRadius: '16px',
+                              background: '#F1F5F9',
+                              color: '#94A3B8',
+                              border: '1px solid #E2E8F0',
+                              fontWeight: 800
+                            }}
+                          >
+                            <CheckCircleOutlined /> EVENT COMPLETED
+                          </Button>
+                        </Space>
+                      ) : event?.status === 'CANCELLED' ? (
+                        <Space direction="vertical" style={{ width: '100%' }}>
+                          <Button
+                            block
+                            disabled
+                            style={{
+                              height: '60px',
+                              borderRadius: '16px',
+                              background: '#FEE2E2',
+                              color: '#EF4444',
+                              border: '1px solid #FCA5A5',
+                              fontWeight: 800
+                            }}
+                          >
+                            <CloseCircleOutlined /> EVENT CANCELLED
+                          </Button>
+                        </Space>
+                      ) : isBooked ? (
                         <Space direction="vertical" style={{ width: '100%' }}>
                           <div style={{
                             background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
@@ -689,7 +723,7 @@ export default function EventDetailsPage() {
                             </Button>
                           </Popconfirm>
                         </Space>
-                      ) : (event.capacity - (event.bookedCount || 0)) <= 0 ? (
+                      ) : (event?.capacity - (event?.bookedCount || 0)) <= 0 ? (
                         <Space direction="vertical" style={{ width: '100%' }}>
                           <Button
                             block

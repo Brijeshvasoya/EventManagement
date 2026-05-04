@@ -11,6 +11,13 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user, prom
 
   const event = await Event.findById(eventId);
   if (!event) throw new Error('Event not found');
+  if (event.status === 'COMPLETED') throw new Error('Cannot book a ticket. Event is already completed.');
+  if (event.status === 'CANCELLED') throw new Error('Cannot book a ticket. Event is cancelled.');
+  
+  // Prevent booking if event date has passed
+  if (new Date(event.date) < new Date()) {
+    throw new Error('Cannot book a ticket. Event date has already passed.');
+  }
 
   const ticket = event.ticketTypes.find(t => t.name === ticketType);
   if (!ticket) throw new Error('Ticket type not found for this event');
@@ -109,7 +116,7 @@ exports.createPlanCheckoutSession = async (planId, user) => {
 
   // ── Prorated Upgrade Logic (BASIC → PRO mid-cycle) ──────────────────────
   const BASIC_PRICE = 799;   // ₹ per month
-  const PRO_PRICE   = 2499;  // ₹ per month
+  const PRO_PRICE = 2499;  // ₹ per month
 
   const isActiveBasic =
     fullUser?.isPlanPurchased &&
@@ -186,7 +193,7 @@ exports.confirmPlanPurchase = async (sessionId, planId, user, proratedCredit = 0
   const existing = await PlanInvoice.findOne({ stripeSessionId: sessionId });
   if (!existing) {
     const BASIC_PRICE = 799;
-    const PRO_PRICE   = 2499;
+    const PRO_PRICE = 2499;
     const credit = Number(proratedCredit) || 0;
     const amount = planId === 'BASIC' ? BASIC_PRICE : Math.max(0, PRO_PRICE - credit);
     await PlanInvoice.create({
@@ -268,7 +275,7 @@ exports.createConnectAccount = async (user) => {
 
   if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock') {
     let accountId = fullUser.stripeAccountId;
-    
+
     if (!accountId) {
       const account = await stripe.accounts.create({
         type: 'express',
@@ -319,26 +326,26 @@ exports.createTransfer = async (payout, organizer) => {
 exports.triggerAbandonedCheckoutEmail = async (sessionId, user) => {
   const Booking = require('../../models/Booking');
   const Event = require('../../models/Event');
-  
+
   const booking = await Booking.findOne({ stripePaymentId: sessionId, status: 'PENDING', abandonedEmailSent: false });
   if (!booking) return false;
-  
+
   let checkoutUrl = '';
   if (sessionId.startsWith('cs_')) {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     checkoutUrl = session.url;
   }
   if (!checkoutUrl) return false;
-  
+
   const event = await Event.findById(booking.event);
   if (!event) return false;
-  
+
   const { sendAbandonedCheckoutEmail } = require('../../utils/email');
   await sendAbandonedCheckoutEmail(user, event, checkoutUrl);
-  
+
   booking.abandonedEmailSent = true;
   await Booking.updateOne({ _id: booking._id }, { $set: { abandonedEmailSent: true } });
-  
+
   return true;
 };
 
