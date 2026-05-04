@@ -8,8 +8,24 @@ import Head from 'next/head';
 import toast from 'react-hot-toast';
 import { Form, Input, Button, Typography, ConfigProvider, Radio } from 'antd';
 import { UserOutlined, MailOutlined, LockOutlined, RocketOutlined, CheckCircleFilled, ArrowRightOutlined } from '@ant-design/icons';
+import { motion } from 'framer-motion';
 
 const { Text: AntText } = Typography;
+
+// Animation Variants
+const fadeInUp = {
+  initial: { opacity: 0, y: 30 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
 
 const REGISTER_MUTATION = gql`
   mutation Register($name: String!, $email: String!, $password: String!, $role: String) {
@@ -98,63 +114,92 @@ export default function Signup() {
         <div className="event-item e4">🎵</div>
 
         {/* Left Side: Branding */}
-        <div style={{
-          flex: 1.5,
-          padding: '80px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          position: 'relative',
-          zIndex: 5
-        }} className="hide-mobile">
+        <motion.div 
+          initial="initial"
+          animate="animate"
+          variants={staggerContainer}
+          style={{
+            flex: 1.5,
+            padding: '80px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            position: 'relative',
+            zIndex: 5
+          }} className="hide-mobile"
+        >
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
-            <div className="logo-pulse-container" style={{
-              width: '64px', height: '64px', background: 'white',
-              borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 10px 30px rgba(67, 56, 202, 0.15)',
-              position: 'relative',
-              animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-            }}>
+            <motion.div 
+              variants={{
+                initial: { scale: 0.5, opacity: 0 },
+                animate: { scale: 1, opacity: 1 }
+              }}
+              className="logo-pulse-container" 
+              style={{
+                width: '64px', height: '64px', background: 'white',
+                borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 10px 30px rgba(67, 56, 202, 0.15)',
+                position: 'relative'
+              }}
+            >
               <img src="/logo.png" alt="Icon" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
               <div className="pulse-ring"></div>
-            </div>
-            <h1 style={{ fontSize: '4.5rem', fontWeight: 900, color: '#312E81', margin: 0, letterSpacing: '-2px' }}>
-              <span className="text-reveal">Built for </span>{" "}
-              <span className="text-reveal" style={{ animationDelay: '0.2s', color: '#1B2A4E' }}>Creators.</span>
-            </h1>
+            </motion.div>
+            <motion.h1 
+              variants={fadeInUp}
+              style={{ fontSize: '4.5rem', fontWeight: 900, color: '#312E81', margin: 0, letterSpacing: '-2px' }}
+            >
+              <span>Built for </span>{" "}
+              <span style={{ color: 'rgb(67, 56, 202)' }}>Creators.</span>
+            </motion.h1>
           </div>
 
-          <p style={{ fontSize: '1.2rem', color: '#64748B', maxWidth: '500px', marginBottom: '60px', lineHeight: 1.6, animation: 'fadeInUp 1s ease-out 0.4s both' }}>
+          <motion.p 
+            variants={fadeInUp}
+            style={{ fontSize: '1.2rem', color: '#64748B', maxWidth: '500px', marginBottom: '60px', lineHeight: 1.6 }}
+          >
             Join the elite circle of event professional organizers and scale your experiences globally.
-          </p>
+          </motion.p>
 
-          <div style={{ display: 'flex', gap: '20px', marginBottom: '40px' }}>
+          <motion.div 
+            variants={staggerContainer}
+            style={{ display: 'flex', gap: '20px', marginBottom: '40px' }}
+          >
             {[
               { icon: '🎯', text: 'Professional Suite', desc: 'All-in-one management tools' },
               { icon: '⚡', text: 'Instant Scale', desc: 'Global server infrastructure' }
             ].map((item, i) => (
-              <div key={i} className="feature-card" style={{ display: 'flex', gap: '16px', alignItems: 'center', background: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(10px)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(67, 56, 202, 0.1)', minWidth: '320px', animation: `fadeInRight 0.8s ease-out ${0.5 + (i * 0.1)}s both` }}>
+              <motion.div 
+                key={i} 
+                variants={fadeInUp}
+                whileHover={{ y: -5, scale: 1.02 }}
+                className="feature-card" 
+                style={{ display: 'flex', gap: '16px', alignItems: 'center', background: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(10px)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(67, 56, 202, 0.1)', minWidth: '320px' }}
+              >
                 <div style={{ fontSize: '1.8rem' }}>{item.icon}</div>
                 <div>
                   <div style={{ fontWeight: 700, color: '#1B2A4E', fontSize: '0.95rem' }}>{item.text}</div>
                   <div style={{ color: '#64748B', fontSize: '0.8rem' }}>{item.desc}</div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Testimonial Card */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(10px)',
-            padding: '32px',
-            borderRadius: '24px',
-            border: '1px solid rgba(67, 56, 202, 0.1)',
-            maxWidth: '660px',
-            animation: 'fadeInUp 1s ease-out 0.8s both',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.03)'
-          }}>
+          <motion.div 
+            variants={fadeInUp}
+            whileHover={{ scale: 1.01 }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(10px)',
+              padding: '32px',
+              borderRadius: '24px',
+              border: '1px solid rgba(67, 56, 202, 0.1)',
+              maxWidth: '660px',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.03)'
+            }}
+          >
             <div style={{ color: '#FBBF24', fontSize: '1.2rem', marginBottom: '16px' }}>
               {"★ ★ ★ ★ ★"}
             </div>
@@ -178,34 +223,44 @@ export default function Signup() {
                 <span style={{ color: '#94A3B8', fontSize: '0.8rem', fontWeight: 600 }}>+9,000 more</span>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Right Side: Card */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
 
-          <div className="rotating-square" style={{
-            position: 'absolute',
-            width: '560px',
-            height: '560px',
-            background: 'linear-gradient(45deg, rgba(67, 56, 202, 0.08), rgba(139, 92, 246, 0.08))',
-            borderRadius: '80px',
-            animation: 'rotate 25s linear infinite',
-            zIndex: 1
-          }} />
+          <motion.div 
+            initial={{ rotate: 0 }}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+            className="rotating-square" 
+            style={{
+              position: 'absolute',
+              width: '560px',
+              height: '560px',
+              background: 'linear-gradient(45deg, rgba(67, 56, 202, 0.08), rgba(139, 92, 246, 0.08))',
+              borderRadius: '80px',
+              zIndex: 1
+            }} 
+          />
 
-          <div className="signup-card breathe" style={{
-            width: '100%',
-            maxWidth: '520px',
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            padding: '40px',
-            borderRadius: '32px',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.05)',
-            position: 'relative',
-            zIndex: 2,
-            animation: 'scaleUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)'
-          }}>
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 100, delay: 0.2 }}
+            className="signup-card breathe" 
+            style={{
+              width: '100%',
+              maxWidth: '520px',
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(20px)',
+              padding: '40px',
+              borderRadius: '32px',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.05)',
+              position: 'relative',
+              zIndex: 2
+            }}
+          >
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div className="logo-hover" style={{ width: '56px', height: '56px', background: 'white', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', position: 'relative', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
                 <img src="/logo.png" alt="Icon" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
@@ -253,9 +308,9 @@ export default function Signup() {
               <span style={{ color: '#94A3B8', fontSize: '0.85rem' }}>Already an operative? </span>
               <Link href="/login" style={{ color: '#1B2A4E', fontWeight: 700, fontSize: '0.85rem' }}>Login</Link>
             </div>
-          </div>
-        </div>
+          </motion.div>
       </div>
+    </div>
 
       <style jsx global>{`
         body { margin: 0; padding: 0; overflow: hidden; }

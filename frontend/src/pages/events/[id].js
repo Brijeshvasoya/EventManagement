@@ -30,8 +30,33 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { IndianRupeeIcon, MapPin, Calendar, Users, Briefcase, Star, Info, CreditCard, Ticket } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const { Title: AntTitle, Text: AntText, Paragraph } = Typography;
+
+// Animation Variants
+const fadeInUp = {
+  initial: { opacity: 0, y: 30 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const heroContentVariants = {
+  initial: { opacity: 0, y: 50 },
+  animate: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 }
+  }
+};
 
 export default function EventDetailsPage() {
   const router = useRouter();
@@ -68,24 +93,23 @@ export default function EventDetailsPage() {
 
   if (authLoading || loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '20px' }}>
-      <div style={{
-        width: '64px', height: '64px',
-        borderRadius: '16px',
-        background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-        animation: 'pulse-glow 2s ease-in-out infinite',
-        boxShadow: '0 0 30px rgba(99, 102, 241, 0.4)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center'
-      }}>
+      <motion.div 
+        animate={{ 
+          scale: [1, 1.1, 1],
+          opacity: [0.8, 1, 0.8]
+        }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        style={{
+          width: '64px', height: '64px',
+          borderRadius: '16px',
+          background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+          boxShadow: '0 0 30px rgba(99, 102, 241, 0.4)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}
+      >
         <ThunderboltOutlined style={{ fontSize: '32px', color: 'white' }} />
-      </div>
+      </motion.div>
       <span style={{ color: '#6366f1', fontWeight: 600, fontSize: '1.1rem', letterSpacing: '0.5px' }}>Crafting Event Experience...</span>
-      <style jsx>{`
-        @keyframes pulse-glow {
-          0% { transform: scale(1); opacity: 0.8; }
-          50% { transform: scale(1.1); opacity: 1; }
-          100% { transform: scale(1); opacity: 0.8; }
-        }
-      `}</style>
     </div>
   );
   if (error) return <div style={{ padding: '2rem' }}><Empty description="Error loading event details" /></div>;
@@ -304,15 +328,24 @@ export default function EventDetailsPage() {
       <Head><title>{event.title} | Premium Event Experience</title></Head>
 
       {/* STUNNING HERO SECTION */}
-      <div style={{ position: 'relative', width: '100%', height: '70vh', minHeight: '600px', overflow: 'hidden', borderRadius: '24px', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)' }}>
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: `url(${event.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover no-repeat`,
-          transform: 'scale(1.05)',
-          filter: 'brightness(0.5) blur(2px)',
-          transition: 'all 0.5s ease'
-        }} />
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+        style={{ position: 'relative', width: '100%', height: '70vh', minHeight: '600px', overflow: 'hidden', borderRadius: '0 0 40px 40px', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)' }}
+      >
+        <motion.div 
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: `url(${event.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover no-repeat`,
+            filter: 'brightness(0.5) blur(2px)',
+            transition: 'all 0.5s ease'
+          }} 
+        />
         <div style={{
           position: 'absolute',
           inset: 0,
@@ -321,7 +354,12 @@ export default function EventDetailsPage() {
         }} />
 
         {/* FLOATING NAVIGATION & ACTIONS */}
-        <div style={{ position: 'absolute', top: '40px', left: '40px', right: '40px', display: 'flex', justifyContent: 'end', alignItems: 'center', zIndex: 50 }}>
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          style={{ position: 'absolute', top: '40px', left: '40px', right: '40px', display: 'flex', justifyContent: 'end', alignItems: 'center', zIndex: 50 }}
+        >
           <div style={{ display: 'flex', gap: '12px' }}>
             <Tooltip title="Add to Calendar">
               <Button
@@ -352,19 +390,23 @@ export default function EventDetailsPage() {
               />
             </Tooltip>
           </div>
-        </div>
+        </motion.div>
 
-        <div style={{
-          position: 'relative',
-          maxWidth: '1200px',
-          height: '100%',
-          margin: '0 auto',
-          padding: '0 24px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-          paddingBottom: '80px'
-        }}>
+        <motion.div 
+          variants={heroContentVariants}
+          style={{
+            position: 'relative',
+            maxWidth: '1200px',
+            height: '100%',
+            margin: '0 auto',
+            padding: '0 24px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+            paddingBottom: '80px',
+            zIndex: 20
+          }}
+        >
           <Space direction="vertical" size={24} style={{ maxWidth: '800px' }}>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
               <Tag color="blue" style={{ borderRadius: '100px', padding: '6px 20px', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', border: 'none', background: 'rgba(99, 102, 241, 0.3)', backdropFilter: 'blur(10px)', color: '#fff' }}>
@@ -412,14 +454,21 @@ export default function EventDetailsPage() {
               </div>
             </div>
           </Space>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* CONTENT GRID */}
-      <div style={{ maxWidth: '1200px', margin: '-60px auto 0', padding: '0 24px', position: 'relative', zIndex: 10 }}>
+      <motion.div 
+        variants={staggerContainer}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: false, amount: 0.1 }}
+        style={{ maxWidth: '1200px', margin: '-60px auto 0', padding: '0 24px', position: 'relative', zIndex: 10 }}
+      >
         <Row gutter={[32, 32]}>
           <Col xs={24} lg={16}>
-            <Card style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', padding: '12px' }}>
+            <motion.div variants={fadeInUp}>
+              <Card style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', padding: '12px' }}>
               <Tabs
                 defaultActiveKey="1"
                 className="modern-tabs"
@@ -534,10 +583,17 @@ export default function EventDetailsPage() {
                 ]}
               />
             </Card>
+            </motion.div>
           </Col>
 
           <Col xs={24} lg={8}>
-            <div style={{ position: 'sticky', top: '24px' }}>
+            <motion.div 
+              variants={{
+                initial: { opacity: 0, x: 30 },
+                animate: { opacity: 1, x: 0, transition: { duration: 0.6, delay: 0.3 } }
+              }}
+              style={{ position: 'sticky', top: '24px' }}
+            >
               {/* ACTION CARD */}
               {!isOwner && (
                 <Card style={{
@@ -835,10 +891,10 @@ export default function EventDetailsPage() {
                   <Button type="link" icon={<GlobalOutlined />} onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`, '_blank')}>Open Maps</Button>
                 </div>
               </Card>
-            </div>
+            </motion.div>
           </Col>
         </Row>
-      </div>
+      </motion.div>
 
       <style jsx global>{`
         .modern-tabs .ant-tabs-nav {

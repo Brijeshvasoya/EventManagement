@@ -20,6 +20,7 @@ import {
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 
 const { Text: AntText } = Typography;
@@ -336,7 +337,15 @@ export default function AppLayout({ children }) {
             {/* Mobile spacer */}
             <div className="mobile-only" style={{ height: '70px', flexShrink: 0 }} />
 
-            {children}
+            <motion.div
+              key={router.pathname}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+            >
+              {children}
+            </motion.div>
           </main>
         </div>
       </div>

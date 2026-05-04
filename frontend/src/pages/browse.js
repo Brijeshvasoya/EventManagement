@@ -9,6 +9,27 @@ import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { motion } from 'framer-motion';
+
+// Animation Variants
+const fadeInUp = {
+    initial: { opacity: 0, y: 30 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.5, ease: "easeOut" }
+};
+
+const staggerContainer = {
+    animate: {
+        transition: {
+            staggerChildren: 0.1
+        }
+    }
+};
+
+const hoverScale = {
+    whileHover: { scale: 1.02, translateY: -5 },
+    transition: { type: "spring", stiffness: 300 }
+};
 
 export default function Browse() {
     const router = useRouter();
@@ -142,26 +163,39 @@ export default function Browse() {
 
     const EventGrid = ({ events, emptyMsg }) => (
         events.length === 0 ? (
-            <div style={{
-                padding: '5rem 2rem',
-                textAlign: 'center',
-                background: 'var(--bg-secondary)',
-                borderRadius: '24px',
-                border: '2px dashed var(--glass-border)'
-            }}>
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                style={{
+                    padding: '5rem 2rem',
+                    textAlign: 'center',
+                    background: 'var(--bg-secondary)',
+                    borderRadius: '24px',
+                    border: '2px dashed var(--glass-border)'
+                }}
+            >
                 <div style={{ fontSize: '3rem', marginBottom: '16px', opacity: 0.5 }}>🔍</div>
                 <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{emptyMsg}</p>
-            </div>
+            </motion.div>
         ) : (
-            <div className="event-grid grid-cols-auto-340" style={{ gap: '24px' }}>
+            <motion.div 
+                variants={staggerContainer}
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: false, amount: 0.1 }}
+                className="event-grid grid-cols-auto-340" 
+                style={{ gap: '24px' }}
+            >
                 {events.map((e, index) => {
                     const isBooked = myBookedEventIds.includes(e?.id);
                     const isOwner = user?.id === e?.organizer?.id || user?.role === 'ADMIN';
 
                     return (
-                        <div
+                        <motion.div
                             key={e?.id}
-                            className="hover-bounce premium-event-card"
+                            variants={fadeInUp}
+                            whileHover={hoverScale.whileHover}
+                            className="premium-event-card"
                             onClick={() => showDetails(e)}
                             style={{
                                 cursor: 'pointer',
@@ -170,19 +204,16 @@ export default function Browse() {
                                 border: '1px solid var(--glass-border)',
                                 background: 'var(--card-bg)',
                                 backdropFilter: 'blur(20px)',
-                                transition: 'all 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
-                                animation: `fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) ${index * 0.08}s forwards`,
-                                opacity: 0,
                                 display: 'flex',
-                                flexDirection: 'column'
+                                flexDirection: 'column',
+                                height: '100%'
                             }}
                         >
                             <div style={{ height: '220px', position: 'relative', overflow: 'hidden' }}>
                                 <img
                                     src={e?.imageUrl || '/event-placeholder.jpg'}
                                     style={{
-                                        width: '100%', height: '100%', objectFit: 'cover',
-                                        transition: 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)'
+                                        width: '100%', height: '100%', objectFit: 'cover'
                                     }}
                                     className="event-card-img"
                                 />
@@ -311,10 +342,10 @@ export default function Browse() {
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     );
                 })}
-            </div>
+            </motion.div>
         )
     );
 

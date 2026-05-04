@@ -2,6 +2,7 @@ import { useContext, useState } from 'react';
 import { GlobalActionsContext } from '../components/GlobalActions';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
+import { motion } from 'framer-motion';
 import { GET_MY_BOOKINGS, CANCEL_BOOKING, GET_MY_ANALYTICS, GET_MY_EVENTS, GET_EVENTS, REDEEM_REWARD, GET_MY_PROMO_CODES } from '@/features/events/graphql/queries';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
@@ -16,6 +17,26 @@ import DigitalTicketModal from '@/features/events/components/DigitalTicketModal'
 import dayjs from 'dayjs';
 
 const { Title, Text: AntText } = Typography;
+
+// Animation Variants
+const fadeInUp = {
+  initial: { opacity: 0, y: 30 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, ease: "easeOut" }
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const hoverScale = {
+  whileHover: { scale: 1.02, translateY: -5 },
+  transition: { type: "spring", stiffness: 300 }
+};
 
 const GET_ALL_USERS = gql`
   query GetAllUsers {
@@ -195,75 +216,52 @@ export default function Dashboard() {
     return (
       <>
         <Head><title>Super Admin Dashboard | EventHub</title></Head>
-        <div style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          <div className="header-responsive" style={{ marginBottom: '32px', background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)', borderRadius: '32px', color: 'white', padding: '32px', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)' }}>
+        <motion.div 
+          initial="initial"
+          animate="animate"
+          variants={staggerContainer}
+          style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: '32px' }}
+        >
+          <motion.div 
+            variants={fadeInUp}
+            className="header-responsive" 
+            style={{ marginBottom: '32px', background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)', borderRadius: '32px', color: 'white', padding: '32px', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)' }}
+          >
             <h1 style={{ margin: 0, fontSize: '2.2rem', fontWeight: 800, color: 'white', letterSpacing: '-0.5px' }}>Platform Dashboard</h1>
             <p style={{ color: 'rgba(255,255,255,0.7)', margin: '4px 0 0 0', fontSize: '1rem' }}>Welcome back, Super Admin. Here is the platform overview.</p>
-          </div>
+          </motion.div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
-            <Card variant="borderless" style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '24px' }}>💳</span>
-                </div>
-                <div>
-                  <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Platform Revenue</div>
-                  <div style={{ color: '#1B2A4E', fontSize: '1.6rem', fontWeight: 800 }}>₹{Number(platformPlanRevenue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                </div>
-              </div>
-            </Card>
+          <motion.div 
+            variants={staggerContainer}
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}
+          >
+            {[
+              { label: 'Platform Revenue', val: `₹${Number(platformPlanRevenue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: '💳', bg: 'rgba(99, 102, 241, 0.1)' },
+              { label: 'Organizer Revenue', val: `₹${Number(organizerRevenue).toLocaleString()}`, icon: '💰', bg: 'rgba(16, 185, 129, 0.1)' },
+              { label: 'Tickets Sold', val: totalTicketsSold.toLocaleString(), icon: '🎟️', bg: 'rgba(59, 130, 246, 0.1)' },
+              { label: 'Total Users', val: totalUsers.toLocaleString(), icon: '👥', bg: 'rgba(139, 92, 246, 0.1)' },
+              { label: 'Organizers', val: totalOrganizers.toLocaleString(), icon: '🏢', bg: 'rgba(245, 158, 11, 0.1)' }
+            ].map((stat, i) => (
+              <motion.div key={i} variants={fadeInUp} whileHover={hoverScale.whileHover}>
+                <Card variant="borderless" style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', height: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: stat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontSize: '24px' }}>{stat.icon}</span>
+                    </div>
+                    <div>
+                      <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>{stat.label}</div>
+                      <div style={{ color: '#1B2A4E', fontSize: '1.6rem', fontWeight: 800 }}>{stat.val}</div>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
 
-            <Card variant="borderless" style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '24px' }}>💰</span>
-                </div>
-                <div>
-                  <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Organizer Revenue</div>
-                  <div style={{ color: '#1B2A4E', fontSize: '1.6rem', fontWeight: 800 }}>₹{Number(organizerRevenue).toLocaleString()}</div>
-                </div>
-              </div>
-            </Card>
-
-            <Card variant="borderless" style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '24px' }}>🎟️</span>
-                </div>
-                <div>
-                  <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Tickets Sold</div>
-                  <div style={{ color: '#1B2A4E', fontSize: '1.6rem', fontWeight: 800 }}>{totalTicketsSold.toLocaleString()}</div>
-                </div>
-              </div>
-            </Card>
-
-            <Card variant="borderless" style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(139, 92, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '24px' }}>👥</span>
-                </div>
-                <div>
-                  <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Total Users</div>
-                  <div style={{ color: '#1B2A4E', fontSize: '1.6rem', fontWeight: 800 }}>{totalUsers.toLocaleString()}</div>
-                </div>
-              </div>
-            </Card>
-
-            <Card variant="borderless" style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '24px' }}>🏢</span>
-                </div>
-                <div>
-                  <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Organizers</div>
-                  <div style={{ color: '#1B2A4E', fontSize: '1.6rem', fontWeight: 800 }}>{totalOrganizers.toLocaleString()}</div>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+          <motion.div 
+            variants={fadeInUp}
+            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}
+          >
             <Card title={<span style={{ fontWeight: 800, fontSize: '1.2rem', color: '#1B2A4E' }}>Revenue Growth</span>} bordered={false} style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
               <div style={{ height: 300, width: '100%' }}>
                 {monthlyDataArray.length > 0 ? (
@@ -303,22 +301,21 @@ export default function Dashboard() {
                 )}
               />
             </Card>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </>
     );
   }
 
-
-
-
   return (
     <>
       <Head><title>Dashboard | EventHub</title></Head>
-      <div style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-
-
-
+      <motion.div 
+        initial="initial"
+        animate="animate"
+        variants={staggerContainer}
+        style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
+      >
         {/* Digital Ticket Modal */}
         <DigitalTicketModal
           open={isQRModalVisible}
@@ -372,19 +369,24 @@ export default function Dashboard() {
               const isUnlocked = (user.loyaltyPoints || 0) >= reward.pts;
               const isRedeemed = user.redeemedRewards?.includes(reward.title);
               return (
-                <div key={i} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '16px',
-                  padding: '16px',
-                  borderRadius: '16px',
-                  background: isUnlocked ? 'white' : '#F9FAFB',
-                  border: '1px solid',
-                  borderColor: isUnlocked ? (isRedeemed ? '#10B981' : '#E5E7EB') : '#F1F5F9',
-                  opacity: isUnlocked ? 1 : 0.7,
-                  transition: 'all 0.3s ease',
-                  position: 'relative'
-                }}>
+                <motion.div 
+                  key={i} 
+                  variants={fadeInUp}
+                  whileHover={isUnlocked ? hoverScale.whileHover : {}}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    padding: '16px',
+                    borderRadius: '16px',
+                    background: isUnlocked ? 'white' : '#F9FAFB',
+                    border: '1px solid',
+                    borderColor: isUnlocked ? (isRedeemed ? '#10B981' : '#E5E7EB') : '#F1F5F9',
+                    opacity: isUnlocked ? 1 : 0.7,
+                    transition: 'all 0.3s ease',
+                    position: 'relative'
+                  }}
+                >
                   <div style={{
                     width: '48px', height: '48px', borderRadius: '12px',
                     background: isRedeemed ? 'rgba(16, 185, 129, 0.1)' : (isUnlocked ? 'rgba(131, 56, 236, 0.1)' : '#F3F4F6'),
@@ -412,7 +414,7 @@ export default function Dashboard() {
                       Redeem
                     </Button>
                   )}
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -430,12 +432,16 @@ export default function Dashboard() {
 
 
         {/* EVENTHUB HEADER */}
-        <div className="header-responsive" style={{ marginBottom: '32px' }}>
+        <motion.div 
+          variants={fadeInUp}
+          className="header-responsive" 
+          style={{ marginBottom: '32px' }}
+        >
           <div>
             <h1 style={{ margin: 0, fontSize: '2.2rem', fontWeight: 800, color: '#1B2A4E', letterSpacing: '-0.5px' }}>Dashboard</h1>
             <p style={{ color: '#6B7280', margin: '4px 0 0 0', fontSize: '1rem' }}>Hello {user?.name}, welcome back!</p>
           </div>
-        </div>
+        </motion.div>
 
         {isOrganizer ? (() => {
           const upcomingEvents = (myEventsData?.myEvents?.filter(e => new Date(isNaN(Number(e.date)) ? e.date : Number(e.date)) >= now) || [])
@@ -468,42 +474,35 @@ export default function Dashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
                 {/* TOP KPI CARDS ROW */}
-                <div className="grid-cols-auto-320" style={{ gap: '24px' }}>
-                  <Card styles={{ body: { padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' } }} style={{ borderRadius: '20px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(67, 56, 202, 0.1)', color: 'rgb(67, 56, 202)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>📅</div>
-                    <div>
-                      <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>Upcoming Events</div>
-                      <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{upcomingEvents.length}</div>
-                    </div>
-                  </Card>
-
-                  <Card styles={{ body: { padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' } }} style={{ borderRadius: '20px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(67, 56, 202, 0.1)', color: 'rgb(67, 56, 202)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>☑️</div>
-                    <div>
-                      <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>Total Bookings</div>
-                      <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{analyticsData?.myAnalytics?.confirmedBookingsCount || 0}</div>
-                    </div>
-                  </Card>
-
-                  <Card styles={{ body: { padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' } }} style={{ borderRadius: '20px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(67, 56, 202, 0.1)', color: 'rgb(67, 56, 202)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🎟️</div>
-                    <div>
-                      <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>Tickets Sold</div>
-                      <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{ticketsSold}</div>
-                    </div>
-                  </Card>
-
-                  <Card styles={{ body: { padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' } }} style={{ borderRadius: '20px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(251, 191, 36, 0.1)', color: '#FBBF24', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>⭐</div>
-                    <div>
-                      <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>Global Rating</div>
-                      <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{user?.averageRating?.toFixed(1) || '0.0'}</div>
-                    </div>
-                  </Card>
-                </div>
+                <motion.div 
+                  variants={staggerContainer}
+                  className="grid-cols-auto-320" 
+                  style={{ gap: '24px' }}
+                >
+                  {[
+                    { label: 'Upcoming Events', val: upcomingEvents.length, icon: '📅', color: 'rgb(67, 56, 202)', bg: 'rgba(67, 56, 202, 0.1)' },
+                    { label: 'Total Bookings', val: analyticsData?.myAnalytics?.confirmedBookingsCount || 0, icon: '☑️', color: 'rgb(67, 56, 202)', bg: 'rgba(67, 56, 202, 0.1)' },
+                    { label: 'Tickets Sold', val: ticketsSold, icon: '🎟️', color: 'rgb(67, 56, 202)', bg: 'rgba(67, 56, 202, 0.1)' },
+                    { label: 'Global Rating', val: user?.averageRating?.toFixed(1) || '0.0', icon: '⭐', color: '#FBBF24', bg: 'rgba(251, 191, 36, 0.1)' }
+                  ].map((kpi, i) => (
+                    <motion.div key={i} variants={fadeInUp} whileHover={hoverScale.whileHover}>
+                      <Card styles={{ body: { padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' } }} style={{ borderRadius: '20px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', height: '100%' }}>
+                        <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: kpi.bg, color: kpi.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>{kpi.icon}</div>
+                        <div>
+                          <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>{kpi.label}</div>
+                          <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{kpi.val}</div>
+                        </div>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </motion.div>
 
                 {/* GRAPHS ROW: Ticket Sales (Doughnut) & Sales Revenue (Bar) */}
-                <div className="grid-cols-reverse" style={{ gap: '24px' }}>
+                <motion.div 
+                  variants={fadeInUp}
+                  className="grid-cols-reverse" 
+                  style={{ gap: '24px' }}
+                >
                   <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                       <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Ticket Sales</h3>
@@ -548,7 +547,6 @@ export default function Dashboard() {
                     </div>
                     <div style={{ height: '220px', minWidth: 0 }}>
                       <ResponsiveContainer width="100%" height="100%" debounce={100}>
-                        {/* Injecting real data for current month, filling historical conservatively */}
                         <BarChart data={analyticsData?.myAnalytics?.monthlyData || []}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                           <XAxis dataKey="n" stroke="#9CA3AF" axisLine={false} tickLine={false} fontSize={12} dy={10} />
@@ -605,56 +603,79 @@ export default function Dashboard() {
                       })()}
                     </div>
                   </Card>
-                </div>
+                </motion.div>
 
                 {/* POPULAR EVENTS PROGRESS BARS */}
-                <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                    <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Event Category Breakdown</h3>
-                    <Select
-                      value={categoryFilter}
-                      onChange={setCategoryFilter}
-                      variant="borderless"
-                      style={{ background: '#F3F4F6', borderRadius: '100px', fontWeight: 600, minWidth: '100px' }}
-                      dropdownStyle={{ borderRadius: '12px' }}
-                      options={[
-                        { value: 'Hosted', label: 'Hosted' },
-                        { value: 'Attended', label: 'Attended' }
-                      ]}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 600, color: '#1B2A4E' }}>
-                        <span style={{ textTransform: 'capitalize' }}>{topCat1[0]}</span>
-                        <span><span style={{ color: 'rgb(67, 56, 202)', marginRight: '32px' }}>{Math.round((topCat1[1] / totalEvents) * 100)}%</span> {topCat1[1]} Events</span>
-                      </div>
-                      <div style={{ width: '100%', height: '8px', background: '#F3F4F6', borderRadius: '100px' }}>
-                        <div style={{ width: `${Math.round((topCat1[1] / totalEvents) * 100)}%`, height: '100%', background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px' }} />
-                      </div>
+                <motion.div variants={fadeInUp}>
+                  <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                      <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Event Category Breakdown</h3>
+                      <Select
+                        value={categoryFilter}
+                        onChange={setCategoryFilter}
+                        variant="borderless"
+                        style={{ background: '#F3F4F6', borderRadius: '100px', fontWeight: 600, minWidth: '100px' }}
+                        dropdownStyle={{ borderRadius: '12px' }}
+                        options={[
+                          { value: 'Hosted', label: 'Hosted' },
+                          { value: 'Attended', label: 'Attended' }
+                        ]}
+                      />
                     </div>
-                    {topCat2[1] > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 600, color: '#1B2A4E' }}>
-                          <span style={{ textTransform: 'capitalize' }}>{topCat2[0]}</span>
-                          <span><span style={{ color: 'rgb(67, 56, 202)', marginRight: '32px' }}>{Math.round((topCat2[1] / totalEvents) * 100)}%</span> {topCat2[1]} Events</span>
+                          <span style={{ textTransform: 'capitalize' }}>{topCat1[0]}</span>
+                          <span><span style={{ color: 'rgb(67, 56, 202)', marginRight: '32px' }}>{Math.round((topCat1[1] / totalEvents) * 100)}%</span> {topCat1[1]} Events</span>
                         </div>
                         <div style={{ width: '100%', height: '8px', background: '#F3F4F6', borderRadius: '100px' }}>
-                          <div style={{ width: `${Math.round((topCat2[1] / totalEvents) * 100)}%`, height: '100%', background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px' }} />
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            whileInView={{ width: `${Math.round((topCat1[1] / totalEvents) * 100)}%` }}
+                            transition={{ duration: 1, ease: "easeOut" }}
+                            style={{ height: '100%', background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px' }} 
+                          />
                         </div>
                       </div>
-                    )}
-                  </div>
-                </Card>
+                      {topCat2[1] > 0 && (
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 600, color: '#1B2A4E' }}>
+                            <span style={{ textTransform: 'capitalize' }}>{topCat2[0]}</span>
+                            <span><span style={{ color: 'rgb(67, 56, 202)', marginRight: '32px' }}>{Math.round((topCat2[1] / totalEvents) * 100)}%</span> {topCat2[1]} Events</span>
+                          </div>
+                          <div style={{ width: '100%', height: '8px', background: '#F3F4F6', borderRadius: '100px' }}>
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              whileInView={{ width: `${Math.round((topCat2[1] / totalEvents) * 100)}%` }}
+                              transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+                              style={{ height: '100%', background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px' }} 
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                </motion.div>
 
                 {/* ALL EVENTS ROW */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
+                <motion.div variants={fadeInUp} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
                   <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.2rem' }}>My Events</h3>
                   <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }} onClick={() => router.push('/my-events')}>View All Event</div>
-                </div>
-                <div className="grid-cols-auto-320" style={{ gap: '20px' }}>
+                </motion.div>
+                <motion.div 
+                  variants={staggerContainer}
+                  className="grid-cols-auto-320" 
+                  style={{ gap: '20px' }}
+                >
                   {myEventsData?.myEvents.slice(0, 3).map(e => (
-                    <div key={e.id} className="hover-bounce" style={{ background: '#FFF', cursor: 'pointer', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', padding: '16px' }} onClick={() => { router.push(`/events/${e.id}`) }}>
+                    <motion.div 
+                      key={e.id} 
+                      variants={fadeInUp}
+                      whileHover={hoverScale.whileHover}
+                      className="hover-bounce" 
+                      style={{ background: '#FFF', cursor: 'pointer', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', padding: '16px' }} 
+                      onClick={() => { router.push(`/events/${e.id}`) }}
+                    >
                       <div style={{ position: 'relative', height: '140px', borderRadius: '16px', overflow: 'hidden', marginBottom: '16px', background: `url(${e.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover` }}>
                         <Tag style={{ position: 'absolute', top: '12px', left: '12px', background: 'rgba(255,255,255,0.9)', color: '#1B2A4E', border: 'none', borderRadius: '100px', fontWeight: 700, padding: '4px 12px', textTransform: 'capitalize' }}>{e.category || 'Event'}</Tag>
                         {e.status === 'COMPLETED' && (
@@ -670,110 +691,116 @@ export default function Dashboard() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CalendarOutlined /> {new Date(isNaN(Number(e.date)) ? e.date : Number(e.date)).toLocaleDateString()}</div>
                         <div style={{ color: 'rgb(67, 56, 202)', fontWeight: 800, fontSize: '1rem' }}>₹{Number(e.ticketTypes?.[0]?.price || 30).toLocaleString()}</div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                   {(!myEventsData || myEventsData?.myEvents.length === 0) && (
                     <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', background: '#FFF', borderRadius: '24px', color: '#6B7280' }}>
                       No hosted events to display yet.
                     </div>
                   )}
-                </div>
+                </motion.div>
 
               </div>
 
               {/* RIGHT COLUMN: Upcoming Event & Activity */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <motion.div variants={staggerContainer} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <motion.div variants={fadeInUp} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.2rem' }}>Upcoming Event</h3>
-                </div>
+                </motion.div>
 
                 {upcomingEvents[0] ? (
                   <>
-                    <Card styles={{ body: { padding: 0 } }} style={{ borderRadius: '24px', border: 'none', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
-                      <div style={{ height: '200px', background: `url(${upcomingEvents[0].imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover`, position: 'relative' }}>
-                        <Tag style={{ position: 'absolute', top: '16px', left: '16px', background: 'rgba(255,255,255,0.9)', color: '#1B2A4E', border: 'none', borderRadius: '100px', fontWeight: 700, padding: '6px 16px' }}>Most Anticipated</Tag>
-                      </div>
-                      <div style={{ padding: '24px' }}>
-                        <h3 style={{ margin: '0 0 8px 0', color: '#1B2A4E', fontSize: '1.4rem', fontWeight: 800 }}>{upcomingEvents[0].title}</h3>
-                        <div style={{ color: '#6B7280', fontSize: '0.9rem', marginBottom: '20px' }}>{upcomingEvents[0].location}</div>
-                        <p style={{ color: '#6B7280', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>{upcomingEvents[0].description ? upcomingEvents[0].description.substring(0, 80) + '...' : 'Immerse yourself in electrifying performances by top artists and enjoy the festival.'}</p>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1B2A4E', fontWeight: 600, fontSize: '0.9rem', background: '#F3F4F6', padding: '8px 16px', borderRadius: '12px' }}>
-                            <CalendarOutlined />
-                            <span>{new Date(isNaN(Number(upcomingEvents[0].date)) ? upcomingEvents[0].date : Number(upcomingEvents[0].date)).toLocaleDateString()}</span>
-                          </div>
-                          <Button type="primary" onClick={() => router.push(`/events/${upcomingEvents[0].id}`)} style={{ background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px', padding: '0 24px', fontWeight: 700, height: '40px', border: 'none', boxShadow: '0 4px 12px rgba(49, 46, 129, 0.3)' }}>View Details</Button>
-                        </div>
-                      </div>
-                    </Card>
-                    {upcomingEvents[1] && (
+                    <motion.div variants={fadeInUp} whileHover={hoverScale.whileHover}>
                       <Card styles={{ body: { padding: 0 } }} style={{ borderRadius: '24px', border: 'none', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
-                        <div style={{ height: '200px', background: `url(${upcomingEvents[1]?.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover`, position: 'relative' }}>
+                        <div style={{ height: '200px', background: `url(${upcomingEvents[0].imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover`, position: 'relative' }}>
                           <Tag style={{ position: 'absolute', top: '16px', left: '16px', background: 'rgba(255,255,255,0.9)', color: '#1B2A4E', border: 'none', borderRadius: '100px', fontWeight: 700, padding: '6px 16px' }}>Most Anticipated</Tag>
                         </div>
                         <div style={{ padding: '24px' }}>
-                          <h3 style={{ margin: '0 0 8px 0', color: '#1B2A4E', fontSize: '1.4rem', fontWeight: 800 }}>{upcomingEvents[1]?.title}</h3>
-                          <div style={{ color: '#6B7280', fontSize: '0.9rem', marginBottom: '20px' }}>{upcomingEvents[1]?.location}</div>
-                          <p style={{ color: '#6B7280', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>{upcomingEvents[1]?.description ? upcomingEvents[1]?.description.substring(0, 80) + '...' : 'Immerse yourself in electrifying performances by top artists and enjoy the festival.'}</p>
+                          <h3 style={{ margin: '0 0 8px 0', color: '#1B2A4E', fontSize: '1.4rem', fontWeight: 800 }}>{upcomingEvents[0].title}</h3>
+                          <div style={{ color: '#6B7280', fontSize: '0.9rem', marginBottom: '20px' }}>{upcomingEvents[0].location}</div>
+                          <p style={{ color: '#6B7280', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>{upcomingEvents[0].description ? upcomingEvents[0].description.substring(0, 80) + '...' : 'Immerse yourself in electrifying performances by top artists and enjoy the festival.'}</p>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1B2A4E', fontWeight: 600, fontSize: '0.9rem', background: '#F3F4F6', padding: '8px 16px', borderRadius: '12px' }}>
                               <CalendarOutlined />
-                              <span>{new Date(isNaN(Number(upcomingEvents[1]?.date)) ? upcomingEvents[1]?.date : Number(upcomingEvents[1]?.date)).toLocaleDateString()}</span>
+                              <span>{new Date(isNaN(Number(upcomingEvents[0].date)) ? upcomingEvents[0].date : Number(upcomingEvents[0].date)).toLocaleDateString()}</span>
                             </div>
-                            <Button type="primary" onClick={() => router.push(`/events/${upcomingEvents[1]?.id}`)} style={{ background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px', padding: '0 24px', fontWeight: 700, height: '40px', border: 'none', boxShadow: '0 4px 12px rgba(49, 46, 129, 0.3)' }}>View Details</Button>
+                            <Button type="primary" onClick={() => router.push(`/events/${upcomingEvents[0].id}`)} style={{ background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px', padding: '0 24px', fontWeight: 700, height: '40px', border: 'none', boxShadow: '0 4px 12px rgba(49, 46, 129, 0.3)' }}>View Details</Button>
                           </div>
                         </div>
                       </Card>
+                    </motion.div>
+                    {upcomingEvents[1] && (
+                      <motion.div variants={fadeInUp} whileHover={hoverScale.whileHover}>
+                        <Card styles={{ body: { padding: 0 } }} style={{ borderRadius: '24px', border: 'none', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
+                          <div style={{ height: '200px', background: `url(${upcomingEvents[1]?.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover`, position: 'relative' }}>
+                            <Tag style={{ position: 'absolute', top: '16px', left: '16px', background: 'rgba(255,255,255,0.9)', color: '#1B2A4E', border: 'none', borderRadius: '100px', fontWeight: 700, padding: '6px 16px' }}>Most Anticipated</Tag>
+                          </div>
+                          <div style={{ padding: '24px' }}>
+                            <h3 style={{ margin: '0 0 8px 0', color: '#1B2A4E', fontSize: '1.4rem', fontWeight: 800 }}>{upcomingEvents[1]?.title}</h3>
+                            <div style={{ color: '#6B7280', fontSize: '0.9rem', marginBottom: '20px' }}>{upcomingEvents[1]?.location}</div>
+                            <p style={{ color: '#6B7280', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>{upcomingEvents[1]?.description ? upcomingEvents[1]?.description.substring(0, 80) + '...' : 'Immerse yourself in electrifying performances by top artists and enjoy the festival.'}</p>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1B2A4E', fontWeight: 600, fontSize: '0.9rem', background: '#F3F4F6', padding: '8px 16px', borderRadius: '12px' }}>
+                                <CalendarOutlined />
+                                <span>{new Date(isNaN(Number(upcomingEvents[1]?.date)) ? upcomingEvents[1]?.date : Number(upcomingEvents[1]?.date)).toLocaleDateString()}</span>
+                              </div>
+                              <Button type="primary" onClick={() => router.push(`/events/${upcomingEvents[1]?.id}`)} style={{ background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px', padding: '0 24px', fontWeight: 700, height: '40px', border: 'none', boxShadow: '0 4px 12px rgba(49, 46, 129, 0.3)' }}>View Details</Button>
+                            </div>
+                          </div>
+                        </Card>
+                      </motion.div>
                     )}
                   </>
                 ) : (
-                  <Card
-                    styles={{ body: { padding: '48px 24px', textAlign: 'center' } }}
-                    style={{
-                      borderRadius: '32px',
-                      border: '1px dashed #E2E8F0',
-                      background: 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%)',
-                      boxShadow: 'none'
-                    }}
-                  >
-                    <div style={{
-                      width: '64px',
-                      height: '64px',
-                      borderRadius: '20px',
-                      background: 'white',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '2rem',
-                      marginBottom: '24px',
-                      boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)'
-                    }}>
-                      ✨
-                    </div>
-                    <Title level={4} style={{ color: '#1B2A4E', fontWeight: 800, marginBottom: '8px' }}>Launch Your Next Event</Title>
-                    <AntText style={{ color: '#64748B', display: 'block', marginBottom: '32px', fontSize: '1rem' }}>
-                      You don't have any upcoming events scheduled. Create one now to start selling tickets!
-                    </AntText>
-                    <Button
-                      type="primary"
-                      size="large"
-                      icon={<PlusCircleOutlined />}
-                      onClick={() => router.push('/events/create')}
+                  <motion.div variants={fadeInUp}>
+                    <Card
+                      styles={{ body: { padding: '48px 24px', textAlign: 'center' } }}
                       style={{
-                        background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)',
-                        borderRadius: '14px',
-                        height: '54px',
-                        padding: '0 32px',
-                        fontWeight: 700,
-                        border: 'none',
-                        boxShadow: '0 10px 15px -3px rgba(49, 46, 129, 0.3)'
+                        borderRadius: '32px',
+                        border: '1px dashed #E2E8F0',
+                        background: 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%)',
+                        boxShadow: 'none'
                       }}
                     >
-                      Create Event Now
-                    </Button>
-                  </Card>
+                      <div style={{
+                        width: '64px',
+                        height: '64px',
+                        borderRadius: '20px',
+                        background: 'white',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '2rem',
+                        marginBottom: '24px',
+                        boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)'
+                      }}>
+                        ✨
+                      </div>
+                      <Title level={4} style={{ color: '#1B2A4E', fontWeight: 800, marginBottom: '8px' }}>Launch Your Next Event</Title>
+                      <AntText style={{ color: '#64748B', display: 'block', marginBottom: '32px', fontSize: '1rem' }}>
+                        You don't have any upcoming events scheduled. Create one now to start selling tickets!
+                      </AntText>
+                      <Button
+                        type="primary"
+                        size="large"
+                        icon={<PlusCircleOutlined />}
+                        onClick={() => router.push('/events/create')}
+                        style={{
+                          background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)',
+                          borderRadius: '14px',
+                          height: '54px',
+                          padding: '0 32px',
+                          fontWeight: 700,
+                          border: 'none',
+                          boxShadow: '0 10px 15px -3px rgba(49, 46, 129, 0.3)'
+                        }}
+                      >
+                        Create Event Now
+                      </Button>
+                    </Card>
+                  </motion.div>
                 )}
-              </div>
+              </motion.div>
             </div>
           );
         })() : (() => {
@@ -1202,7 +1229,7 @@ export default function Dashboard() {
           );
         })()}
 
-      </div>
+      </motion.div>
     </>
   );
 }
