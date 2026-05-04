@@ -7,16 +7,17 @@ const notificationService = {
     requireAuth(user);
     const userId = user.id || user._id;
 
-    const notifications = await Notification.find({
-      recipient: new mongoose.Types.ObjectId(userId),
-      read: false
-    })
-      .sort({ createdAt: -1 })
-      .populate('booking')
-      .populate('event');
+    const notifications = await Notification.aggregate([
+      { $match: { recipient: new mongoose.Types.ObjectId(userId), read: false } },
+      { $sort: { createdAt: -1 } },
+      { $lookup: { from: 'bookings', localField: 'booking', foreignField: '_id', as: 'booking' } },
+      { $unwind: { path: '$booking', preserveNullAndEmptyArrays: true } },
+      { $lookup: { from: 'events', localField: 'event', foreignField: '_id', as: 'event' } },
+      { $unwind: { path: '$event', preserveNullAndEmptyArrays: true } }
+    ]);
 
     console.log(`[LIST DEBUG] User: ${userId}, Found: ${notifications.length}`);
-    return notifications;
+    return notifications.map(n => ({ ...n, id: n._id.toString() }));
   },
 
   getUnreadCount: async (user) => {

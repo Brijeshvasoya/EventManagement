@@ -7,6 +7,7 @@ const User = require('../../models/User');
 const { requireAuth } = require('../../utils/authGuard');
 const notificationService = require('../notifications/notificationService');
 
+const mongoose = require('mongoose');
 const Feedback = require('../../models/Feedback');
 
 const bookingService = {
@@ -20,7 +21,12 @@ const bookingService = {
     // Extract ID string if an object was passed accidentally
     const cleanEventId = typeof eventId === 'object' ? (eventId._id || eventId.id) : eventId;
 
-    const event = await Event.findById(cleanEventId).populate('organizer');
+    const events = await Event.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(cleanEventId) } },
+      { $lookup: { from: 'users', localField: 'organizer', foreignField: '_id', as: 'organizer' } },
+      { $unwind: { path: '$organizer', preserveNullAndEmptyArrays: true } }
+    ]);
+    const event = events[0];
     if (!event) throw new Error('Event not found');
 
     // Prevent double processing the same payment session
@@ -52,34 +58,61 @@ const bookingService = {
       }
     }
 
-    let isNewBooking = false;
+    let justConfirmed = false;
+
     if (booking) {
       if (booking.status === 'CONFIRMED') return booking;
 
-      booking.status = 'CONFIRMED';
-      booking.paymentStatus = 'PAID';
-      booking.paymentIntentId = paymentIntentId;
-      if (amountPaid) booking.amountPaid = amountPaid;
-      await booking.save();
+      // Use findOneAndUpdate to be atomic and avoid race conditions
+      const updated = await Booking.findOneAndUpdate(
+        { _id: booking._id, status: { $ne: 'CONFIRMED' } },
+        {
+          $set: {
+            status: 'CONFIRMED',
+            paymentStatus: 'PAID',
+            paymentIntentId: paymentIntentId || booking.paymentIntentId,
+            amountPaid: amountPaid || booking.amountPaid
+          }
+        },
+        { new: true }
+      );
+
+      if (!updated) {
+        // Another request just confirmed it!
+        return await Booking.findById(booking._id);
+      }
+      booking = updated;
+      justConfirmed = true;
     } else {
-      isNewBooking = true;
-      booking = await Booking.create({
-        event: cleanEventId,
-        user: user.id,
-        ticketType: ticketType || 'REGULAR',
-        amountPaid: amountPaid || 0,
-        stripePaymentId,
-        paymentIntentId,
-        status: 'CONFIRMED',
-        paymentStatus: 'PAID',
-        quantity: quantity || 1
-      });
+      try {
+        booking = await Booking.create({
+          event: cleanEventId,
+          user: user.id,
+          ticketType: ticketType || 'REGULAR',
+          amountPaid: amountPaid || 0,
+          stripePaymentId,
+          paymentIntentId,
+          status: 'CONFIRMED',
+          paymentStatus: 'PAID',
+          quantity: quantity || 1
+        });
+        justConfirmed = true;
+      } catch (err) {
+        if (err.code === 11000) {
+          // Duplicate key error means another request created it!
+          const existing = await Booking.findOne({ stripePaymentId });
+          if (existing) return existing;
+        }
+        throw err;
+      }
+    }
+
+    if (!justConfirmed) {
+      return booking;
     }
 
     // Increment Loyalty Points (100 pts per booking)
-    if (isNewBooking || booking.status === 'CONFIRMED') {
-      await User.findByIdAndUpdate(user.id, { $inc: { loyaltyPoints: 100 } });
-    }
+    await User.findByIdAndUpdate(user.id, { $inc: { loyaltyPoints: 100 } });
 
     // Notify Organizer
     if (event.organizer) {
@@ -195,7 +228,14 @@ const bookingService = {
       try {
         const Waitlist = require('../../models/Waitlist');
         // 1. Find the first person in line
-        const nextInLine = await Waitlist.findOne({ event: booking.event, status: 'WAITING' }).sort({ createdAt: 1 }).populate('user');
+        const waitlistItems = await Waitlist.aggregate([
+          { $match: { event: new mongoose.Types.ObjectId(booking.event), status: 'WAITING' } },
+          { $sort: { createdAt: 1 } },
+          { $limit: 1 },
+          { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'user' } },
+          { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } }
+        ]);
+        const nextInLine = waitlistItems[0];
         
         if (nextInLine) {
           const event = await Event.findById(booking.event);
@@ -217,8 +257,7 @@ const bookingService = {
 
           // 2. Notify the first person immediately (Exclusive window)
           await sendSpotNotification(nextInLine.user._id, event.title, true);
-          nextInLine.status = 'NOTIFIED';
-          await nextInLine.save();
+          await Waitlist.updateOne({ _id: nextInLine._id }, { $set: { status: 'NOTIFIED' } });
 
           // 3. Wait 5 minutes, then notify everyone else if spots are still open
           setTimeout(async () => {
@@ -233,15 +272,15 @@ const bookingService = {
 
               if (totalBooked < currentEvent.capacity) {
                 // Spots still available! Notify the rest of the waitlist
-                const remainingWaitlist = await Waitlist.find({ 
-                  event: currentEvent._id, 
-                  status: 'WAITING' 
-                }).populate('user');
+                const remainingWaitlist = await Waitlist.aggregate([
+                  { $match: { event: new mongoose.Types.ObjectId(currentEvent._id), status: 'WAITING' } },
+                  { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'user' } },
+                  { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } }
+                ]);
 
                 for (const entry of remainingWaitlist) {
                   await sendSpotNotification(entry.user._id, currentEvent.title, false);
-                  entry.status = 'NOTIFIED';
-                  await entry.save();
+                  await Waitlist.updateOne({ _id: entry._id }, { $set: { status: 'NOTIFIED' } });
                 }
               }
             } catch (err) {
@@ -259,7 +298,12 @@ const bookingService = {
 
     // Notify Attendee about cancellation
     try {
-      const cancelledEvent = await Event.findById(booking.event).populate('organizer');
+      const cancelledEvents = await Event.aggregate([
+        { $match: { _id: new mongoose.Types.ObjectId(booking.event) } },
+        { $lookup: { from: 'users', localField: 'organizer', foreignField: '_id', as: 'organizer' } },
+        { $unwind: { path: '$organizer', preserveNullAndEmptyArrays: true } }
+      ]);
+      const cancelledEvent = cancelledEvents[0];
       const refundNote = refundSucceeded && booking.amountPaid > 0
         ? ` A 75% refund of $${(booking.amountPaid * 0.75).toFixed(2)} has been initiated.`
         : '';
@@ -333,7 +377,14 @@ const bookingService = {
   },
 
   verifyTicket: async (bookingId) => {
-    const booking = await Booking.findById(bookingId).populate('user').populate('event');
+    const bookings = await Booking.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(bookingId) } },
+      { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'user' } },
+      { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+      { $lookup: { from: 'events', localField: 'event', foreignField: '_id', as: 'event' } },
+      { $unwind: { path: '$event', preserveNullAndEmptyArrays: true } }
+    ]);
+    const booking = bookings[0];
     if (!booking) throw new Error('Invalid ticket: Booking not found.');
 
     if (booking.status === 'CHECKED_IN') {
@@ -362,7 +413,7 @@ const bookingService = {
     }
 
     booking.status = 'CHECKED_IN';
-    await booking.save();
+    await Booking.updateOne({ _id: booking._id }, { $set: { status: 'CHECKED_IN' } });
 
     // Notify Attendee about successful check-in
     try {
@@ -411,19 +462,29 @@ const bookingService = {
   },
 
   getPublicBookingForFeedback: async (bookingId) => {
-    const booking = await Booking.findById(bookingId).populate('event');
+    const bookings = await Booking.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(bookingId) } },
+      { $lookup: { from: 'events', localField: 'event', foreignField: '_id', as: 'event' } },
+      { $unwind: { path: '$event', preserveNullAndEmptyArrays: true } }
+    ]);
+    const booking = bookings[0];
     if (!booking) throw new Error('Booking not found');
     if (booking.status !== 'CHECKED_IN') throw new Error("You can submit feedback only after you have checked in to the event.");
 
     // Populate organizer name for display
     const Event = require('../../models/Event'); // ensure populated
-    const populatedEvent = await Event.findById(booking.event).populate('organizer');
+    const populatedEvents = await Event.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(booking.event._id) } },
+      { $lookup: { from: 'users', localField: 'organizer', foreignField: '_id', as: 'organizer' } },
+      { $unwind: { path: '$organizer', preserveNullAndEmptyArrays: true } }
+    ]);
+    const populatedEvent = populatedEvents[0];
 
     // Check for existing feedback
     const existingFeedback = await Feedback.findOne({ booking: bookingId });
 
     return {
-      id: booking.id,
+      id: booking._id.toString(),
       eventTitle: populatedEvent.title,
       organizerName: populatedEvent.organizer?.name || 'Organizer',
       status: booking.status,
@@ -435,7 +496,12 @@ const bookingService = {
   submitFeedback: async ({ bookingId, rating, comment }) => {
     if (rating < 1 || rating > 5) throw new Error('Rating must be between 1 and 5');
 
-    const booking = await Booking.findById(bookingId).populate('event');
+    const bookings = await Booking.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(bookingId) } },
+      { $lookup: { from: 'events', localField: 'event', foreignField: '_id', as: 'event' } },
+      { $unwind: { path: '$event', preserveNullAndEmptyArrays: true } }
+    ]);
+    const booking = bookings[0];
     if (!booking) throw new Error('Booking not found');
 
     // Check if feedback already exists

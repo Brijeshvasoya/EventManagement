@@ -77,7 +77,7 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user, prom
       allow_promotion_codes: false, // We handle it manually now
       metadata: { eventId, userId: user.id, ticketType, quantity: quantity.toString(), promoCode: promoCode || '' },
       success_url: `${APP_URL}/checkout-success?eventId=${eventId}&ticketType=${ticketType}&quantity=${quantity}&sessionId={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${APP_URL}/checkout-cancel`,
+      cancel_url: `${APP_URL}/checkout-cancel?sessionId={CHECKOUT_SESSION_ID}`,
     });
 
     // Create a PENDING booking record
@@ -89,7 +89,8 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user, prom
       amountPaid: totalAmount,
       stripePaymentId: session.id,
       status: 'PENDING',
-      paymentStatus: 'PENDING'
+      paymentStatus: 'PENDING',
+      abandonedEmailSent: false
     });
 
     return session.url;
@@ -313,5 +314,31 @@ exports.createTransfer = async (payout, organizer) => {
     return transfer;
   }
   return { id: 'tr_mock_' + Date.now() };
+};
+
+exports.triggerAbandonedCheckoutEmail = async (sessionId, user) => {
+  const Booking = require('../../models/Booking');
+  const Event = require('../../models/Event');
+  
+  const booking = await Booking.findOne({ stripePaymentId: sessionId, status: 'PENDING', abandonedEmailSent: false });
+  if (!booking) return false;
+  
+  let checkoutUrl = '';
+  if (sessionId.startsWith('cs_')) {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    checkoutUrl = session.url;
+  }
+  if (!checkoutUrl) return false;
+  
+  const event = await Event.findById(booking.event);
+  if (!event) return false;
+  
+  const { sendAbandonedCheckoutEmail } = require('../../utils/email');
+  await sendAbandonedCheckoutEmail(user, event, checkoutUrl);
+  
+  booking.abandonedEmailSent = true;
+  await Booking.updateOne({ _id: booking._id }, { $set: { abandonedEmailSent: true } });
+  
+  return true;
 };
 

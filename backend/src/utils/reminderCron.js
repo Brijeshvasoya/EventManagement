@@ -105,4 +105,62 @@ const startReminderCron = () => {
   console.log('✅ [ReminderCron] Daily event reminder cron scheduled (runs at 08:00 AM every day).');
 };
 
-module.exports = { startReminderCron, runReminderJob };
+const runAbandonedCheckoutJob = async () => {
+  const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const bookings = await Booking.aggregate([
+    {
+      $match: {
+        status: 'PENDING',
+        paymentStatus: 'PENDING',
+        abandonedEmailSent: false,
+        createdAt: { $lte: thirtyMinsAgo, $gte: twentyFourHoursAgo },
+        stripePaymentId: { $exists: true, $ne: null }
+      }
+    },
+    { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'user' } },
+    { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+    { $lookup: { from: 'events', localField: 'event', foreignField: '_id', as: 'event' } },
+    { $unwind: { path: '$event', preserveNullAndEmptyArrays: true } }
+  ]);
+
+  if (bookings.length === 0) {
+    console.log('ℹ️  [ReminderCron] No abandoned checkouts found. Skipping.');
+    return { sent: 0 };
+  }
+
+  const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  const { sendAbandonedCheckoutEmail } = require('./email');
+  let totalSent = 0;
+
+  for (const booking of bookings) {
+    try {
+      if (!booking.user || !booking.event) continue;
+
+      let checkoutUrl = '';
+      if (booking.stripePaymentId && booking.stripePaymentId.startsWith('cs_')) {
+        const session = await stripe.checkout.sessions.retrieve(booking.stripePaymentId);
+        if (session.url) {
+          checkoutUrl = session.url;
+        }
+      }
+
+      if (!checkoutUrl) {
+        console.warn(`⚠️ [ReminderCron] No active Stripe session URL for booking ${booking._id}`);
+        continue;
+      }
+
+      await sendAbandonedCheckoutEmail(booking.user, booking.event, checkoutUrl);
+      await Booking.updateOne({ _id: booking._id }, { $set: { abandonedEmailSent: true } });
+      totalSent++;
+    } catch (err) {
+      console.error(`❌ [ReminderCron] Failed to process abandoned checkout for ${booking._id}:`, err.message);
+    }
+  }
+
+  console.log(`✅ [ReminderCron] Sent ${totalSent} abandoned checkout email(s).`);
+  return { sent: totalSent };
+};
+
+module.exports = { startReminderCron, runReminderJob, runAbandonedCheckoutJob };

@@ -92,7 +92,15 @@ const startServer = async () => {
   app.get('/api/tickets/download/:bookingId', async (req, res) => {
     try {
       const { bookingId } = req.params;
-      const booking = await Booking.findById(bookingId).populate('user event');
+      const mongoose = require('mongoose');
+      const bookings = await Booking.aggregate([
+        { $match: { _id: new mongoose.Types.ObjectId(bookingId) } },
+        { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'user' } },
+        { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+        { $lookup: { from: 'events', localField: 'event', foreignField: '_id', as: 'event' } },
+        { $unwind: { path: '$event', preserveNullAndEmptyArrays: true } }
+      ]);
+      const booking = bookings[0];
       if (!booking) return res.status(404).send('Booking not found.');
       const pdfBuffer = await generateTicketPDF(booking.user, booking, booking.event);
       const fileName = `Ticket_${booking.event.title.replace(/[^a-zA-Z0-9]/g, '_')}_${bookingId.slice(-6)}.pdf`;

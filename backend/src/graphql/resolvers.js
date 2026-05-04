@@ -310,6 +310,11 @@ const resolvers = {
       const PromoCode = require('../models/PromoCode');
       const result = await PromoCode.deleteOne({ _id: id, organizer: user.id });
       return result.deletedCount > 0;
+    },
+    triggerAbandonedCheckout: async (_, { sessionId }, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      const stripeService = require('../modules/payments/stripeService');
+      return await stripeService.triggerAbandonedCheckoutEmail(sessionId, user);
     }
   },
   PromoCode: {

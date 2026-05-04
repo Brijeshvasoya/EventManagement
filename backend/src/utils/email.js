@@ -293,3 +293,47 @@ exports.sendCheckInFeedbackEmail = async (user, booking, event) => {
     console.error(`❌ FEEDBACK EMAIL ERROR: Failed to send to ${recipient}`, error);
   }
 };
+
+exports.sendAbandonedCheckoutEmail = async (user, event, checkoutUrl) => {
+  const recipient = (process.env.RESEND_TEST_RECIPIENT || user.email).trim();
+  const FROM_EMAIL = (process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev').trim();
+
+  try {
+    const emailOptions = {
+      from: FROM_EMAIL,
+      to: recipient,
+      subject: `You left something behind! Complete your booking for ${event.title} ⏳`,
+      text: `Hi ${user.name},\n\nWe noticed you didn't complete your ticket purchase for "${event.title}". Spots are filling up fast! Click here to complete your payment and secure your ticket:\n\n${checkoutUrl}\n\nHope to see you there!`,
+      html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 40px; color: white; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px;">⏳ Complete Your Booking</h1>
+            <p style="opacity: 0.85;">You left some tickets in your cart!</p>
+          </div>
+          <div style="padding: 30px; background: white; text-align: center;">
+            <p>Hi <strong>${user.name}</strong>,</p>
+            <p>We noticed you started booking tickets for <strong>"${event.title}"</strong>, but didn't finish the payment.</p>
+            <p>Don't miss out! Secure your spot before tickets sell out.</p>
+            
+            <div style="margin: 30px 0;">
+              <a href="${checkoutUrl}" style="background: #4338ca; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Complete Payment</a>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
+            <p style="font-size: 12px; color: #94a3b8; word-break: break-all;">
+              If the button doesn't work, copy and paste this URL into your browser: <br>
+              ${checkoutUrl}
+            </p>
+          </div>
+          <div style="padding: 20px; background: #f1f5f9; text-align: center; font-size: 12px; color: #94a3b8;">
+            © 2026 EventHub SaaS. All rights reserved.
+          </div>
+        </div>
+      `,
+    };
+
+    await resend.emails.send(emailOptions);
+  } catch (error) {
+    console.error(`❌ ABANDONED CHECKOUT EMAIL ERROR: Failed to send to ${recipient}`, error);
+  }
+};

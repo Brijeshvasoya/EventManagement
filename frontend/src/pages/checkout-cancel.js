@@ -2,8 +2,29 @@ import Link from 'next/link';
 import { Button, Result } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import Head from 'next/head';
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { useMutation } from '@apollo/client/react';
+import { gql } from '@apollo/client';
+
+const TRIGGER_ABANDONED_CHECKOUT = gql`
+  mutation triggerAbandonedCheckout($sessionId: String!) {
+    triggerAbandonedCheckout(sessionId: $sessionId)
+  }
+`;
 
 export default function CheckoutCancel() {
+  const router = useRouter();
+  const { sessionId } = router.query;
+  const [triggerAbandonedCheckout] = useMutation(TRIGGER_ABANDONED_CHECKOUT);
+
+  useEffect(() => {
+    if (sessionId) {
+      triggerAbandonedCheckout({ variables: { sessionId } })
+        .catch(err => console.error('Failed to trigger abandoned checkout email:', err));
+    }
+  }, [sessionId, triggerAbandonedCheckout]);
+
   return (
     <>
       <Head><title>Payment Cancelled | EventHub</title></Head>

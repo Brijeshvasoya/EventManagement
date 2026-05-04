@@ -74,6 +74,7 @@ const typeDefs = `#graphql
     createPromoCode(input: PromoCodeInput!): PromoCode!
     updatePromoCode(id: ID!, input: PromoCodeInput!): PromoCode!
     deletePromoCode(id: ID!): Boolean!
+    triggerAbandonedCheckout(sessionId: String!): Boolean!
   }
 
   type Subscription {
