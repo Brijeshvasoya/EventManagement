@@ -103,11 +103,11 @@ export default function SuperAdminEvents() {
               onChange={setTypeFilter}
               options={[
                 { value: 'ALL', label: 'All Types' },
-                { value: 'CONFERENCE', label: 'Conference' },
-                { value: 'WORKSHOP', label: 'Workshop' },
-                { value: 'CONCERT', label: 'Concert' },
-                { value: 'SPORTS', label: 'Sports' },
-                { value: 'EXHIBITION', label: 'Exhibition' },
+                { value: 'WEDDING', label: '💍 Wedding' },
+                { value: 'CORPORATE', label: '🏢 Corporate' },
+                { value: 'BIRTHDAY', label: '🎂 Birthday' },
+                { value: 'SEMINAR', label: '🎓 Seminar / Tech' },
+                { value: 'OTHER', label: '🌟 Other' },
               ]}
             />
           </Space>

@@ -197,11 +197,11 @@ const EventCard = memo(({ event, onBook, onDelete, onUpdate }) => {
             </Form.Item>
             <Form.Item name="eventType" label="Event Category">
               <Select>
-                <Select.Option value="WEDDING">Wedding</Select.Option>
-                <Select.Option value="CORPORATE">Corporate</Select.Option>
-                <Select.Option value="BIRTHDAY">Birthday</Select.Option>
-                <Select.Option value="SEMINAR">Seminar</Select.Option>
-                <Select.Option value="OTHER">Other</Select.Option>
+                <Select.Option value="WEDDING">💍 Wedding</Select.Option>
+                <Select.Option value="CORPORATE">🏢 Corporate</Select.Option>
+                <Select.Option value="BIRTHDAY">🎂 Birthday</Select.Option>
+                <Select.Option value="SEMINAR">🎓 Seminar / Tech</Select.Option>
+                <Select.Option value="OTHER">🌟 Other</Select.Option>
               </Select>
             </Form.Item>
           </div>

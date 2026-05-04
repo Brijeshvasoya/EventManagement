@@ -339,11 +339,11 @@ export default function Browse() {
 
                             <Form.Item name="eventType" label={<label style={{ fontWeight: '600', color: '#a0a0b8', fontSize: '0.85rem' }}>Event Type *</label>} rules={[{ required: true }]} style={{ marginBottom: 0 }}>
                                 <Select style={{ width: '100%', height: '42px' }}>
-                                    <Select.Option value="WEDDING">Wedding</Select.Option>
-                                    <Select.Option value="CORPORATE">Corporate</Select.Option>
-                                    <Select.Option value="BIRTHDAY">Birthday</Select.Option>
-                                    <Select.Option value="SEMINAR">Seminar / Tech</Select.Option>
-                                    <Select.Option value="OTHER">Other</Select.Option>
+                                    <Select.Option value="WEDDING">💍 Wedding</Select.Option>
+                                    <Select.Option value="CORPORATE">🏢 Corporate</Select.Option>
+                                    <Select.Option value="BIRTHDAY">🎂 Birthday</Select.Option>
+                                    <Select.Option value="SEMINAR">🎓 Seminar / Tech</Select.Option>
+                                    <Select.Option value="OTHER">🌟 Other</Select.Option>
                                 </Select>
                             </Form.Item>
                         </div>

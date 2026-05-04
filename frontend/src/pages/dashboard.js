@@ -184,7 +184,7 @@ export default function Dashboard() {
     users.forEach(u => {
       if (u.role === 'ORGANIZER' && u.isPlanPurchased) {
         if (u.planId === 'BASIC') platformPlanRevenue += 799;
-        if (u.planId === 'PRO') platformPlanRevenue += 24999;
+        if (u.planId === 'PRO') platformPlanRevenue += 2499;
       }
     });
 
@@ -493,8 +493,8 @@ export default function Dashboard() {
 
           // Calculate dynamic popular event categories
           const catCount = {};
-          const targetEvents = categoryFilter === 'Hosted' 
-            ? (myEventsData?.myEvents || []) 
+          const targetEvents = categoryFilter === 'Hosted'
+            ? (myEventsData?.myEvents || [])
             : (bookingData?.myBookings?.map(b => b.event) || []);
           const totalEvents = targetEvents.length || 1;
           targetEvents.forEach(e => {
@@ -654,7 +654,7 @@ export default function Dashboard() {
                 <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Event Category Breakdown</h3>
-                    <Select 
+                    <Select
                       value={categoryFilter}
                       onChange={setCategoryFilter}
                       variant="borderless"
@@ -879,24 +879,51 @@ export default function Dashboard() {
 
                 {/* CHARTS ROW */}
                 <div className="grid-cols-reverse" style={{ gap: '24px' }}>
-                  <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
+                  <Card styles={{ body: { padding: '24px', display: 'flex', flexDirection: 'column', height: '100%' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                     <h3 style={{ margin: '0 0 20px 0', color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Interest Split</h3>
-                    <div style={{ position: 'relative', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-                      <div style={{ width: '180px', height: '180px', borderRadius: '50%', background: `conic-gradient(rgb(67, 56, 202) 0% ${topCatPercent}%, #F1F5F9 ${topCatPercent}% 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ width: '136px', height: '136px', borderRadius: '50%', background: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '12px' }}>
-                          <div style={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '2px' }}>Favorite</div>
-                          <div style={{ color: '#1B2A4E', fontSize: topCat[0].length > 12 ? '0.9rem' : '1.1rem', fontWeight: 800, lineHeight: 1.1, textTransform: 'capitalize', maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{topCat[0]}</div>
-                        </div>
-                      </div>
+                    <div style={{ position: 'relative', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', flexShrink: 0 }}>
+                      {(() => {
+                        const COLORS = ['rgb(67, 56, 202)', '#3A86FF', '#FB5607', '#FF006E', '#FFBE0B', '#10B981'];
+                        let gradientStr = `conic-gradient(#F1F5F9 0% 100%)`;
+                        if (totalBookingsCount > 0) {
+                          let currentPercent = 0;
+                          const gradientParts = sortedCats.map(([cat, count], i) => {
+                            const p = (count / totalBookingsCount) * 100;
+                            const part = `${COLORS[i % COLORS.length]} ${currentPercent}% ${currentPercent + p}%`;
+                            currentPercent += p;
+                            return part;
+                          });
+                          gradientStr = `conic-gradient(${gradientParts.join(', ')})`;
+                        }
+
+                        return (
+                          <div style={{ width: '180px', height: '180px', borderRadius: '50%', background: gradientStr, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: '136px', height: '136px', borderRadius: '50%', background: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '12px' }}>
+                              <div style={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '2px' }}>Favorite</div>
+                              <div style={{ color: '#1B2A4E', fontSize: topCat[0].length > 12 ? '0.9rem' : '1.1rem', fontWeight: 800, lineHeight: 1.1, textTransform: 'capitalize', maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{topCat[0]}</div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                        <span style={{ color: '#6B7280', fontWeight: 600 }}>{topCat[0]}</span>
-                        <span style={{ color: '#1B2A4E', fontWeight: 800 }}>{topCatPercent}%</span>
-                      </div>
-                      <div style={{ width: '100%', height: '6px', background: '#F3F4F6', borderRadius: '10px' }}>
-                        <div style={{ width: `${topCatPercent}%`, height: '100%', background: 'rgb(67, 56, 202)', borderRadius: '10px' }} />
-                      </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto', paddingRight: '4px' }}>
+                      {sortedCats.map(([cat, count], i) => {
+                        const COLORS = ['rgb(67, 56, 202)', '#3A86FF', '#FB5607', '#FF006E', '#FFBE0B', '#10B981'];
+                        const color = COLORS[i % COLORS.length];
+                        const percent = totalBookingsCount > 0 ? Math.round((count / totalBookingsCount) * 100) : 0;
+
+                        return (
+                          <div key={cat} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                              <span style={{ color: '#6B7280', fontWeight: 600, textTransform: 'capitalize' }}>{cat}</span>
+                              <span style={{ color: '#1B2A4E', fontWeight: 800 }}>{percent}%</span>
+                            </div>
+                            <div style={{ width: '100%', height: '6px', background: '#F3F4F6', borderRadius: '10px' }}>
+                              <div style={{ width: `${percent}%`, height: '100%', background: color, borderRadius: '10px' }} />
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </Card>
 
