@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_MY_BOOKINGS, CANCEL_BOOKING } from '@/features/events/graphql/queries';
+import { GET_MY_BOOKINGS } from '@/features/events/graphql/queries';
+import { CANCEL_BOOKING } from '@/features/events/graphql/mutations';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
