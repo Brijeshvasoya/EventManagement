@@ -7,9 +7,12 @@
     "dev": "nodemon src/server.js"
   },
   "dependencies": {
+    "@ai-sdk/mistral": "^3.0.34",
     "@apollo/server": "^4.10.0",
     "@google/generative-ai": "^0.24.1",
     "@graphql-tools/schema": "^10.0.33",
+    "@mastra/core": "^1.32.1",
+    "@mastra/libsql": "^1.10.0",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
@@ -35,7 +38,8 @@
     "react-qr-barcode-scanner": "^2.1.25",
     "resend": "^4.0.0",
     "stripe": "^22.0.0",
-    "ws": "^8.20.0"
+    "ws": "^8.20.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

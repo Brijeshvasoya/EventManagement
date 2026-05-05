@@ -15,7 +15,7 @@ import { Spin, Card, Empty, Button, Tag, Divider, Modal, Popconfirm, Form, Input
 import { EnvironmentOutlined, CalendarOutlined, DownloadOutlined, QrcodeOutlined, CrownOutlined, CheckCircleFilled, UserOutlined, MailOutlined, SettingOutlined, AppstoreOutlined, ArrowRightOutlined, EyeOutlined, BellOutlined, CheckOutlined, RocketOutlined, PlusCircleOutlined, CloseCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import DigitalTicketModal from '@/features/events/components/DigitalTicketModal';
 import dayjs from 'dayjs';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, Sparkles } from 'lucide-react';
 
 const { Title, Text: AntText } = Typography;
 
@@ -437,7 +437,7 @@ export default function Dashboard() {
         <motion.div
           variants={fadeInUp}
           className="header-responsive"
-          style={{ marginBottom: '32px' }}
+          style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
         >
           <div>
             <h1 style={{ margin: 0, fontSize: '2.2rem', fontWeight: 800, color: '#1B2A4E', letterSpacing: '-0.5px' }}>Dashboard</h1>

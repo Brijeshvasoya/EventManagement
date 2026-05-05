@@ -45,6 +45,66 @@ const startServer = async () => {
   // ... (rest of the helper endpoints from original server.js)
 
   // AI & MEDIA ENDPOINTS (Module 11 & 14)
+  let mastraInstance;
+  const loadMastra = async () => {
+    try {
+      const { mastra } = await import('./mastra/index.mjs');
+      mastraInstance = mastra;
+      console.log('✅ Mastra AI loaded in backend');
+    } catch (e) {
+      console.error('❌ Failed to load Mastra:', e);
+    }
+  };
+  loadMastra();
+
+  app.post('/api/chat', async (req, res) => {
+    try {
+      if (!mastraInstance) {
+        await loadMastra();
+      }
+      if (!mastraInstance) return res.status(503).json({ error: 'AI not ready' });
+
+      const { messages, role, token } = req.body;
+      const agent = mastraInstance.getAgent('projectAgent');
+
+      const roleInstruction = `The user chatting with you has the role: ${role}. 
+      ${token ? `User Token: ${token}` : ''}
+      ${role === 'ORGANIZER' 
+        ? 'Focus on event management, sales analytics, and organizer tools.' 
+        : 'Focus on event discovery, ticket booking, and pass management.'}`;
+
+      // Inject system instruction at the beginning
+      const sanitizedMessages = [
+        { role: 'system', content: roleInstruction },
+        ...messages.map(m => ({
+          role: m.role,
+          content: m.content,
+        }))
+      ];
+
+      const result = await agent.stream(sanitizedMessages);
+
+      // Set headers for streaming
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Transfer-Encoding', 'chunked');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
+      // Use textStream for Express streaming
+      const reader = result.textStream.getReader();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        res.write(value);
+      }
+      res.end();
+    } catch (error) {
+      console.error('Chat error:', error);
+      res.status(500).json({ error: 'Failed to process chat' });
+    }
+  });
+
   app.post('/api/ai/generate', async (req, res) => {
     const { title, eventType } = req.body;
     if (!title) return res.status(400).json({ error: 'Title required' });

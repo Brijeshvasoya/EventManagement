@@ -9,8 +9,13 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/mistral": "^3.0.34",
+    "@ai-sdk/react": "^3.0.177",
     "@ant-design/icons": "^6.1.1",
     "@apollo/client": "^4.1.6",
+    "@mastra/core": "^1.32.1",
+    "@mastra/libsql": "^1.10.0",
+    "@mastra/loggers": "^1.1.1",
     "@stripe/react-stripe-js": "^6.1.0",
     "@stripe/stripe-js": "^9.0.1",
     "antd": "^6.3.5",
@@ -25,8 +30,11 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hot-toast": "^2.6.0",
+    "react-markdown": "^10.1.0",
     "react-qr-code": "^2.0.18",
-    "recharts": "^3.8.1"
+    "recharts": "^3.8.1",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "chart.js": "^4.5.1",
@@ -38,7 +46,7 @@
     "file-saver": "^2.0.5",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
-    "lucide-react": "^1.8.0",
+    "lucide-react": "^1.14.0",
     "multer": "^2.1.1",
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^8.0.5",

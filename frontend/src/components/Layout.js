@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { TopbarMobileIcons, DesktopHeaderActions } from './GlobalActions';
+import AIChatBot from './AIChatBot';
 import { Button, Avatar, Typography, ConfigProvider, theme, Drawer, Dropdown } from 'antd';
 import {
   AppstoreOutlined,
@@ -348,6 +349,7 @@ export default function AppLayout({ children }) {
             </motion.div>
           </main>
         </div>
+        <AIChatBot />
       </div>
 
       <style jsx global>{`
