@@ -57,7 +57,7 @@ export const CREATE_CHECKOUT_SESSION = gql`
 `;
 export const GET_MY_ANALYTICS = gql`
   query GetMyAnalytics {
-    myAnalytics { totalRevenue ticketsSold cancelledTickets confirmedBookingsCount monthlyData { n c p } }
+    myAnalytics { totalRevenue ticketsSold cancelledTickets confirmedBookingsCount monthlyData { n c p t } }
   }
 `;
 export const CANCEL_BOOKING = gql`

@@ -26,7 +26,9 @@ import {
   ClockCircleOutlined,
   GlobalOutlined,
   FireOutlined,
-  FacebookOutlined
+  FacebookOutlined,
+  PlusOutlined,
+  MinusOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { IndianRupeeIcon, MapPin, Calendar, Users, Briefcase, Star, Info, CreditCard, Ticket } from 'lucide-react';
@@ -284,70 +286,53 @@ export default function EventDetailsPage() {
     {
       title: 'Attendee',
       key: 'user',
-      width: '30%',
+      width: '45%',
       render: (_, record) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Avatar size={48} src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${record.user.name}`} style={{ border: '2px solid #eef2ff', flexShrink: 0, boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Avatar size={40} src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${record.user.name}`} style={{ border: '2px solid #eef2ff', flexShrink: 0 }} />
           <div style={{ overflow: 'hidden' }}>
-            <AntText strong style={{ color: '#0f172a', display: 'block', fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{record.user.name}</AntText>
-            <AntText style={{ fontSize: '13px', color: '#64748b', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{record.user.email}</AntText>
+            <AntText strong style={{ color: '#0f172a', display: 'block', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{record.user.name}</AntText>
+            <AntText style={{ fontSize: '11px', color: '#64748b', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{record.user.email}</AntText>
           </div>
         </div>
       )
     },
     {
-      title: 'Ticket Tier',
-      dataIndex: 'ticketType',
-      key: 'ticketType',
-      width: '15%',
-      align: 'center',
-      render: (type) => <Tag style={{ borderRadius: '8px', fontWeight: 700, padding: '4px 12px', border: 'none', background: '#eff6ff', color: '#3b82f6', textTransform: 'uppercase', fontSize: '10px', margin: 0 }}>{type}</Tag>
-    },
-    {
-      title: 'Payment Status',
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      width: '20%',
+      width: '25%',
       align: 'center',
       render: (status) => (
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '100px', background: status === 'CONFIRMED' ? '#f0fdf4' : status === 'PENDING' ? '#fffbeb' : '#f8fafc' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '100px', background: status === 'CONFIRMED' ? '#f0fdf4' : status === 'PENDING' ? '#fffbeb' : '#f8fafc' }}>
           <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: status === 'CONFIRMED' ? '#10b981' : status === 'PENDING' ? '#f59e0b' : '#6366f1', flexShrink: 0 }} />
-          <AntText style={{ fontWeight: 800, color: status === 'CONFIRMED' ? '#166534' : status === 'PENDING' ? '#92400e' : '#1e1b4b', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+          <AntText style={{ fontWeight: 800, color: status === 'CONFIRMED' ? '#166534' : status === 'PENDING' ? '#92400e' : '#1e1b4b', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.5px' }}>
             {status}
           </AntText>
         </div>
       )
     },
     {
-      title: 'Revenue',
-      dataIndex: 'amountPaid',
-      key: 'amountPaid',
-      width: '15%',
-      align: 'center',
-      render: (amt) => <AntText strong style={{ color: '#0f172a', fontSize: '1.1rem', whiteSpace: 'nowrap' }}>₹{Number(amt).toLocaleString()}</AntText>
-    },
-    {
-      title: 'Quick Actions',
+      title: 'Action',
       key: 'action',
-      width: '20%',
-      align: 'center',
+      width: '30%',
+      align: 'right',
       render: (_, record) => (
         record.status === 'PENDING' ? (
           <Popconfirm
             title="Confirm Payment"
-            description="Is this payment received in cash/direct?"
             onConfirm={() => handleConfirmPayment(record.id)}
-            okText="Yes, Confirm"
+            okText="Confirm"
             cancelText="No"
             okButtonProps={{ style: { background: '#10b981', border: 'none' } }}
           >
-            <div 
-              style={{ 
+            <div
+              style={{
                 background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: 'white',
-                padding: '10px 20px',
-                borderRadius: '12px',
-                fontSize: '11px',
+                padding: '8px 14px',
+                borderRadius: '10px',
+                fontSize: '10px',
                 fontWeight: 900,
                 cursor: 'pointer',
                 textAlign: 'center',
@@ -355,27 +340,17 @@ export default function EventDetailsPage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 textTransform: 'uppercase',
-                letterSpacing: '1px',
-                boxShadow: '0 8px 20px -6px rgba(16, 185, 129, 0.4)',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                minWidth: '160px',
-                whiteSpace: 'nowrap',
-                border: '1px solid rgba(255,255,255,0.1)'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
-                e.currentTarget.style.boxShadow = '0 12px 24px -8px rgba(16, 185, 129, 0.5)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = '0 8px 20px -6px rgba(16, 185, 129, 0.4)';
+                letterSpacing: '0.5px',
+                boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)',
+                minWidth: '130px',
+                whiteSpace: 'nowrap'
               }}
             >
               Confirm Payment
             </div>
           </Popconfirm>
         ) : (
-          <AntText style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 600 }}>NO ACTIONS</AntText>
+          <AntText style={{ color: '#10b981', fontSize: '10px', fontWeight: 800, paddingRight: '12px' }}>PAID</AntText>
         )
       )
     }
@@ -471,7 +446,7 @@ export default function EventDetailsPage() {
           variants={heroContentVariants}
           style={{
             position: 'relative',
-            maxWidth: '1200px',
+            maxWidth: '1300px',
             height: '100%',
             margin: '0 auto',
             padding: '0 24px',
@@ -538,7 +513,7 @@ export default function EventDetailsPage() {
         initial="initial"
         whileInView="animate"
         viewport={{ once: false, amount: 0.1 }}
-        style={{ maxWidth: '1200px', margin: '-60px auto 0', padding: '0 24px', position: 'relative', zIndex: 10 }}
+        style={{ maxWidth: '1300px', margin: '-60px auto 0', padding: '0 24px', position: 'relative', zIndex: 10 }}
       >
         <Row gutter={[32, 32]}>
           <Col xs={24} lg={16}>
@@ -552,7 +527,7 @@ export default function EventDetailsPage() {
                       key: '1',
                       label: <Space><Info size={18} /> Details</Space>,
                       children: (
-                        <div style={{ padding: '24px 0' }}>
+                        <div style={{ padding: '24px' }}>
                           <AntTitle level={4} style={{ color: '#0f172a', fontWeight: 800, marginBottom: '20px' }}>About this event</AntTitle>
                           <Paragraph style={{ fontSize: '1.1rem', lineHeight: '1.8', color: '#475569' }}>
                             {event.description}
@@ -591,7 +566,7 @@ export default function EventDetailsPage() {
                       key: '2',
                       label: <Space><Star size={18} /> Reviews</Space>,
                       children: (
-                        <div style={{ padding: '24px 0' }}>
+                        <div style={{ padding: '24px' }}>
                           <List
                             dataSource={event.feedbacks || []}
                             renderItem={(item) => (
@@ -616,7 +591,7 @@ export default function EventDetailsPage() {
                         key: '3',
                         label: <Space><Users size={18} /> Attendees ({event.attendees?.length || 0})</Space>,
                         children: (
-                          <div style={{ padding: '24px 0' }}>
+                          <div style={{ padding: '24px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                               <Input
                                 placeholder="Search by name or email..."
@@ -631,8 +606,49 @@ export default function EventDetailsPage() {
                               columns={attendeeColumns}
                               rowKey="id"
                               pagination={{ pageSize: 5 }}
-                              scroll={{ x: 900 }}
                               className="attendee-table"
+                              tableLayout="fixed"
+                              style={{ width: '100%' }}
+                              expandable={{
+                                expandedRowRender: (record) => (
+                                  <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #eef2ff', margin: '4px 0' }}>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+                                      <div style={{ flex: '1 1 200px' }}>
+                                        <AntText type="secondary" style={{ fontSize: '9px', display: 'block', textTransform: 'uppercase', fontWeight: 800, marginBottom: '8px' }}>Ticket Details</AntText>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                          <div style={{ background: '#fff', padding: '6px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                            <AntText strong style={{ fontSize: '11px', color: '#64748b' }}>TIER: </AntText>
+                                            <Tag color="blue" style={{ margin: 0, borderRadius: '4px', fontWeight: 700, fontSize: '10px' }}>{record.ticketType}</Tag>
+                                          </div>
+                                          <div style={{ background: '#fff', padding: '6px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                            <AntText strong style={{ fontSize: '11px', color: '#64748b' }}>PAID: </AntText>
+                                            <AntText strong style={{ color: '#0f172a', fontSize: '11px' }}>₹{record.amountPaid}</AntText>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div style={{ flex: '1 1 250px', borderLeft: '1px dashed #e2e8f0', paddingLeft: '16px' }}>
+                                        <AntText type="secondary" style={{ fontSize: '9px', display: 'block', textTransform: 'uppercase', fontWeight: 800, marginBottom: '8px' }}>Booking Info</AntText>
+                                        <AntText style={{ fontSize: '11px', color: '#64748b', lineHeight: '1.5' }}>
+                                          ID: <strong style={{ color: '#0f172a' }}>#{record.id.slice(-8).toUpperCase()}</strong><br />
+                                          Status: <strong style={{ color: record.status === 'PENDING' ? '#f59e0b' : '#10b981' }}>{record.status}</strong>. {
+                                            record.status === 'PENDING' ? 'Awaiting offline payment. Please verify and confirm above.' :
+                                              record.status === 'CONFIRMED' ? 'Payment verified. Guest is ready for check-in.' :
+                                                'Check-in completed. Guest has entered the venue.'
+                                          }
+                                        </AntText>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ),
+                                expandIcon: ({ expanded, onExpand, record }) => (
+                                  <div
+                                    onClick={e => onExpand(record, e)}
+                                    style={{ cursor: 'pointer', color: '#6366f1', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '6px', background: expanded ? '#eff6ff' : '#f8fafc' }}
+                                  >
+                                    {expanded ? <MinusOutlined style={{ fontSize: '10px' }} /> : <PlusOutlined style={{ fontSize: '10px' }} />}
+                                  </div>
+                                )
+                              }}
                             />
                           </div>
                         )
@@ -641,7 +657,7 @@ export default function EventDetailsPage() {
                         key: '4',
                         label: <Space><Briefcase size={18} /> Vendors ({event.vendors?.length || 0})</Space>,
                         children: (
-                          <div style={{ padding: '24px 0' }}>
+                          <div style={{ padding: '24px' }}>
                             <Table
                               dataSource={event.vendors || []}
                               rowKey="id"
@@ -921,62 +937,62 @@ export default function EventDetailsPage() {
                           </Space>
                         );
                       })()
-                      : (event?.capacity - (event?.bookedCount || 0)) <= 0 ? (
-                        <Space direction="vertical" style={{ width: '100%' }}>
+                        : (event?.capacity - (event?.bookedCount || 0)) <= 0 ? (
+                          <Space direction="vertical" style={{ width: '100%' }}>
+                            <Button
+                              block
+                              disabled
+                              style={{
+                                height: '60px',
+                                borderRadius: '16px',
+                                background: '#F1F5F9',
+                                color: '#94A3B8',
+                                border: '1px solid #E2E8F0',
+                                fontWeight: 800
+                              }}
+                            >
+                              <CloseCircleOutlined /> SOLD OUT
+                            </Button>
+                            <Button
+                              block
+                              loading={waitlistLoading}
+                              onClick={handleJoinWaitlist}
+                              disabled={event.isOnWaitlist}
+                              style={{
+                                height: '50px',
+                                borderRadius: '12px',
+                                background: event.isOnWaitlist ? '#f8fafc' : 'rgba(99, 102, 241, 0.1)',
+                                color: event.isOnWaitlist ? '#94a3b8' : '#6366f1',
+                                border: event.isOnWaitlist ? '1px solid #e2e8f0' : '1px dashed #6366f1',
+                                fontWeight: 700
+                              }}
+                            >
+                              {event.isOnWaitlist ? (
+                                <Space><CheckCircleOutlined /> ON WAITLIST</Space>
+                              ) : (
+                                <Space><Users size={18} /> JOIN THE WAITLIST</Space>
+                              )}
+                            </Button>
+                          </Space>
+                        ) : (
                           <Button
                             block
-                            disabled
+                            type="primary"
+                            loading={sessionLoading}
+                            onClick={handleCheckout}
                             style={{
                               height: '60px',
                               borderRadius: '16px',
-                              background: '#F1F5F9',
-                              color: '#94A3B8',
-                              border: '1px solid #E2E8F0',
-                              fontWeight: 800
+                              background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                              border: 'none',
+                              fontWeight: 800,
+                              fontSize: '1rem',
+                              boxShadow: '0 10px 20px rgba(99, 102, 241, 0.3)'
                             }}
                           >
-                            <CloseCircleOutlined /> SOLD OUT
+                            RESERVE PASS NOW
                           </Button>
-                          <Button
-                            block
-                            loading={waitlistLoading}
-                            onClick={handleJoinWaitlist}
-                            disabled={event.isOnWaitlist}
-                            style={{
-                              height: '50px',
-                              borderRadius: '12px',
-                              background: event.isOnWaitlist ? '#f8fafc' : 'rgba(99, 102, 241, 0.1)',
-                              color: event.isOnWaitlist ? '#94a3b8' : '#6366f1',
-                              border: event.isOnWaitlist ? '1px solid #e2e8f0' : '1px dashed #6366f1',
-                              fontWeight: 700
-                            }}
-                          >
-                            {event.isOnWaitlist ? (
-                              <Space><CheckCircleOutlined /> ON WAITLIST</Space>
-                            ) : (
-                              <Space><Users size={18} /> JOIN THE WAITLIST</Space>
-                            )}
-                          </Button>
-                        </Space>
-                      ) : (
-                        <Button
-                          block
-                          type="primary"
-                          loading={sessionLoading}
-                          onClick={handleCheckout}
-                          style={{
-                            height: '60px',
-                            borderRadius: '16px',
-                            background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                            border: 'none',
-                            fontWeight: 800,
-                            fontSize: '1rem',
-                            boxShadow: '0 10px 20px rgba(99, 102, 241, 0.3)'
-                          }}
-                        >
-                          RESERVE PASS NOW
-                        </Button>
-                      )}
+                        )}
                     </Space>
                   </div>
 
@@ -1092,6 +1108,18 @@ export default function EventDetailsPage() {
         }
         .attendee-table .ant-table-tbody > tr:hover > td {
           background: #fcfdfe !important;
+        }
+        .attendee-table .ant-table-row-expand-icon-cell {
+          padding-left: 24px !important;
+        }
+        .attendee-table .ant-table-thead > tr > th:last-child,
+        .attendee-table .ant-table-tbody > tr > td:last-child {
+          text-align: right !important;
+          padding-right: 24px !important;
+        }
+        .attendee-table .ant-table-row-expand-icon-cell {
+          width: 50px !important;
+          text-align: center !important;
         }
       `}</style>
     </div>

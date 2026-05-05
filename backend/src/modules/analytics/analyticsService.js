@@ -15,7 +15,7 @@ exports.getOrganizerAnalytics = async (user) => {
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const monthlyStats = months.reduce((acc, m) => {
-    acc[m] = { n: m, c: 0, p: 0 };
+    acc[m] = { n: m, c: 0, p: 0, t: 0 };
     return acc;
   }, {});
 
@@ -33,7 +33,8 @@ exports.getOrganizerAnalytics = async (user) => {
       // Update monthly breakdown
       if (monthlyStats[monthName]) {
         monthlyStats[monthName].c += revenue;
-        monthlyStats[monthName].p += (revenue * 0.8); // 20% Profit margin as requested
+        monthlyStats[monthName].p += (revenue * 0.8); // 20% Profit margin
+        monthlyStats[monthName].t += qty;
       }
     } else if (b.status === 'CANCELLED') {
       cancelledTickets += qty;

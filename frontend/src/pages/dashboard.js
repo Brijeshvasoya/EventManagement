@@ -53,6 +53,7 @@ export default function Dashboard() {
   const [isQRModalVisible, setIsQRModalVisible] = useState(false);
   const [isRewardsModalVisible, setIsRewardsModalVisible] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('Hosted');
+  const [chartVersion, setChartVersion] = useState(0);
 
   const { refetchGlobalNotifications } = useContext(GlobalActionsContext);
 
@@ -217,22 +218,22 @@ export default function Dashboard() {
     return (
       <>
         <Head><title>Super Admin Dashboard | EventHub</title></Head>
-        <motion.div 
+        <motion.div
           initial="initial"
           animate="animate"
           variants={staggerContainer}
           style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: '32px' }}
         >
-          <motion.div 
+          <motion.div
             variants={fadeInUp}
-            className="header-responsive" 
+            className="header-responsive"
             style={{ marginBottom: '32px', background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)', borderRadius: '32px', color: 'white', padding: '32px', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)' }}
           >
             <h1 style={{ margin: 0, fontSize: '2.2rem', fontWeight: 800, color: 'white', letterSpacing: '-0.5px' }}>Platform Dashboard</h1>
             <p style={{ color: 'rgba(255,255,255,0.7)', margin: '4px 0 0 0', fontSize: '1rem' }}>Welcome back, Super Admin. Here is the platform overview.</p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             variants={staggerContainer}
             style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}
           >
@@ -259,7 +260,7 @@ export default function Dashboard() {
             ))}
           </motion.div>
 
-          <motion.div 
+          <motion.div
             variants={fadeInUp}
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}
           >
@@ -311,7 +312,7 @@ export default function Dashboard() {
   return (
     <>
       <Head><title>Dashboard | EventHub</title></Head>
-      <motion.div 
+      <motion.div
         initial="initial"
         animate="animate"
         variants={staggerContainer}
@@ -370,8 +371,8 @@ export default function Dashboard() {
               const isUnlocked = (user.loyaltyPoints || 0) >= reward.pts;
               const isRedeemed = user.redeemedRewards?.includes(reward.title);
               return (
-                <motion.div 
-                  key={i} 
+                <motion.div
+                  key={i}
                   variants={fadeInUp}
                   whileHover={isUnlocked ? hoverScale.whileHover : {}}
                   style={{
@@ -433,9 +434,9 @@ export default function Dashboard() {
 
 
         {/* EVENTHUB HEADER */}
-        <motion.div 
+        <motion.div
           variants={fadeInUp}
-          className="header-responsive" 
+          className="header-responsive"
           style={{ marginBottom: '32px' }}
         >
           <div>
@@ -475,9 +476,9 @@ export default function Dashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
                 {/* TOP KPI CARDS ROW */}
-                <motion.div 
+                <motion.div
                   variants={staggerContainer}
-                  className="grid-cols-auto-320" 
+                  className="grid-cols-auto-320"
                   style={{ gap: '24px' }}
                 >
                   {[
@@ -499,10 +500,12 @@ export default function Dashboard() {
                 </motion.div>
 
                 {/* GRAPHS ROW: Ticket Sales (Doughnut) & Sales Revenue (Bar) */}
-                <motion.div 
+                <motion.div
                   variants={fadeInUp}
-                  className="grid-cols-reverse" 
+                  className="grid-cols-reverse"
                   style={{ gap: '24px' }}
+                  onViewportEnter={() => setChartVersion(v => v + 1)}
+                  viewport={{ once: false, amount: 0.3 }}
                 >
                   <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -548,12 +551,32 @@ export default function Dashboard() {
                     </div>
                     <div style={{ height: '220px', minWidth: 0 }}>
                       <ResponsiveContainer width="100%" height="100%" debounce={100}>
-                        <BarChart data={analyticsData?.myAnalytics?.monthlyData || []}>
+                        <BarChart key={chartVersion} data={analyticsData?.myAnalytics?.monthlyData || []}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                           <XAxis dataKey="n" stroke="#9CA3AF" axisLine={false} tickLine={false} fontSize={12} dy={10} />
                           <YAxis stroke="#9CA3AF" axisLine={false} tickLine={false} fontSize={12} tickFormatter={(v) => `${(v / 1000)}k`} />
                           <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
-                          <Bar dataKey="c" fill="rgb(67, 56, 202)" radius={[6, 6, 6, 6]} barSize={12} name="Total Revenue (₹)" />
+                          <Bar
+                            dataKey="c"
+                            fill="rgb(67, 56, 202)"
+                            radius={[6, 6, 6, 6]}
+                            barSize={12}
+                            name="Total Revenue (₹)"
+                            animationDuration={1500}
+                            animationEasing="ease-out"
+                          />
+                          <Bar
+                            dataKey="t"
+                            fill="rgb(67, 56, 202)"
+                            radius={[6, 6, 6, 6]}
+                            barSize={12}
+                            name="Tickets Sold"
+                            animationBegin={300}
+                            animationDuration={1500}
+                            animationEasing="ease-out"
+                          />
+
+
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -630,11 +653,11 @@ export default function Dashboard() {
                           <span><span style={{ color: 'rgb(67, 56, 202)', marginRight: '32px' }}>{Math.round((topCat1[1] / totalEvents) * 100)}%</span> {topCat1[1]} Events</span>
                         </div>
                         <div style={{ width: '100%', height: '8px', background: '#F3F4F6', borderRadius: '100px' }}>
-                          <motion.div 
+                          <motion.div
                             initial={{ width: 0 }}
                             whileInView={{ width: `${Math.round((topCat1[1] / totalEvents) * 100)}%` }}
                             transition={{ duration: 1, ease: "easeOut" }}
-                            style={{ height: '100%', background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px' }} 
+                            style={{ height: '100%', background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px' }}
                           />
                         </div>
                       </div>
@@ -645,11 +668,11 @@ export default function Dashboard() {
                             <span><span style={{ color: 'rgb(67, 56, 202)', marginRight: '32px' }}>{Math.round((topCat2[1] / totalEvents) * 100)}%</span> {topCat2[1]} Events</span>
                           </div>
                           <div style={{ width: '100%', height: '8px', background: '#F3F4F6', borderRadius: '100px' }}>
-                            <motion.div 
+                            <motion.div
                               initial={{ width: 0 }}
                               whileInView={{ width: `${Math.round((topCat2[1] / totalEvents) * 100)}%` }}
                               transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-                              style={{ height: '100%', background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px' }} 
+                              style={{ height: '100%', background: 'linear-gradient(135deg, rgb(49, 46, 129) 0%, rgb(67, 56, 202) 100%)', borderRadius: '100px' }}
                             />
                           </div>
                         </div>
@@ -663,18 +686,18 @@ export default function Dashboard() {
                   <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.2rem' }}>My Events</h3>
                   <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }} onClick={() => router.push('/my-events')}>View All Event</div>
                 </motion.div>
-                <motion.div 
+                <motion.div
                   variants={staggerContainer}
-                  className="grid-cols-auto-320" 
+                  className="grid-cols-auto-320"
                   style={{ gap: '20px' }}
                 >
                   {myEventsData?.myEvents.slice(0, 3).map(e => (
-                    <motion.div 
-                      key={e.id} 
+                    <motion.div
+                      key={e.id}
                       variants={fadeInUp}
                       whileHover={hoverScale.whileHover}
-                      className="hover-bounce" 
-                      style={{ background: '#FFF', cursor: 'pointer', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', padding: '16px' }} 
+                      className="hover-bounce"
+                      style={{ background: '#FFF', cursor: 'pointer', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', padding: '16px' }}
                       onClick={() => { router.push(`/events/${e.id}`) }}
                     >
                       <div style={{ position: 'relative', height: '140px', borderRadius: '16px', overflow: 'hidden', marginBottom: '16px', background: `url(${e.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover` }}>
@@ -966,14 +989,14 @@ export default function Dashboard() {
                             />
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <h4 style={{ margin: '0 0 2px 0', fontSize: '1rem', fontWeight: 800, color: '#1B2A4E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.event.title}</h4>
-                              <Tag style={{ 
-                                borderRadius: '100px', 
-                                border: 'none', 
-                                background: b.status === 'CANCELLED' ? '#FEF2F2' : b.status === 'PENDING' ? '#FFF7ED' : '#F0FDF4', 
-                                color: b.status === 'CANCELLED' ? '#EF4444' : b.status === 'PENDING' ? '#F97316' : '#10B981', 
-                                fontWeight: 700, 
-                                margin: 0, 
-                                fontSize: '0.7rem' 
+                              <Tag style={{
+                                borderRadius: '100px',
+                                border: 'none',
+                                background: b.status === 'CANCELLED' ? '#FEF2F2' : b.status === 'PENDING' ? '#FFF7ED' : '#F0FDF4',
+                                color: b.status === 'CANCELLED' ? '#EF4444' : b.status === 'PENDING' ? '#F97316' : '#10B981',
+                                fontWeight: 700,
+                                margin: 0,
+                                fontSize: '0.7rem'
                               }}>
                                 {b.status === 'PENDING' ? 'PAYMENT PENDING' : (b.status || 'Confirmed')}
                               </Tag>
