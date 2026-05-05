@@ -68,7 +68,7 @@ export const CANCEL_BOOKING = gql`
 export const GET_MY_BOOKINGS = gql`
   query GetMyBookings {
     myBookings {
-      id status qrCode ticketType amountPaid quantity createdAt
+      id status qrCode ticketType amountPaid quantity createdAt paymentUrl
       event { 
         id title date location capacity imageUrl description eventType status bookedCount
         organizer { id name email }
@@ -302,3 +302,13 @@ export const DELETE_PROMO_CODE = gql`
   }
 `;
 
+
+export const CONFIRM_PAYMENT = gql`
+  mutation ConfirmPayment($bookingId: ID!) {
+    confirmPayment(bookingId: $bookingId) {
+      id
+      status
+      paymentStatus
+    }
+  }
+`;

@@ -349,3 +349,17 @@ exports.triggerAbandonedCheckoutEmail = async (sessionId, user) => {
   return true;
 };
 
+
+exports.getCheckoutUrl = async (sessionId) => {
+  if (!sessionId) return null;
+  if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_mock') {
+    return null;
+  }
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    return session.url;
+  } catch (e) {
+    console.error('Error retrieving stripe session:', e);
+    return null;
+  }
+};

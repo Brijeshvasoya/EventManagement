@@ -119,12 +119,12 @@ export default function CalendarPage() {
                 padding: '4px 8px',
                 borderRadius: '8px',
                 background: item.type === 'event' ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                  : item.type === 'booking' ? 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)'
+                  : item.type === 'booking' ? (item.data.status === 'PENDING' ? 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)' : 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)')
                     : 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
                 color: '#ffffff',
                 fontWeight: 700,
                 boxShadow: `0 2px 8px ${item.type === 'event' ? 'rgba(16, 185, 129, 0.3)'
-                  : item.type === 'booking' ? 'rgba(59, 130, 246, 0.3)'
+                  : item.type === 'booking' ? (item.data.status === 'PENDING' ? 'rgba(249, 115, 22, 0.3)' : 'rgba(59, 130, 246, 0.3)')
                     : 'rgba(245, 158, 11, 0.3)'}`,
                 transition: 'all 0.2s',
                 cursor: 'pointer',
@@ -243,12 +243,12 @@ export default function CalendarPage() {
                       <div style={{ position: 'absolute', top: 0, left: 0, width: '6px', height: '100%', background: isEvent ? 'linear-gradient(180deg, #10B981 0%, #059669 100%)' : isBooking ? 'linear-gradient(180deg, #3B82F6 0%, #2563EB 100%)' : 'linear-gradient(180deg, #F59E0B 0%, #D97706 100%)' }} />
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px 12px 12px 16px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <Tag color={isEvent ? 'success' : isBooking ? 'processing' : 'warning'} style={{
+                          <Tag color={isEvent ? 'success' : isBooking ? (data.status === 'PENDING' ? 'warning' : 'processing') : 'warning'} style={{
                             borderRadius: '100px', fontWeight: 700, border: 'none', padding: '2px 10px',
-                            background: isEvent ? 'rgba(16, 185, 129, 0.1)' : isBooking ? 'rgba(59, 130, 246, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                            color: isEvent ? '#059669' : isBooking ? '#2563EB' : '#D97706'
+                            background: isEvent ? 'rgba(16, 185, 129, 0.1)' : isBooking ? (data.status === 'PENDING' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(59, 130, 246, 0.1)') : 'rgba(245, 158, 11, 0.1)',
+                            color: isEvent ? '#059669' : isBooking ? (data.status === 'PENDING' ? '#D97706' : '#2563EB') : '#D97706'
                           }}>
-                            {isEvent ? 'Hosted Event' : isBooking ? 'Booked Ticket' : 'Available Event'}
+                            {isEvent ? 'Hosted Event' : isBooking ? (data.status === 'PENDING' ? 'PAYMENT PENDING' : 'Booked Ticket') : 'Available Event'}
                           </Tag>
                           {isBooking && <Tag style={{ borderRadius: '100px', fontWeight: 700, border: '1px solid #E2E8F0', background: 'white', color: '#475569' }}>x{data.quantity}</Tag>}
                         </div>
@@ -275,12 +275,19 @@ export default function CalendarPage() {
                         <div style={{ display: 'flex', gap: '8px', marginTop: '4px', paddingTop: '16px', borderTop: '1px dashed #E2E8F0' }}>
                           {isBooking ? (
                             <>
-                              <a href={`/events/${ev.id}`} style={{ flex: 1, color: '#64748B', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F1F5F9', padding: '10px', borderRadius: '12px', transition: 'all 0.2s', textDecoration: 'none' }} className="action-btn-gray">
-                                Details
-                              </a>
-                              <a style={{ flex: 2, color: 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', padding: '10px', borderRadius: '12px', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(59,130,246,0.3)', textDecoration: 'none' }} onClick={() => downloadTicket(data)} className="action-btn-blue">
-                                Download Ticket &rarr;
-                              </a>
+                              {data.status === 'PENDING' ? (
+                                <a 
+                                  style={{ flex: 2, color: 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)', padding: '10px', borderRadius: '12px', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(249,115,22,0.3)', textDecoration: 'none' }} 
+                                  onClick={() => data.paymentUrl && (window.location.href = data.paymentUrl)} 
+                                  className="action-btn-orange"
+                                >
+                                  Complete Payment &rarr;
+                                </a>
+                              ) : (
+                                <a style={{ flex: 2, color: 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', padding: '10px', borderRadius: '12px', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(59,130,246,0.3)', textDecoration: 'none' }} onClick={() => downloadTicket(data)} className="action-btn-blue">
+                                  Download Ticket &rarr;
+                                </a>
+                              )}
                             </>
                           ) : isAvailable ? (
                             <a href={`/events/${ev.id}`} style={{ width: '100%', color: 'white', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', padding: '10px', borderRadius: '12px', transition: 'all 0.2s', textDecoration: 'none', boxShadow: '0 4px 12px rgba(245,158,11,0.3)' }} className="action-btn-orange">
@@ -318,10 +325,10 @@ export default function CalendarPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <Tag color={
                   selectedEventModal.type === 'event' ? 'success' :
-                    selectedEventModal.type === 'booking' ? 'blue' : 'warning'
+                    selectedEventModal.type === 'booking' ? (selectedEventModal.data.status === 'PENDING' ? 'warning' : 'blue') : 'warning'
                 } style={{ borderRadius: '100px', fontWeight: 800, padding: '4px 12px' }}>
                   {selectedEventModal.type === 'event' ? 'Hosted Event' :
-                    selectedEventModal.type === 'booking' ? 'Booked Ticket' : 'Available Event'}
+                    selectedEventModal.type === 'booking' ? (selectedEventModal.data.status === 'PENDING' ? 'PAYMENT PENDING' : 'Booked Ticket') : 'Available Event'}
                 </Tag>
               </div>
               <Title level={3} style={{ margin: 0, fontWeight: 900, color: '#1E1B4B' }}>
@@ -344,9 +351,21 @@ export default function CalendarPage() {
 
               <div style={{ marginTop: '32px' }}>
                 {selectedEventModal.type === 'booking' && (
-                  <Button type="primary" block size="large" style={{ borderRadius: '12px', height: '50px', fontWeight: 700 }} onClick={() => downloadTicket(selectedEventModal.data)}>
-                    Download Ticket PDF
-                  </Button>
+                  selectedEventModal.data.status === 'PENDING' ? (
+                    <Button 
+                      type="primary" 
+                      block 
+                      size="large" 
+                      style={{ borderRadius: '12px', height: '50px', fontWeight: 700, background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)', border: 'none' }} 
+                      onClick={() => selectedEventModal.data.paymentUrl && (window.location.href = selectedEventModal.data.paymentUrl)}
+                    >
+                      Complete Payment
+                    </Button>
+                  ) : (
+                    <Button type="primary" block size="large" style={{ borderRadius: '12px', height: '50px', fontWeight: 700 }} onClick={() => downloadTicket(selectedEventModal.data)}>
+                      Download Ticket PDF
+                    </Button>
+                  )
                 )}
                 {selectedEventModal.type === 'available_event' && (
                   <Button type="primary" block size="large" style={{ borderRadius: '12px', height: '50px', fontWeight: 700, background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', border: 'none' }} onClick={() => router.push(`/events/${selectedEventModal.data.id}`)}>

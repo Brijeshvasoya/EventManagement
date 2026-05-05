@@ -15,6 +15,7 @@ import { Spin, Card, Empty, Button, Tag, Divider, Modal, Popconfirm, Form, Input
 import { EnvironmentOutlined, CalendarOutlined, DownloadOutlined, QrcodeOutlined, CrownOutlined, CheckCircleFilled, UserOutlined, MailOutlined, SettingOutlined, AppstoreOutlined, ArrowRightOutlined, EyeOutlined, BellOutlined, CheckOutlined, RocketOutlined, PlusCircleOutlined, CloseCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import DigitalTicketModal from '@/features/events/components/DigitalTicketModal';
 import dayjs from 'dayjs';
+import { CreditCard } from 'lucide-react';
 
 const { Title, Text: AntText } = Typography;
 
@@ -804,19 +805,20 @@ export default function Dashboard() {
             </div>
           );
         })() : (() => {
-          const upcomingBookings = bookings
+          const activeBookings = bookings.filter(b => b.status === 'CONFIRMED' || b.status === 'PENDING');
+          const upcomingBookings = activeBookings
             .filter(b => b.event && new Date(isNaN(Number(b.event.date)) ? b.event.date : Number(b.event.date)) >= now)
             .sort((a, b) => new Date(isNaN(Number(a.event.date)) ? a.event.date : Number(a.event.date)) - new Date(isNaN(Number(b.event.date)) ? b.event.date : Number(b.event.date)));
           const featuredBooking = upcomingBookings[0];
-          const totalSpent = bookings.reduce((acc, b) => acc + (b.amountPaid || 0), 0);
+          const totalSpent = activeBookings.filter(b => b.status === 'CONFIRMED').reduce((acc, b) => acc + (b.amountPaid || 0), 0);
 
           // Calculate category preference for doughnut chart
           const catCount = {};
-          bookings.forEach(b => {
+          activeBookings.forEach(b => {
             const cat = b.event?.eventType || 'General';
             catCount[cat] = (catCount[cat] || 0) + 1;
           });
-          const totalBookingsCount = bookings.length;
+          const totalBookingsCount = activeBookings.length;
           const sortedCats = Object.entries(catCount).sort((a, b) => b[1] - a[1]);
           const topCat = sortedCats[0] || ['Start Exploring', 0];
           const topCatPercent = totalBookingsCount > 0 ? Math.round((topCat[1] / totalBookingsCount) * 100) : 0;
@@ -827,7 +829,7 @@ export default function Dashboard() {
             const d = new Date();
             d.setMonth(d.getMonth() - i);
             const monthName = d.toLocaleString('default', { month: 'short' });
-            const count = bookings.filter(b => {
+            const count = activeBookings.filter(b => {
               const bDate = new Date(isNaN(Number(b.event?.date)) ? b.event?.date : Number(b.event?.date));
               return bDate.getMonth() === d.getMonth() && bDate.getFullYear() === d.getFullYear();
             }).length;
@@ -854,7 +856,7 @@ export default function Dashboard() {
                     <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🎟️</div>
                     <div>
                       <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>Total Passes</div>
-                      <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{bookings.length}</div>
+                      <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{activeBookings.length}</div>
                     </div>
                   </Card>
 
@@ -964,38 +966,75 @@ export default function Dashboard() {
                             />
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <h4 style={{ margin: '0 0 2px 0', fontSize: '1rem', fontWeight: 800, color: '#1B2A4E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.event.title}</h4>
-                              <Tag style={{ borderRadius: '100px', border: 'none', background: b.status === 'CANCELLED' ? '#FEF2F2' : '#F0FDF4', color: b.status === 'CANCELLED' ? '#EF4444' : '#10B981', fontWeight: 700, margin: 0, fontSize: '0.7rem' }}>{b.status || 'Confirmed'}</Tag>
+                              <Tag style={{ 
+                                borderRadius: '100px', 
+                                border: 'none', 
+                                background: b.status === 'CANCELLED' ? '#FEF2F2' : b.status === 'PENDING' ? '#FFF7ED' : '#F0FDF4', 
+                                color: b.status === 'CANCELLED' ? '#EF4444' : b.status === 'PENDING' ? '#F97316' : '#10B981', 
+                                fontWeight: 700, 
+                                margin: 0, 
+                                fontSize: '0.7rem' 
+                              }}>
+                                {b.status === 'PENDING' ? 'PAYMENT PENDING' : (b.status || 'Confirmed')}
+                              </Tag>
                             </div>
                           </div>
 
                           <div style={{ background: '#F8FAFB', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-                            <div style={{ textAlign: 'center', background: 'white', padding: '6px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                              <img src={b.qrCode} style={{ width: '100px', height: '100px', cursor: 'pointer' }} onClick={() => showBigQR(b)} alt="QR" />
+                            <div style={{ textAlign: 'center', background: 'white', padding: '6px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', opacity: b.status === 'PENDING' ? 0.3 : 1 }}>
+                              <img src={b.qrCode} style={{ width: '100px', height: '100px', cursor: b.status === 'PENDING' ? 'not-allowed' : 'pointer' }} onClick={() => b.status !== 'PENDING' && showBigQR(b)} alt="QR" />
                             </div>
                             <div style={{ textAlign: 'right' }}>
                               <div style={{ color: '#6B7280', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Ticket Info</div>
-                              <div style={{ fontWeight: 800, color: b.status === 'CANCELLED' ? '#EF4444' : '#1B2A4E', fontSize: '1.2rem' }}>₹{Number(b.amountPaid).toLocaleString()}</div>
+                              <div style={{ fontWeight: 800, color: b.status === 'CANCELLED' ? '#EF4444' : b.status === 'PENDING' ? '#F97316' : '#1B2A4E', fontSize: '1.2rem' }}>₹{Number(b.amountPaid).toLocaleString()}</div>
                               <div style={{ color: '#94A3B8', fontSize: '0.75rem' }}>{b.ticketType} x {b.quantity}</div>
                             </div>
                           </div>
 
                           <div style={{ display: 'flex', gap: '10px' }}>
-                            <Button
-                              block
-                              icon={<DownloadOutlined />}
-                              onClick={() => downloadTicket(b)}
-                              style={{ borderRadius: '12px', fontWeight: 600, height: '44px', background: '#F8FAFB', border: 'none', color: '#1B2A4E', flex: 1 }}
-                            >
-                              Pass
-                            </Button>
-                            <Button
-                              icon={<QrcodeOutlined />}
-                              onClick={() => downloadQRCode(b.qrCode, b.event.title)}
-                              style={{ borderRadius: '12px', flex: 1, height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--gradient-main)', color: 'white', border: 'none', fontWeight: 600 }}
-                              title="Download QR Code Only"
-                            >
-                              QR
-                            </Button>
+                            {b.status === 'PENDING' ? (
+                              <Button
+                                block
+                                type="primary"
+                                icon={<CreditCard size={14} />}
+                                onClick={() => b.paymentUrl && (window.location.href = b.paymentUrl)}
+                                style={{
+                                  borderRadius: '12px',
+                                  fontWeight: 800,
+                                  height: '44px',
+                                  background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                                  border: 'none',
+                                  color: 'white',
+                                  flex: 1,
+                                  boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '8px'
+                                }}
+                              >
+                                Complete Payment
+                              </Button>
+                            ) : (
+                              <>
+                                <Button
+                                  block
+                                  icon={<DownloadOutlined />}
+                                  onClick={() => downloadTicket(b)}
+                                  style={{ borderRadius: '12px', fontWeight: 600, height: '44px', background: '#F8FAFB', border: 'none', color: '#1B2A4E', flex: 1 }}
+                                >
+                                  Pass
+                                </Button>
+                                <Button
+                                  icon={<QrcodeOutlined />}
+                                  onClick={() => downloadQRCode(b.qrCode, b.event.title)}
+                                  style={{ borderRadius: '12px', flex: 1, height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--gradient-main)', color: 'white', border: 'none', fontWeight: 600 }}
+                                  title="Download QR Code Only"
+                                >
+                                  QR
+                                </Button>
+                              </>
+                            )}
                             {b.status !== 'CANCELLED' && (
                               <Popconfirm
                                 title="Cancel Ticket"

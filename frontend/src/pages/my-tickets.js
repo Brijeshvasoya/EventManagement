@@ -60,7 +60,7 @@ export default function MyTickets() {
     );
   }
 
-  const bookings = data?.myBookings || [];
+  const bookings = (data?.myBookings || []).filter(b => b.status === 'CONFIRMED' || b.status === 'PENDING');
 
   const handleViewTicket = (booking) => {
     setSelectedBooking(booking);
@@ -116,8 +116,8 @@ export default function MyTickets() {
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
-        <Tag color={status === 'CONFIRMED' ? 'green' : 'orange'} style={{ borderRadius: '100px', padding: '2px 12px' }}>
-          {status}
+        <Tag color={status === 'CONFIRMED' ? 'green' : status === 'PENDING' ? 'orange' : 'red'} style={{ borderRadius: '100px', padding: '2px 12px' }}>
+          {status === 'PENDING' ? 'PAYMENT PENDING' : status}
         </Tag>
       )
     },
@@ -127,14 +127,24 @@ export default function MyTickets() {
       align: 'center',
       render: (_, record) => (
         <Space>
-          <Button
-            type="primary"
-            shape="circle"
-            icon={<EyeOutlined />}
-            onClick={() => handleViewTicket(record)}
-            style={{ background: 'var(--primary-color)', boxShadow: '0 4px 10px rgba(79, 70, 229, 0.2)' }}
-            title="View Ticket"
-          />
+          {record.status === 'PENDING' ? (
+            <Button
+              type="primary"
+              onClick={() => record.paymentUrl && (window.location.href = record.paymentUrl)}
+              style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', border: 'none', borderRadius: '8px', fontWeight: 600 }}
+            >
+              Pay Now
+            </Button>
+          ) : (
+            <Button
+              type="primary"
+              shape="circle"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewTicket(record)}
+              style={{ background: 'var(--primary-color)', boxShadow: '0 4px 10px rgba(79, 70, 229, 0.2)' }}
+              title="View Ticket"
+            />
+          )}
           {record.status !== 'CANCELLED' && (
             <Popconfirm
               title="Cancel Ticket"
@@ -170,7 +180,7 @@ export default function MyTickets() {
               </div>
               <div>
                 <div style={{ opacity: 0.8, fontSize: '0.85rem' }}>Total Active Tickets</div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{bookings.filter(b => b.status === 'CONFIRMED').length}</div>
+                <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{bookings.length}</div>
               </div>
             </div>
           </Card>

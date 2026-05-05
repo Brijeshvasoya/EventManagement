@@ -315,7 +315,8 @@ const resolvers = {
       if (!user) throw new GraphQLError('Unauthorized');
       const stripeService = require('../modules/payments/stripeService');
       return await stripeService.triggerAbandonedCheckoutEmail(sessionId, user);
-    }
+    },
+    confirmPayment: (_, { bookingId }, { user }) => bookingService.confirmPaymentManually(bookingId, user),
   },
   PromoCode: {
     event: async (parent) => {
@@ -403,6 +404,10 @@ const resolvers = {
       } catch (e) {
         return null; // fallback gracefully if qrcode fails
       }
+    },
+    paymentUrl: async (parent) => {
+      if (parent.status !== 'PENDING') return null;
+      return await stripeService.getCheckoutUrl(parent.stripePaymentId);
     }
   },
   Notification: {

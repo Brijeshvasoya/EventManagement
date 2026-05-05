@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_EVENT_DETAILS, GET_MY_BOOKINGS, CANCEL_BOOKING, CREATE_CHECKOUT_SESSION, JOIN_WAITLIST, VALIDATE_PROMO_CODE, DELETE_EVENT } from '@/features/events/graphql/queries';
+import { GET_EVENT_DETAILS, GET_MY_BOOKINGS, CANCEL_BOOKING, CREATE_CHECKOUT_SESSION, JOIN_WAITLIST, VALIDATE_PROMO_CODE, DELETE_EVENT, CONFIRM_PAYMENT } from '@/features/events/graphql/queries';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import ExcelJS from 'exceljs';
@@ -51,8 +51,8 @@ const staggerContainer = {
 
 const heroContentVariants = {
   initial: { opacity: 0, y: 50 },
-  animate: { 
-    opacity: 1, 
+  animate: {
+    opacity: 1,
     y: 0,
     transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 }
   }
@@ -82,6 +82,16 @@ export default function EventDetailsPage() {
   const [joinWaitlist, { loading: waitlistLoading }] = useMutation(JOIN_WAITLIST);
   const [deleteEvent] = useMutation(DELETE_EVENT);
 
+  const [confirmPayment] = useMutation(CONFIRM_PAYMENT, {
+    refetchQueries: [{ query: GET_EVENT_DETAILS, variables: { id: router.query.id } }],
+    onCompleted: () => toast.success('Payment confirmed successfully! ✅'),
+    onError: (err) => toast.error(err.message)
+  });
+
+  const handleConfirmPayment = async (bookingId) => {
+    await confirmPayment({ variables: { bookingId } });
+  };
+
   const [promoCodeInput, setPromoCodeInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [isValidatingPromo, setIsValidatingPromo] = useState(false);
@@ -93,8 +103,8 @@ export default function EventDetailsPage() {
 
   if (authLoading || loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '20px' }}>
-      <motion.div 
-        animate={{ 
+      <motion.div
+        animate={{
           scale: [1, 1.1, 1],
           opacity: [0.8, 1, 0.8]
         }}
@@ -274,35 +284,100 @@ export default function EventDetailsPage() {
     {
       title: 'Attendee',
       key: 'user',
+      width: '30%',
       render: (_, record) => (
-        <Space size={12}>
-          <Avatar size={40} src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${record.user.name}`} style={{ border: '2px solid #eef2ff' }} />
-          <div>
-            <AntText strong style={{ color: '#1e293b', display: 'block' }}>{record.user.name}</AntText>
-            <AntText style={{ fontSize: '12px', color: '#64748b' }}>{record.user.email}</AntText>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <Avatar size={48} src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${record.user.name}`} style={{ border: '2px solid #eef2ff', flexShrink: 0, boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }} />
+          <div style={{ overflow: 'hidden' }}>
+            <AntText strong style={{ color: '#0f172a', display: 'block', fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{record.user.name}</AntText>
+            <AntText style={{ fontSize: '13px', color: '#64748b', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{record.user.email}</AntText>
           </div>
-        </Space>
+        </div>
       )
     },
     {
-      title: 'Tier',
+      title: 'Ticket Tier',
       dataIndex: 'ticketType',
       key: 'ticketType',
-      render: (type) => <Tag color="blue" style={{ borderRadius: '6px', fontWeight: 600 }}>{type}</Tag>
+      width: '15%',
+      align: 'center',
+      render: (type) => <Tag style={{ borderRadius: '8px', fontWeight: 700, padding: '4px 12px', border: 'none', background: '#eff6ff', color: '#3b82f6', textTransform: 'uppercase', fontSize: '10px', margin: 0 }}>{type}</Tag>
     },
     {
-      title: 'Status',
+      title: 'Payment Status',
       dataIndex: 'status',
       key: 'status',
+      width: '20%',
+      align: 'center',
       render: (status) => (
-        <Badge status={status === 'CONFIRMED' ? 'success' : status === 'CHECKED_IN' ? 'processing' : 'error'} text={status} style={{ fontWeight: 600, color: status === 'CONFIRMED' ? '#10b981' : '#6366f1' }} />
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '100px', background: status === 'CONFIRMED' ? '#f0fdf4' : status === 'PENDING' ? '#fffbeb' : '#f8fafc' }}>
+          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: status === 'CONFIRMED' ? '#10b981' : status === 'PENDING' ? '#f59e0b' : '#6366f1', flexShrink: 0 }} />
+          <AntText style={{ fontWeight: 800, color: status === 'CONFIRMED' ? '#166534' : status === 'PENDING' ? '#92400e' : '#1e1b4b', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+            {status}
+          </AntText>
+        </div>
       )
     },
     {
       title: 'Revenue',
       dataIndex: 'amountPaid',
       key: 'amountPaid',
-      render: (amt) => <AntText strong style={{ color: '#0f172a' }}>₹{Number(amt).toLocaleString()}</AntText>
+      width: '15%',
+      align: 'center',
+      render: (amt) => <AntText strong style={{ color: '#0f172a', fontSize: '1.1rem', whiteSpace: 'nowrap' }}>₹{Number(amt).toLocaleString()}</AntText>
+    },
+    {
+      title: 'Quick Actions',
+      key: 'action',
+      width: '20%',
+      align: 'center',
+      render: (_, record) => (
+        record.status === 'PENDING' ? (
+          <Popconfirm
+            title="Confirm Payment"
+            description="Is this payment received in cash/direct?"
+            onConfirm={() => handleConfirmPayment(record.id)}
+            okText="Yes, Confirm"
+            cancelText="No"
+            okButtonProps={{ style: { background: '#10b981', border: 'none' } }}
+          >
+            <div 
+              style={{ 
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: 'white',
+                padding: '10px 20px',
+                borderRadius: '12px',
+                fontSize: '11px',
+                fontWeight: 900,
+                cursor: 'pointer',
+                textAlign: 'center',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                boxShadow: '0 8px 20px -6px rgba(16, 185, 129, 0.4)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                minWidth: '160px',
+                whiteSpace: 'nowrap',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                e.currentTarget.style.boxShadow = '0 12px 24px -8px rgba(16, 185, 129, 0.5)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = '0 8px 20px -6px rgba(16, 185, 129, 0.4)';
+              }}
+            >
+              Confirm Payment
+            </div>
+          </Popconfirm>
+        ) : (
+          <AntText style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 600 }}>NO ACTIONS</AntText>
+        )
+      )
     }
   ];
 
@@ -328,13 +403,13 @@ export default function EventDetailsPage() {
       <Head><title>{event.title} | Premium Event Experience</title></Head>
 
       {/* STUNNING HERO SECTION */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
-        style={{ position: 'relative', width: '100%', height: '70vh', minHeight: '600px', overflow: 'hidden', borderRadius: '0 0 40px 40px', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)' }}
+        style={{ position: 'relative', width: '100%', height: '70vh', minHeight: '600px', overflow: 'hidden', borderRadius: '40px 40px 40px 40px', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)' }}
       >
-        <motion.div 
+        <motion.div
           initial={{ scale: 1.1 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
@@ -344,7 +419,7 @@ export default function EventDetailsPage() {
             background: `url(${event.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}) center/cover no-repeat`,
             filter: 'brightness(0.5) blur(2px)',
             transition: 'all 0.5s ease'
-          }} 
+          }}
         />
         <div style={{
           position: 'absolute',
@@ -354,7 +429,7 @@ export default function EventDetailsPage() {
         }} />
 
         {/* FLOATING NAVIGATION & ACTIONS */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -392,7 +467,7 @@ export default function EventDetailsPage() {
           </div>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           variants={heroContentVariants}
           style={{
             position: 'relative',
@@ -458,7 +533,7 @@ export default function EventDetailsPage() {
       </motion.div>
 
       {/* CONTENT GRID */}
-      <motion.div 
+      <motion.div
         variants={staggerContainer}
         initial="initial"
         whileInView="animate"
@@ -469,125 +544,127 @@ export default function EventDetailsPage() {
           <Col xs={24} lg={16}>
             <motion.div variants={fadeInUp}>
               <Card style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', padding: '12px' }}>
-              <Tabs
-                defaultActiveKey="1"
-                className="modern-tabs"
-                items={[
-                  {
-                    key: '1',
-                    label: <Space><Info size={18} /> Details</Space>,
-                    children: (
-                      <div style={{ padding: '24px 0' }}>
-                        <AntTitle level={4} style={{ color: '#0f172a', fontWeight: 800, marginBottom: '20px' }}>About this event</AntTitle>
-                        <Paragraph style={{ fontSize: '1.1rem', lineHeight: '1.8', color: '#475569' }}>
-                          {event.description}
-                        </Paragraph>
-
-                        <Divider />
-
-                        <AntTitle level={4} style={{ color: '#0f172a', fontWeight: 800, marginBottom: '20px' }}>Event Features</AntTitle>
-                        <Row gutter={[16, 16]}>
-                          {(event.features && event.features.length > 0 ? event.features.map(f => {
-                            const featureMap = {
-                              'VIP_ACCESS': { icon: <FireOutlined />, label: 'VIP Access Available', color: '#f43f5e' },
-                              'NETWORKING': { icon: <GlobalOutlined />, label: 'Networking Sessions', color: '#6366f1' },
-                              'LIVE_QA': { icon: <ThunderboltOutlined />, label: 'Live Q&A', color: '#f59e0b' },
-                              'DIGITAL_COLLECTIBLES': { icon: <Ticket size={20} />, label: 'Digital Collectibles', color: '#10b981' }
-                            };
-                            return featureMap[f] || { icon: <Info size={18} />, label: f.replace(/_/g, ' '), color: '#64748b' };
-                          }) : [
-                            { icon: <FireOutlined />, label: 'VIP Access Available', color: '#f43f5e' },
-                            { icon: <GlobalOutlined />, label: 'Networking Sessions', color: '#6366f1' },
-                            { icon: <ThunderboltOutlined />, label: 'Live Q&A', color: '#f59e0b' },
-                            { icon: <Ticket size={20} />, label: 'Digital Collectibles', color: '#10b981' }
-                          ]).map((feature, i) => (
-                            <Col xs={24} sm={12} key={i}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
-                                <div style={{ color: feature.color, fontSize: '20px' }}>{feature.icon}</div>
-                                <AntText strong style={{ color: '#334155' }}>{feature.label}</AntText>
-                              </div>
-                            </Col>
-                          ))}
-                        </Row>
-                      </div>
-                    )
-                  },
-                  {
-                    key: '2',
-                    label: <Space><Star size={18} /> Reviews</Space>,
-                    children: (
-                      <div style={{ padding: '24px 0' }}>
-                        <List
-                          dataSource={event.feedbacks || []}
-                          renderItem={(item) => (
-                            <div style={{ padding: '20px', background: '#fff', borderRadius: '16px', border: '1px solid #f1f5f9', marginBottom: '16px' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                <Space size={12}>
-                                  <Avatar src={`https://api.dicebear.com/7.x/initials/svg?seed=${item.user?.name}`} />
-                                  <AntText strong>{item.user?.name}</AntText>
-                                </Space>
-                                <Rate disabled defaultValue={item.rating} style={{ fontSize: '12px' }} />
-                              </div>
-                              <AntText style={{ color: '#475569' }}>{item.comment}</AntText>
-                            </div>
-                          )}
-                          locale={{ emptyText: <Empty description="Be the first to review!" /> }}
-                        />
-                      </div>
-                    )
-                  },
-                  ...(isOwner ? [
+                <Tabs
+                  defaultActiveKey="1"
+                  className="modern-tabs"
+                  items={[
                     {
-                      key: '3',
-                      label: <Space><Users size={18} /> Attendees ({event.attendees?.length || 0})</Space>,
+                      key: '1',
+                      label: <Space><Info size={18} /> Details</Space>,
                       children: (
                         <div style={{ padding: '24px 0' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                            <Input
-                              placeholder="Search by name or email..."
-                              prefix={<SearchOutlined />}
-                              style={{ maxWidth: '300px', borderRadius: '10px' }}
-                              onChange={e => setAttendeeSearchText(e.target.value)}
-                            />
-                            <Button icon={<DownloadOutlined />} onClick={exportToExcel} style={{ borderRadius: '10px', fontWeight: 600 }}>Download Roster</Button>
-                          </div>
-                          <Table
-                            dataSource={event.attendees || []}
-                            columns={attendeeColumns}
-                            rowKey="id"
-                            pagination={{ pageSize: 5 }}
-                          />
+                          <AntTitle level={4} style={{ color: '#0f172a', fontWeight: 800, marginBottom: '20px' }}>About this event</AntTitle>
+                          <Paragraph style={{ fontSize: '1.1rem', lineHeight: '1.8', color: '#475569' }}>
+                            {event.description}
+                          </Paragraph>
+
+                          <Divider />
+
+                          <AntTitle level={4} style={{ color: '#0f172a', fontWeight: 800, marginBottom: '20px' }}>Event Features</AntTitle>
+                          <Row gutter={[16, 16]}>
+                            {(event.features && event.features.length > 0 ? event.features.map(f => {
+                              const featureMap = {
+                                'VIP_ACCESS': { icon: <FireOutlined />, label: 'VIP Access Available', color: '#f43f5e' },
+                                'NETWORKING': { icon: <GlobalOutlined />, label: 'Networking Sessions', color: '#6366f1' },
+                                'LIVE_QA': { icon: <ThunderboltOutlined />, label: 'Live Q&A', color: '#f59e0b' },
+                                'DIGITAL_COLLECTIBLES': { icon: <Ticket size={20} />, label: 'Digital Collectibles', color: '#10b981' }
+                              };
+                              return featureMap[f] || { icon: <Info size={18} />, label: f.replace(/_/g, ' '), color: '#64748b' };
+                            }) : [
+                              { icon: <FireOutlined />, label: 'VIP Access Available', color: '#f43f5e' },
+                              { icon: <GlobalOutlined />, label: 'Networking Sessions', color: '#6366f1' },
+                              { icon: <ThunderboltOutlined />, label: 'Live Q&A', color: '#f59e0b' },
+                              { icon: <Ticket size={20} />, label: 'Digital Collectibles', color: '#10b981' }
+                            ]).map((feature, i) => (
+                              <Col xs={24} sm={12} key={i}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
+                                  <div style={{ color: feature.color, fontSize: '20px' }}>{feature.icon}</div>
+                                  <AntText strong style={{ color: '#334155' }}>{feature.label}</AntText>
+                                </div>
+                              </Col>
+                            ))}
+                          </Row>
                         </div>
                       )
                     },
                     {
-                      key: '4',
-                      label: <Space><Briefcase size={18} /> Vendors ({event.vendors?.length || 0})</Space>,
+                      key: '2',
+                      label: <Space><Star size={18} /> Reviews</Space>,
                       children: (
                         <div style={{ padding: '24px 0' }}>
-                          <Table
-                            dataSource={event.vendors || []}
-                            rowKey="id"
-                            pagination={false}
-                            columns={[
-                              { title: 'Vendor', dataIndex: 'name', key: 'name', render: (t) => <AntText strong>{t}</AntText> },
-                              { title: 'Category', dataIndex: 'category', key: 'category', render: (c) => <Tag color="blue">{c}</Tag> },
-                              { title: 'Cost', dataIndex: 'cost', key: 'cost', render: (v) => <AntText strong>₹{v.toLocaleString()}</AntText> },
-                              { title: 'Contact', dataIndex: 'contactInfo', key: 'contactInfo' }
-                            ]}
+                          <List
+                            dataSource={event.feedbacks || []}
+                            renderItem={(item) => (
+                              <div style={{ padding: '20px', background: '#fff', borderRadius: '16px', border: '1px solid #f1f5f9', marginBottom: '16px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                  <Space size={12}>
+                                    <Avatar src={`https://api.dicebear.com/7.x/initials/svg?seed=${item.user?.name}`} />
+                                    <AntText strong>{item.user?.name}</AntText>
+                                  </Space>
+                                  <Rate disabled defaultValue={item.rating} style={{ fontSize: '12px' }} />
+                                </div>
+                                <AntText style={{ color: '#475569' }}>{item.comment}</AntText>
+                              </div>
+                            )}
+                            locale={{ emptyText: <Empty description="Be the first to review!" /> }}
                           />
                         </div>
                       )
-                    }
-                  ] : [])
-                ]}
-              />
-            </Card>
+                    },
+                    ...(isOwner ? [
+                      {
+                        key: '3',
+                        label: <Space><Users size={18} /> Attendees ({event.attendees?.length || 0})</Space>,
+                        children: (
+                          <div style={{ padding: '24px 0' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                              <Input
+                                placeholder="Search by name or email..."
+                                prefix={<SearchOutlined />}
+                                style={{ maxWidth: '300px', borderRadius: '10px' }}
+                                onChange={e => setAttendeeSearchText(e.target.value)}
+                              />
+                              <Button icon={<DownloadOutlined />} onClick={exportToExcel} style={{ borderRadius: '10px', fontWeight: 600 }}>Download Roster</Button>
+                            </div>
+                            <Table
+                              dataSource={event.attendees || []}
+                              columns={attendeeColumns}
+                              rowKey="id"
+                              pagination={{ pageSize: 5 }}
+                              scroll={{ x: 900 }}
+                              className="attendee-table"
+                            />
+                          </div>
+                        )
+                      },
+                      {
+                        key: '4',
+                        label: <Space><Briefcase size={18} /> Vendors ({event.vendors?.length || 0})</Space>,
+                        children: (
+                          <div style={{ padding: '24px 0' }}>
+                            <Table
+                              dataSource={event.vendors || []}
+                              rowKey="id"
+                              pagination={false}
+                              columns={[
+                                { title: 'Vendor', dataIndex: 'name', key: 'name', render: (t) => <AntText strong>{t}</AntText> },
+                                { title: 'Category', dataIndex: 'category', key: 'category', render: (c) => <Tag color="blue">{c}</Tag> },
+                                { title: 'Cost', dataIndex: 'cost', key: 'cost', render: (v) => <AntText strong>₹{v.toLocaleString()}</AntText> },
+                                { title: 'Contact', dataIndex: 'contactInfo', key: 'contactInfo' }
+                              ]}
+                            />
+                          </div>
+                        )
+                      }
+                    ] : [])
+                  ]}
+                />
+              </Card>
             </motion.div>
           </Col>
 
           <Col xs={24} lg={8}>
-            <motion.div 
+            <motion.div
               variants={{
                 initial: { opacity: 0, x: 30 },
                 animate: { opacity: 1, x: 0, transition: { duration: 0.6, delay: 0.3 } }
@@ -725,61 +802,126 @@ export default function EventDetailsPage() {
                             <CloseCircleOutlined /> EVENT CANCELLED
                           </Button>
                         </Space>
-                      ) : isBooked ? (
-                        <Space direction="vertical" style={{ width: '100%' }}>
-                          <div style={{
-                            background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-                            border: '1px solid #22c55e',
-                            borderRadius: '20px',
-                            padding: '24px 16px',
-                            textAlign: 'center',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            gap: '8px',
-                            boxShadow: '0 10px 15px -3px rgba(34, 197, 94, 0.1)'
-                          }}>
-                            <div style={{
-                              width: '48px',
-                              height: '48px',
-                              background: '#22c55e',
-                              borderRadius: '50%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: 'white',
-                              fontSize: '24px',
-                              marginBottom: '4px',
-                              boxShadow: '0 4px 10px rgba(34, 197, 94, 0.3)'
-                            }}>
-                              <CheckCircleFilled />
-                            </div>
-                            <AntText style={{ color: '#166534', fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.3px' }}>BOOKING CONFIRMED</AntText>
-                            <AntText style={{ color: '#15803d', fontSize: '0.9rem', fontWeight: 500 }}>You're all set! We've sent your tickets to your email.</AntText>
-                          </div>
-                          <Popconfirm
-                            title="Cancel your reservation?"
-                            description="This action cannot be undone. Refund policy may apply."
-                            onConfirm={handleCancel}
-                            okText="Yes, Cancel"
-                            cancelText="No, Keep it"
-                          >
-                            <Button
-                              block
-                              type="text"
-                              danger
-                              style={{
-                                marginTop: '8px',
-                                fontWeight: 600,
-                                fontSize: '0.85rem',
-                                opacity: 0.7
-                              }}
+                      ) : isBooked ? (() => {
+                        const booking = myBookings.find(b => b.event.id === event.id);
+                        const isPending = booking?.status === 'PENDING';
+
+                        return (
+                          <Space direction="vertical" style={{ width: '100%' }}>
+                            {isPending ? (
+                              <div style={{
+                                background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
+                                border: '1px solid #f97316',
+                                borderRadius: '24px',
+                                padding: '32px 24px',
+                                textAlign: 'center',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '16px',
+                                boxShadow: '0 10px 15px -3px rgba(249, 115, 22, 0.1)'
+                              }}>
+                                <div style={{
+                                  width: '56px',
+                                  height: '56px',
+                                  background: '#f97316',
+                                  borderRadius: '18px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: 'white',
+                                  fontSize: '28px',
+                                  boxShadow: '0 8px 16px rgba(249, 115, 22, 0.3)'
+                                }}>
+                                  <ClockCircleOutlined />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  <AntText style={{ color: '#9a3412', fontWeight: 950, fontSize: '1.4rem', letterSpacing: '-0.5px', textTransform: 'uppercase' }}>Payment Pending</AntText>
+                                  <AntText style={{ color: '#c2410c', fontSize: '0.95rem', fontWeight: 500, lineHeight: 1.4 }}>Your spot is reserved! Please complete payment to secure your ticket.</AntText>
+                                </div>
+                                <Button
+                                  type="primary"
+                                  block
+                                  size="large"
+                                  icon={<CreditCard size={18} />}
+                                  onClick={() => {
+                                    if (booking.paymentUrl) window.location.href = booking.paymentUrl;
+                                    else toast.error('Payment link not found. Please try again or contact support.');
+                                  }}
+                                  style={{
+                                    background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                                    border: 'none',
+                                    borderRadius: '14px',
+                                    height: '54px',
+                                    fontWeight: 800,
+                                    fontSize: '1rem',
+                                    boxShadow: '0 10px 15px -3px rgba(249, 115, 22, 0.4)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '8px'
+                                  }}
+                                >
+                                  Complete Payment
+                                </Button>
+                              </div>
+                            ) : (
+                              <div style={{
+                                background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                                border: '1px solid #22c55e',
+                                borderRadius: '20px',
+                                padding: '24px 16px',
+                                textAlign: 'center',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '8px',
+                                boxShadow: '0 10px 15px -3px rgba(34, 197, 94, 0.1)'
+                              }}>
+                                <div style={{
+                                  width: '48px',
+                                  height: '48px',
+                                  background: '#22c55e',
+                                  borderRadius: '50%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: 'white',
+                                  fontSize: '24px',
+                                  marginBottom: '4px',
+                                  boxShadow: '0 4px 10px rgba(34, 197, 94, 0.3)'
+                                }}>
+                                  <CheckCircleFilled />
+                                </div>
+                                <AntText style={{ color: '#166534', fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.3px' }}>BOOKING CONFIRMED</AntText>
+                                <AntText style={{ color: '#15803d', fontSize: '0.9rem', fontWeight: 500 }}>You're all set! We've sent your tickets to your email.</AntText>
+                              </div>
+                            )}
+                            <Popconfirm
+                              title="Cancel your reservation?"
+                              description="This action cannot be undone. Refund policy may apply."
+                              onConfirm={handleCancel}
+                              okText="Yes, Cancel"
+                              cancelText="No, Keep it"
                             >
-                              Cancel Reservation
-                            </Button>
-                          </Popconfirm>
-                        </Space>
-                      ) : (event?.capacity - (event?.bookedCount || 0)) <= 0 ? (
+                              <Button
+                                block
+                                type="text"
+                                danger
+                                style={{
+                                  marginTop: '8px',
+                                  fontWeight: 600,
+                                  fontSize: '0.85rem',
+                                  opacity: 0.7
+                                }}
+                              >
+                                Cancel Reservation
+                              </Button>
+                            </Popconfirm>
+                          </Space>
+                        );
+                      })()
+                      : (event?.capacity - (event?.bookedCount || 0)) <= 0 ? (
                         <Space direction="vertical" style={{ width: '100%' }}>
                           <Button
                             block
@@ -924,6 +1066,32 @@ export default function EventDetailsPage() {
         }
         .booking-control .ant-input-number {
           padding: 8px 12px !important;
+        }
+        .attendee-table .ant-table-thead > tr > th {
+          background: #f8fafc !important;
+          color: #64748b !important;
+          font-size: 10px !important;
+          text-transform: uppercase !important;
+          letter-spacing: 1px !important;
+          font-weight: 900 !important;
+          padding: 16px 24px !important;
+          border-bottom: 2px solid #f1f5f9 !important;
+          text-align: center !important;
+          white-space: nowrap !important;
+        }
+        .attendee-table .ant-table-thead > tr > th:first-child {
+          text-align: left !important;
+        }
+        .attendee-table .ant-table-tbody > tr > td {
+          padding: 24px 24px !important;
+          border-bottom: 1px solid #f1f5f9 !important;
+          text-align: center !important;
+        }
+        .attendee-table .ant-table-tbody > tr > td:first-child {
+          text-align: left !important;
+        }
+        .attendee-table .ant-table-tbody > tr:hover > td {
+          background: #fcfdfe !important;
         }
       `}</style>
     </div>

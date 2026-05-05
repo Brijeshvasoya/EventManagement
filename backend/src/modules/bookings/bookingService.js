@@ -392,6 +392,9 @@ const bookingService = {
     }
 
     if (booking.status !== 'CONFIRMED') {
+      if (booking.status === 'PENDING') {
+        throw new Error('Access Denied: Payment Pending. Please complete payment to verify this ticket.');
+      }
       throw new Error(`Access Denied: Ticket is ${booking.status}.`);
     }
 
@@ -536,6 +539,62 @@ const bookingService = {
     }
 
     return feedback;
+  },
+
+  confirmPaymentManually: async (bookingId, user) => {
+    requireAuth(user);
+    const booking = await Booking.findById(bookingId).populate('event');
+    if (!booking) throw new Error('Booking not found');
+
+    const event = booking.event;
+    if (!event) throw new Error('Event not found for this booking');
+
+    // Only organizer or admin can confirm
+    if (event.organizer.toString() !== user.id && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
+      throw new Error('Unauthorized: Only the event organizer can manually confirm payments.');
+    }
+
+    if (booking.status !== 'PENDING') {
+      throw new Error(`Cannot confirm booking with status ${booking.status}`);
+    }
+
+    booking.status = 'CONFIRMED';
+    booking.paymentStatus = 'PAID';
+    await booking.save();
+
+    // Increment Loyalty Points
+    await User.findByIdAndUpdate(booking.user, { $inc: { loyaltyPoints: 100 } });
+
+    // Notify Attendee
+    try {
+      await notificationService.createNotification({
+        recipient: booking.user,
+        title: 'Payment Confirmed Manually',
+        message: `<b>✅ Payment Confirmed</b>: Your payment for "<b>${event.title}</b>" has been manually confirmed by the organizer. Your ticket is now valid!`,
+        type: 'BOOKING_CONFIRMED',
+        bookingId: booking._id,
+        eventId: event._id
+      });
+    } catch (err) {
+      console.error('Failed to create notification:', err.message);
+    }
+
+    // ASYNC EMAIL RECEIPT
+    (async () => {
+      try {
+        const attendee = await User.findById(booking.user);
+        if (attendee) {
+          const { generateTicketPDF } = require('../../utils/pdfGenerator');
+          const { sendTicketEmail } = require('../../utils/email');
+          const pdfBuffer = await generateTicketPDF(attendee, booking, event);
+          await sendTicketEmail(attendee, booking, event, pdfBuffer);
+        }
+      } catch (e) {
+        console.error('Email/PDF generation failed for manual confirmation:', e.message);
+      }
+    })();
+
+    return booking;
   }
 };
 
