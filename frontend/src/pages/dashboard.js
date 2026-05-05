@@ -602,7 +602,7 @@ export default function Dashboard() {
 
                         return pieData.length > 0 ? (
                           <ResponsiveContainer>
-                            <PieChart>
+                            <PieChart key={chartVersion}>
                               <Pie
                                 data={pieData}
                                 cx="50%"
