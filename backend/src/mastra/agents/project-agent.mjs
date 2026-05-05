@@ -2,6 +2,7 @@ import { Agent } from '@mastra/core/agent';
 import { mistral } from '@ai-sdk/mistral';
 import * as tools from '../tools/index.mjs';
 
+console.log("🚀 ~ process.env.FRONTEND_URL:", process.env.FRONTEND_URL)
 export const projectAgent = new Agent({
   id: 'event-management-agent',
   name: 'Event Management Assistant',
