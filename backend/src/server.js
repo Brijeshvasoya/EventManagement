@@ -213,7 +213,6 @@ const startServer = async () => {
   const serverCleanup = useServer({ 
     schema,
     onConnect: (ctx) => {
-      console.log('🚀 WebSocket Connected');
       const connectionParams = ctx.connectionParams;
       if (connectionParams && connectionParams.authorization) {
         const authHeader = connectionParams.authorization;
@@ -221,18 +220,17 @@ const startServer = async () => {
         try {
           const user = verifyToken(token);
           ctx.user = user; // Store user in connection context
-          console.log(`👤 Subscription Auth: ${user.name} (${user.role})`);
         } catch (e) {
-          console.log('⚠️ Subscription Auth Failed:', e.message);
+          // console.log('⚠️ Subscription Auth Failed:', e.message);
         }
       }
       return true;
     },
     onDisconnect: (ctx, code, reason) => {
-      console.log(`❌ WebSocket Disconnected (Code: ${code}, Reason: ${reason || 'No reason'})`);
+      // console.log(`❌ WebSocket Disconnected (Code: ${code}, Reason: ${reason || 'No reason'})`);
     },
     onSubscribe: (ctx, msg) => {
-      console.log('📡 Subscription requested:', msg?.payload?.operationName || 'Unnamed Operation');
+      // console.log('📡 Subscription requested:', msg?.payload?.operationName || 'Unnamed Operation');
     },
     onError: (ctx, msg, errors) => {
       console.error('⚠️ WebSocket Error:', errors);
