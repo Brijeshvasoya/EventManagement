@@ -68,7 +68,7 @@ const startServer = async () => {
       const agent = mastraInstance.getAgent('projectAgent');
 
       const roleInstruction = `The user chatting with you has the role: ${role}. 
-      Platform URL: ${process.env.FRONTEND_URL || 'https://event-management-kohl-rho.vercel.app'}
+      Platform URL: https://event-management-kohl-rho.vercel.app
       ${token ? `User Token: ${token}` : ''}
       ${role === 'ORGANIZER' 
         ? 'Focus on event management, sales analytics, and organizer tools.' 

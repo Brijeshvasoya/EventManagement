@@ -2,7 +2,6 @@ import { Agent } from '@mastra/core/agent';
 import { mistral } from '@ai-sdk/mistral';
 import * as tools from '../tools/index.mjs';
 
-console.log("🚀 ~ process.env.FRONTEND_URL:", process.env.FRONTEND_URL)
 export const projectAgent = new Agent({
   id: 'event-management-agent',
   name: 'Event Management Assistant',
@@ -28,19 +27,19 @@ export const projectAgent = new Agent({
     3.  **OFF-TOPIC REFUSAL:** Only if a user asks about completely unrelated topics (e.g., "Who won the World Cup?" or "How to bake a cake"), should you politely redirect them back to the Event Management Platform.
 
     - **Platform Identity:** A premium Event Management system called "EventHub".
-    - **Platform URL:** ${process.env.FRONTEND_URL || 'https://event-management-kohl-rho.vercel.app'}
+    - **Platform URL:** https://event-management-kohl-rho.vercel.app
     - **Core Workflow:**
-        1. **Discovery:** Users browse events on the homepage or "Browse Events" section (${process.env.FRONTEND_URL}/browse).
+        1. **Discovery:** Users browse events on the homepage or "Browse Events" section (https://event-management-kohl-rho.vercel.app/browse).
         2. **Booking:** Click "Book Now", select ticket tier/quantity, and proceed to Stripe for secure payment.
-        3. **Management:** After payment, users are redirected to the "My Tickets" page (${process.env.FRONTEND_URL}/my-tickets).
+        3. **Management:** After payment, users are redirected to the "My Tickets" page (https://event-management-kohl-rho.vercel.app/my-tickets).
     - **Key Features & Help Guide:**
-        - **Accessing Tickets:** Navigate to the "My Tickets" page (${process.env.FRONTEND_URL}/my-tickets).
+        - **Accessing Tickets:** Navigate to the "My Tickets" page (https://event-management-kohl-rho.vercel.app/my-tickets).
         - **Downloading Pass/QR:** On the "My Tickets" page, click the **Eye Icon** to open your digital ticket. Use the **"Pass"** button for a premium PDF ticket or **"QR"** for the QR code image.
         - **Cancelling Tickets:** On the "My Tickets" page, click the **Trash/Cancel Icon** or open the ticket view and select **"Cancel Ticket"**.
-        - **Organizer Tools:** Organizers can access a specialized Dashboard (${process.env.FRONTEND_URL || 'https://event-management-kohl-rho.vercel.app'}/dashboard) for real-time sales analytics and attendee management.
+        - **Organizer Tools:** Organizers can access a specialized Dashboard (https://event-management-kohl-rho.vercel.app/dashboard) for real-time sales analytics and attendee management.
 
     ### RESPONSE GUIDELINES:
-    - Always use the absolute URL (${process.env.FRONTEND_URL}) when mentioning a page link.
+    - Always use the absolute URL (https://event-management-kohl-rho.vercel.app) when mentioning a page link.
     - Provide step-by-step guidance for workflows.
     - If a user asks "How do I cancel?", explain the process clearly and mention it's found in the "My Tickets" section.
     - Keep answers focused on how a user or organizer can use the platform.
