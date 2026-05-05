@@ -16,6 +16,9 @@ const typeDefs = `#graphql
   type BillingInfo { currentPlan: String planExpiresAt: String isPlanActive: Boolean scheduledPlanId: String scheduledDowngradeAt: String proratedUpgradeAmount: Int invoices: [PlanInvoice!]! }
   type PromoCode { id: ID! code: String! discountType: String! discountValue: Float! expiresAt: String! usageLimit: Int usageCount: Int isActive: Boolean event: Event }
   
+  type SupportMessage { id: ID! message: String! sender: User! createdAt: String! }
+  type SupportTicket { id: ID! user: User! event: Event organizer: User subject: String! description: String! type: String! status: String! messages: [SupportMessage!]! createdAt: String! }
+  
   input TicketTypeInput { name: String! price: Float! capacity: Int! }
   input CreateEventInput { title: String! description: String! date: String! location: String! capacity: Int imageUrl: String eventType: String ticketTypes: [TicketTypeInput] vendorIds: [ID] features: [String] }
   input VendorInput { name: String! category: String! cost: Float! contactInfo: String availableDates: [String] eventIds: [ID] }
@@ -40,6 +43,7 @@ const typeDefs = `#graphql
     myBilling: BillingInfo!
     validatePromoCode(code: String!, eventId: ID!): PromoCode
     myPromoCodes: [PromoCode!]!
+    mySupportTickets(status: String, type: String, eventId: ID, limit: Int, offset: Int): [SupportTicket!]!
   }
   
   type Mutation {
@@ -76,10 +80,15 @@ const typeDefs = `#graphql
     deletePromoCode(id: ID!): Boolean!
     triggerAbandonedCheckout(sessionId: String!): Boolean!
     confirmPayment(bookingId: ID!): Booking!
+    createSupportTicket(eventId: ID, type: String!, subject: String!, description: String!): SupportTicket!
+    replyToSupportTicket(ticketId: ID!, message: String!): SupportTicket!
+    resolveSupportTicket(ticketId: ID!): SupportTicket!
+    reopenSupportTicket(ticketId: ID!): SupportTicket!
   }
 
   type Subscription {
     notificationAdded: Notification!
+    ticketUpdated(ticketId: ID!): SupportTicket!
   }
 `;
 module.exports = typeDefs;

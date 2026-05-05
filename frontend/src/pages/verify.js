@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { VERIFY_TICKET } from '@/features/events/graphql/queries';
+import { VERIFY_TICKET } from '@/features/events/graphql/mutations';
 import { Layout, Typography, Card, Button, Result, Spin, message, Space, Tag } from 'antd';
 import { QrcodeOutlined, CheckCircleOutlined, CloseCircleOutlined, CameraOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import BarcodeScannerComponent from 'react-qr-barcode-scanner';

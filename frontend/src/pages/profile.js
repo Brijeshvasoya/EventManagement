@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import toast from 'react-hot-toast';
-import { UPDATE_PROFILE, GET_MY_EVENTS, GET_MY_BOOKINGS, GET_ME } from '@/features/events/graphql/queries';
+import { GET_MY_EVENTS, GET_MY_BOOKINGS, GET_ME } from '@/features/events/graphql/queries';
+import { UPDATE_PROFILE } from '@/features/events/graphql/mutations';
 import Link from 'next/link';
 import { Form, Input, Button, Typography, ConfigProvider, Space, Divider, Avatar, Skeleton } from 'antd';
 import { UserOutlined, MailOutlined, LockOutlined, SafetyOutlined, CheckCircleOutlined, ThunderboltOutlined, CalendarOutlined, StarOutlined, GiftOutlined } from '@ant-design/icons';
@@ -19,7 +20,7 @@ export default function Profile() {
   const { data: meData, loading: meLoading } = useQuery(GET_ME, {
     skip: !user,
     onCompleted: (data) => {
-      if (data.me && user) setUser({ ...user, ...data.me });
+      if (data?.me && user) setUser({ ...user, ...data.me });
     }
   });
 
@@ -60,7 +61,7 @@ export default function Profile() {
           newPassword: values.newPassword
         }
       });
-      setUser({ ...user, name: data.updateProfile.name, email: data.updateProfile.email });
+      setUser({ ...user, name: data?.updateProfile?.name, email: data?.updateProfile?.email });
       form.setFieldsValue({ currentPassword: '', newPassword: '' });
       toast.success('Security & Profile updated! ✨');
     } catch (e) {
@@ -108,13 +109,13 @@ export default function Profile() {
               }}></div>
             </div>
             <div>
-              <Title level={2} style={{ margin: 0, fontWeight: 900, color: '#1B2A4E', letterSpacing: '-1px' }}>{user.name}</Title>
+              <Title level={2} style={{ margin: 0, fontWeight: 900, color: '#1B2A4E', letterSpacing: '-1px' }}>{user?.name}</Title>
               <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
                 <span style={{ color: '#64748B', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
-                  <ThunderboltOutlined style={{ color: 'rgb(67, 56, 202)' }} /> {user.role}
+                  <ThunderboltOutlined style={{ color: 'rgb(67, 56, 202)' }} /> {user?.role}
                 </span>
                 <span style={{ color: '#64748B', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
-                  <CalendarOutlined style={{ color: 'rgb(67, 56, 202)' }} /> Member since {user.createdAt?.slice(0, 4) || '2024'}
+                  <CalendarOutlined style={{ color: 'rgb(67, 56, 202)' }} /> Member since {user?.createdAt?.slice(0, 4) || '2024'}
                 </span>
               </div>
             </div>

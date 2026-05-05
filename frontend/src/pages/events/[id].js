@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_EVENT_DETAILS, GET_MY_BOOKINGS, CANCEL_BOOKING, CREATE_CHECKOUT_SESSION, JOIN_WAITLIST, VALIDATE_PROMO_CODE, DELETE_EVENT, CONFIRM_PAYMENT } from '@/features/events/graphql/queries';
+import { GET_EVENT_DETAILS, GET_MY_BOOKINGS, VALIDATE_PROMO_CODE } from '@/features/events/graphql/queries';
+import { CANCEL_BOOKING, CREATE_CHECKOUT_SESSION, JOIN_WAITLIST, DELETE_EVENT, CONFIRM_PAYMENT } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import ExcelJS from 'exceljs';

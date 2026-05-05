@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_MY_EVENTS, DELETE_EVENT } from '@/features/events/graphql/queries';
+import { GET_MY_EVENTS } from '@/features/events/graphql/queries';
+import { DELETE_EVENT } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import { Button, Row, Col, Badge, Popconfirm, Tooltip, Space } from 'antd';

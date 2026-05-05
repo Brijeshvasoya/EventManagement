@@ -3,7 +3,8 @@ import { GlobalActionsContext } from '../components/GlobalActions';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 import { motion } from 'framer-motion';
-import { GET_MY_BOOKINGS, CANCEL_BOOKING, GET_MY_ANALYTICS, GET_MY_EVENTS, GET_EVENTS, REDEEM_REWARD, GET_MY_PROMO_CODES } from '@/features/events/graphql/queries';
+import { GET_MY_BOOKINGS, GET_MY_ANALYTICS, GET_MY_EVENTS, GET_EVENTS, GET_MY_PROMO_CODES } from '@/features/events/graphql/queries';
+import { CANCEL_BOOKING, REDEEM_REWARD } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -94,8 +95,8 @@ export default function Dashboard() {
       const { data } = await redeemReward({
         variables: { rewardId: reward.title, points: reward.pts }
       });
-      setUser({ ...user, loyaltyPoints: data.redeemReward.loyaltyPoints, redeemedRewards: data.redeemReward.redeemedRewards });
-      toast.success(`Succesfully redeemed ${reward.title}! 🎁`);
+      setUser({ ...user, loyaltyPoints: data?.redeemReward?.loyaltyPoints, redeemedRewards: data?.redeemReward?.redeemedRewards });
+      toast.success(`Succesfully redeemed ${reward?.title}! 🎁`);
       refetchGlobalNotifications();
     } catch (e) {
       toast.error(e.message);
@@ -138,7 +139,7 @@ export default function Dashboard() {
       const imgWidth = 190;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-      pdf.save(`VIP_Ticket_${booking.event.title.replace(/\s+/g, '_')}.pdf`);
+      pdf.save(`VIP_Ticket_${booking?.event?.title?.replace(/\s+/g, '_')}.pdf`);
       toast.success('Official Ticket Saved! 🎉', { id: 'pdf-gen' });
     } catch (e) {
       console.error(e);
@@ -152,7 +153,7 @@ export default function Dashboard() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `QR_${eventTitle.replace(/\s+/g, '_')}.png`;
+      link.download = `QR_${eventTitle?.replace(/\s+/g, '_')}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -210,10 +211,10 @@ export default function Dashboard() {
     });
 
     const monthlyDataArray = Object.keys(monthlyMap).map(k => ({ name: k, Revenue: monthlyMap[k] }));
-    const topEvents = eventsWithRev.sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+    const topEvents = (eventsWithRev || []).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
 
-    const totalUsers = users.filter(u => u.role === 'USER').length;
-    const totalOrganizers = users.filter(u => u.role === 'ORGANIZER').length;
+    const totalUsers = (users || []).filter(u => u.role === 'USER').length;
+    const totalOrganizers = (users || []).filter(u => u.role === 'ORGANIZER').length;
 
     return (
       <>
@@ -345,10 +346,10 @@ export default function Dashboard() {
         >
           <div style={{ textAlign: 'center', marginBottom: '32px', background: 'linear-gradient(135deg, #FFF 0%, #F8FAFB 100%)', padding: '24px', borderRadius: '24px', border: '1px solid #F1F5F9' }}>
             <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>Current Balance</div>
-            <div style={{ color: '#1B2A4E', fontSize: '3rem', fontWeight: 900, lineHeight: 1 }}>{user.loyaltyPoints || 0} <span style={{ fontSize: '1rem', color: '#6B7280' }}>Pts</span></div>
+            <div style={{ color: '#1B2A4E', fontSize: '3rem', fontWeight: 900, lineHeight: 1 }}>{user?.loyaltyPoints || 0} <span style={{ fontSize: '1rem', color: '#6B7280' }}>Pts</span></div>
             <div style={{ marginTop: '16px' }}>
               <Progress
-                percent={Math.min(100, Math.round(((user.loyaltyPoints || 0) / 5000) * 100))}
+                percent={Math.min(100, Math.round(((user?.loyaltyPoints || 0) / 5000) * 100))}
                 strokeColor={{ '0%': '#F59E0B', '100%': '#D97706' }}
                 showInfo={false}
                 strokeWidth={10}
@@ -368,8 +369,8 @@ export default function Dashboard() {
               { pts: 2500, title: 'VIP Lounge', desc: 'Complementary access to event lounges', icon: '🍸' },
               { pts: 5000, title: 'Platinum Pass', desc: 'One free ticket to any premium event', icon: '✨' }
             ].map((reward, i) => {
-              const isUnlocked = (user.loyaltyPoints || 0) >= reward.pts;
-              const isRedeemed = user.redeemedRewards?.includes(reward.title);
+              const isUnlocked = (user?.loyaltyPoints || 0) >= (reward?.pts || 0);
+              const isRedeemed = user?.redeemedRewards?.includes(reward?.title);
               return (
                 <motion.div
                   key={i}
@@ -691,7 +692,7 @@ export default function Dashboard() {
                   className="grid-cols-auto-320"
                   style={{ gap: '20px' }}
                 >
-                  {myEventsData?.myEvents.slice(0, 3).map(e => (
+                  {myEventsData?.myEvents?.slice(0, 3).map(e => (
                     <motion.div
                       key={e.id}
                       variants={fadeInUp}

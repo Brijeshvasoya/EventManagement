@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_EVENTS, CREATE_CHECKOUT_SESSION, DELETE_EVENT, UPDATE_EVENT } from '../graphql/queries';
+import { GET_EVENTS } from '../graphql/queries';
+import { CREATE_CHECKOUT_SESSION, DELETE_EVENT, UPDATE_EVENT } from '../graphql/mutations';
 import toast from 'react-hot-toast';
 
 export const useEvents = () => {

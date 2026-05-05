@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { CREATE_PROMO_CODE, GET_MY_EVENTS, GET_MY_PROMO_CODES } from '@/features/events/graphql/queries';
+import { GET_MY_EVENTS, GET_MY_PROMO_CODES } from '@/features/events/graphql/queries';
+import { CREATE_PROMO_CODE } from '@/features/events/graphql/mutations';
 import Head from 'next/head';
 import { Card, Form, Input, Button, Select, DatePicker, InputNumber, Typography, Space, Divider, Row, Col, ConfigProvider, Avatar } from 'antd';
 import { RocketOutlined, ArrowLeftOutlined, PercentageOutlined, DollarOutlined, ThunderboltOutlined, InfoCircleOutlined } from '@ant-design/icons';

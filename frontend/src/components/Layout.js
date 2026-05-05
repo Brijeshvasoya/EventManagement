@@ -17,7 +17,8 @@ import {
   DollarCircleOutlined,
   ScanOutlined,
   CreditCardOutlined,
-  RocketOutlined
+  RocketOutlined,
+  QuestionCircleOutlined
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -61,7 +62,8 @@ export default function AppLayout({ children }) {
       { key: '/superadmin/events', icon: <GlobalOutlined />, label: 'All Events' },
       { key: '/superadmin', icon: <UserOutlined />, label: 'Total Users' },
       { key: '/superadmin/payments', icon: <DollarCircleOutlined />, label: 'Payment Tracking' },
-      { key: '/superadmin/tickets', icon: <ScanOutlined />, label: 'All Tickets' }
+      { key: '/superadmin/tickets', icon: <ScanOutlined />, label: 'All Tickets' },
+      { key: '/support', icon: <QuestionCircleOutlined />, label: 'Support Center' }
     ];
   } else {
     menuItems = [
@@ -82,8 +84,11 @@ export default function AppLayout({ children }) {
         { key: '/vendors', icon: <ShopOutlined />, label: 'Vendors' },
         { key: '/verify', icon: <ScanOutlined />, label: 'Scan Ticket' },
         { key: '/billing', icon: <CreditCardOutlined />, label: 'Billing' },
-        { key: '/plans', icon: <AppstoreOutlined />, label: 'Plans' }
-      ] : [])
+        { key: '/plans', icon: <AppstoreOutlined />, label: 'Plans' },
+        { key: '/support', icon: <QuestionCircleOutlined />, label: 'Support Center' }
+      ] : [
+        { key: '/support', icon: <QuestionCircleOutlined />, label: 'Support Center' }
+      ])
     ];
   }
 
@@ -187,7 +192,7 @@ export default function AppLayout({ children }) {
           </div>
 
           {/* Navigation Items */}
-          <nav style={{ padding: '0 16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', lineHeight: "0.5" }}>
+          <nav style={{ padding: '0 16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '0px', lineHeight: "0.5" }}>
             {menuItems.map(item => <NavItem key={item.key} item={item} />)}
           </nav>
 

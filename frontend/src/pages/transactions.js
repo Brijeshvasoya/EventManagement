@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_MY_EVENTS, GET_MY_ANALYTICS, GET_EVENTS, GET_ME, REQUEST_PAYOUT, GET_MY_PAYOUTS, UPDATE_BANK_DETAILS } from '@/features/events/graphql/queries';
+import { GET_MY_EVENTS, GET_MY_ANALYTICS, GET_EVENTS, GET_ME, GET_MY_PAYOUTS } from '@/features/events/graphql/queries';
+import { REQUEST_PAYOUT, UPDATE_BANK_DETAILS } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import { Table, Tag, Card, Row, Col, Statistic, Empty, Button, Modal, InputNumber, Form, message, Alert, Input, Space, Typography, Tooltip as AntTooltip, Select } from 'antd';

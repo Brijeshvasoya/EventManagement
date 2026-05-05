@@ -8,33 +8,8 @@ import toast from 'react-hot-toast';
 import { Button, ConfigProvider, theme, Modal } from 'antd';
 import { RocketOutlined, CheckCircleFilled, CrownOutlined, ThunderboltOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
-const CREATE_PLAN_CHECKOUT_SESSION = gql`
-  mutation CreatePlanCheckoutSession($planId: String!) {
-    createPlanCheckoutSession(planId: $planId)
-  }
-`;
-
-const SCHEDULE_DOWNGRADE = gql`
-  mutation ScheduleDowngrade($targetPlanId: String!) {
-    scheduleDowngrade(targetPlanId: $targetPlanId) { token }
-  }
-`;
-
-const CANCEL_SCHEDULED_DOWNGRADE = gql`
-  mutation CancelScheduledDowngrade {
-    cancelScheduledDowngrade { token }
-  }
-`;
-
-const GET_MY_BILLING = gql`
-  query GetMyBillingForPlans {
-    myBilling {
-      currentPlan isPlanActive planExpiresAt
-      scheduledPlanId scheduledDowngradeAt
-      proratedUpgradeAmount
-    }
-  }
-`;
+import { GET_MY_BILLING } from '@/features/events/graphql/queries';
+import { CREATE_PLAN_CHECKOUT_SESSION, SCHEDULE_DOWNGRADE, CANCEL_SCHEDULED_DOWNGRADE } from '@/features/events/graphql/mutations';
 
 export default function PlansPage() {
   const { user, login } = useAuth();

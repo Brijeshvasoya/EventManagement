@@ -11,28 +11,8 @@ import {
   RocketOutlined, CrownOutlined, WarningOutlined, FileTextOutlined
 } from '@ant-design/icons';
 
-const GET_MY_BILLING = gql`
-  query GetMyBilling {
-    myBilling {
-      currentPlan
-      planExpiresAt
-      isPlanActive
-      scheduledPlanId
-      scheduledDowngradeAt
-      proratedUpgradeAmount
-      invoices {
-        id planId amount currency status stripeSessionId
-        planStartDate planEndDate createdAt
-      }
-    }
-  }
-`;
-
-const CONFIRM_PLAN_PURCHASE = gql`
-  mutation ConfirmPlanPurchase($sessionId: String!, $planId: String!, $proratedCredit: Int) {
-    confirmPlanPurchase(sessionId: $sessionId, planId: $planId, proratedCredit: $proratedCredit) { token }
-  }
-`;
+import { GET_MY_BILLING } from '@/features/events/graphql/queries';
+import { CONFIRM_PLAN_PURCHASE } from '@/features/events/graphql/mutations';
 
 function formatDate(iso) {
   if (!iso) return '—';

@@ -60,7 +60,7 @@ export default function MyTickets() {
     );
   }
 
-  const bookings = (data?.myBookings || []).filter(b => b.status === 'CONFIRMED' || b.status === 'PENDING');
+  const bookings = (data?.myBookings || []).filter(b => b?.status === 'CONFIRMED' || b?.status === 'PENDING');
 
   const handleViewTicket = (booking) => {
     setSelectedBooking(booking);
@@ -81,7 +81,7 @@ export default function MyTickets() {
             overflow: 'hidden',
             flexShrink: 0
           }}>
-            <img src={record.event?.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={record?.event?.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <Text strong>{text}</Text>
         </div>

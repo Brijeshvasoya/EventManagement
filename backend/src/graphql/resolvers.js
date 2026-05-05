@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const { GraphQLError } = require('graphql');
 const { withFilter } = require('graphql-subscriptions');
 const QRCode = require('qrcode');
@@ -10,6 +11,7 @@ const notificationService = require('../modules/notifications/notificationServic
 const stripeService = require('../modules/payments/stripeService');
 const razorpayService = require('../modules/payments/razorpayService');
 const analyticsService = require('../modules/analytics/analyticsService');
+const SupportTicket = require('../models/SupportTicket');
 const { pubsub, EVENTS } = require('../utils/pubsub');
 
 const resolvers = {
@@ -64,7 +66,7 @@ const resolvers = {
 
       // Prorated upgrade preview: if user is on BASIC, calculate how much they'd pay to upgrade to PRO
       const BASIC_PRICE = 799;
-      const PRO_PRICE   = 2499;
+      const PRO_PRICE = 2499;
       let proratedUpgradeAmount = PRO_PRICE; // default full price
       if (fullUser.planId === 'BASIC' && isPlanActive && fullUser.planExpiresAt) {
         const msLeft = new Date(fullUser.planExpiresAt) - new Date();
@@ -111,6 +113,78 @@ const resolvers = {
       if (!user || user.role !== 'ORGANIZER') throw new Error('Unauthorized');
       const PromoCode = require('../models/PromoCode');
       return await PromoCode.find({ organizer: user.id }).sort({ createdAt: -1 });
+    },
+    mySupportTickets: async (_, { status, type, eventId, limit = 20, offset = 0 }, { user, loaders }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+
+      // Safety: Force clean ID
+      const userId = (user.id && typeof user.id === 'object' && user.id._id)
+        ? user.id._id.toString()
+        : user.id?.toString() || user.id;
+
+      let query = {};
+
+      // 1. Base Role-based Visibility
+      if (user.role === 'SUPER_ADMIN') {
+        query.type = 'ORGANIZER_TO_ADMIN';
+      } else if (user.role === 'ORGANIZER') {
+        query.$or = [
+          { organizer: userId },
+          { user: userId, type: 'ORGANIZER_TO_ADMIN' }
+        ];
+      } else {
+        query.user = userId;
+      }
+
+      // 2. Apply Dynamic Filters
+      if (status) query.status = status;
+      if (type) query.type = type;
+      if (eventId) query.event = eventId;
+
+      try {
+        const tickets = await SupportTicket.find(query)
+          .sort({ createdAt: -1 })
+          .skip(offset)
+          .limit(limit);
+
+        // Manual Robust Population
+        const populatedTickets = await Promise.all(tickets.map(async (ticket) => {
+          const t = ticket.toObject();
+          // Ensure Ticket ID is mapped
+          t.id = ticket._id.toString();
+          
+          try {
+            if (t.user && typeof t.user === 'string' && !t.user.startsWith('{')) {
+              t.user = await loaders.userLoader.load(t.user);
+            }
+            if (t.organizer && typeof t.organizer === 'string' && !t.organizer.startsWith('{')) {
+              t.organizer = await loaders.userLoader.load(t.organizer);
+            }
+            if (t.event && typeof t.event === 'string' && !t.event.startsWith('{')) {
+              t.event = await loaders.eventLoader.load(t.event);
+            }
+
+            // Ensure Message IDs are mapped
+            if (t.messages) {
+              t.messages = await Promise.all(t.messages.map(async (msg) => {
+                const m = { ...msg, id: msg._id?.toString() || msg.id };
+                if (m.sender && typeof m.sender === 'string' && !m.sender.startsWith('{')) {
+                  m.sender = await loaders.userLoader.load(m.sender);
+                }
+                return m;
+              }));
+            }
+          } catch (e) {
+            console.error('Error populating ticket:', t.id, e);
+          }
+          return t;
+        }));
+
+        return populatedTickets.filter(t => t.user && typeof t.user === 'object');
+      } catch (error) {
+        console.error('Final fallback error:', error);
+        return [];
+      }
     }
   },
   Mutation: {
@@ -317,6 +391,94 @@ const resolvers = {
       return await stripeService.triggerAbandonedCheckoutEmail(sessionId, user);
     },
     confirmPayment: (_, { bookingId }, { user }) => bookingService.confirmPaymentManually(bookingId, user),
+    createSupportTicket: async (_, { eventId, type, subject, description }, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      if (user.role === 'SUPER_ADMIN') throw new GraphQLError('Super Admins cannot create support tickets');
+      
+      let organizerId = null;
+      if (type === 'USER_TO_ORGANIZER' && eventId) {
+        const Event = require('../models/Event');
+        const event = await Event.findById(eventId);
+        if (event) organizerId = event.organizer;
+      }
+      const ticket = new SupportTicket({
+        user: user.id.toString(),
+        event: eventId,
+        organizer: organizerId,
+        type,
+        subject,
+        description,
+        messages: [{
+          message: description,
+          sender: user.id.toString()
+        }]
+      });
+      await ticket.save();
+      return ticket;
+    },
+    replyToSupportTicket: async (_, { ticketId, message }, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      const ticket = await SupportTicket.findById(ticketId);
+      if (!ticket) throw new GraphQLError('Ticket not found');
+
+      // Security Check: Only involved parties can reply
+      const isCreator = ticket.user.toString() === user.id;
+      const isAssignedOrganizer = ticket.organizer?.toString() === user.id;
+      const isAdminTask = ticket.type === 'ORGANIZER_TO_ADMIN' && user.role === 'SUPER_ADMIN';
+
+      if (!isCreator && !isAssignedOrganizer && !isAdminTask) {
+        throw new GraphQLError('Forbidden: You are not authorized to reply to this ticket');
+      }
+
+      ticket.messages.push({ message, sender: user.id.toString() });
+      // ticket.status = 'OPEN'; // Removed automatic re-open as per user feedback
+      await ticket.save();
+
+      pubsub.publish(EVENTS.TICKET_UPDATED, { ticketUpdated: ticket });
+
+      return ticket;
+    },
+    reopenSupportTicket: async (_, { ticketId }, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      const ticket = await SupportTicket.findById(ticketId);
+      if (!ticket) throw new GraphQLError('Ticket not found');
+
+      const isCreator = ticket.user.toString() === user.id;
+      const isAssignedOrganizer = ticket.organizer?.toString() === user.id;
+      const isAdminTask = ticket.type === 'ORGANIZER_TO_ADMIN' && user.role === 'SUPER_ADMIN';
+
+      if (!isCreator && !isAssignedOrganizer && !isAdminTask) {
+        throw new GraphQLError('Forbidden');
+      }
+
+      ticket.status = 'OPEN';
+      await ticket.save();
+
+      pubsub.publish(EVENTS.TICKET_UPDATED, { ticketUpdated: ticket });
+
+      return ticket;
+    },
+    resolveSupportTicket: async (_, { ticketId }, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      const ticket = await SupportTicket.findById(ticketId);
+      if (!ticket) throw new GraphQLError('Ticket not found');
+
+      // Security Check: Creator or Responder can resolve
+      const isCreator = ticket.user.toString() === user.id;
+      const isAssignedOrganizer = ticket.organizer?.toString() === user.id;
+      const isAdminTask = ticket.type === 'ORGANIZER_TO_ADMIN' && user.role === 'SUPER_ADMIN';
+
+      if (!isCreator && !isAssignedOrganizer && !isAdminTask) {
+        throw new GraphQLError('Forbidden: You are not authorized to resolve this ticket');
+      }
+
+      ticket.status = 'RESOLVED';
+      await ticket.save();
+
+      pubsub.publish(EVENTS.TICKET_UPDATED, { ticketUpdated: ticket });
+
+      return ticket;
+    },
   },
   PromoCode: {
     event: async (parent) => {
@@ -535,7 +697,26 @@ const resolvers = {
       resolve: (payload) => {
         return payload.notificationAdded;
       }
+    },
+    ticketUpdated: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterableIterator([EVENTS.TICKET_UPDATED]),
+        (payload, variables) => {
+          return payload.ticketUpdated.id.toString() === variables.ticketId.toString();
+        }
+      ),
+      resolve: (payload) => {
+        return payload.ticketUpdated;
+      }
     }
+  },
+  SupportTicket: {
+    user: (parent, _, { loaders }) => loaders.userLoader.load(parent.user.toString()),
+    organizer: (parent, _, { loaders }) => parent.organizer ? loaders.userLoader.load(parent.organizer.toString()) : null,
+    event: (parent, _, { loaders }) => parent.event ? loaders.eventLoader.load(parent.event.toString()) : null,
+  },
+  SupportMessage: {
+    sender: (parent, _, { loaders }) => loaders.userLoader.load(parent.sender.toString()),
   }
 };
 module.exports = resolvers;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useMutation } from '@apollo/client/react';
-import { VERIFY_TICKET } from '@/features/events/graphql/queries';
+import { VERIFY_TICKET } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
 import { Layout, Result, Button, Spin, Typography, Card, Space, Tag } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, LoginOutlined, DashboardOutlined } from '@ant-design/icons';

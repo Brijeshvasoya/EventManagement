@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_EVENTS, GET_ALL_PAYOUTS, APPROVE_PAYOUT } from '@/features/events/graphql/queries';
+import { GET_EVENTS, GET_ALL_PAYOUTS } from '@/features/events/graphql/queries';
+import { APPROVE_PAYOUT } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
 import Head from 'next/head';

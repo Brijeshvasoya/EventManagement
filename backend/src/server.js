@@ -70,9 +70,9 @@ const startServer = async () => {
       const roleInstruction = `The user chatting with you has the role: ${role}. 
       Platform URL: https://event-management-kohl-rho.vercel.app
       ${token ? `User Token: ${token}` : ''}
-      ${role === 'ORGANIZER' 
-        ? 'Focus on event management, sales analytics, and organizer tools.' 
-        : 'Focus on event discovery, ticket booking, and pass management.'}`;
+      ${role === 'ORGANIZER'
+          ? 'Focus on event management, sales analytics, and organizer tools.'
+          : 'Focus on event discovery, ticket booking, and pass management.'}`;
 
       // Inject system instruction at the beginning
       const sanitizedMessages = [
@@ -210,7 +210,7 @@ const startServer = async () => {
     path: '/graphql',
   });
 
-  const serverCleanup = useServer({ 
+  const serverCleanup = useServer({
     schema,
     onConnect: (ctx) => {
       const connectionParams = ctx.connectionParams;
@@ -236,9 +236,9 @@ const startServer = async () => {
       console.error('⚠️ WebSocket Error:', errors);
     },
     context: (ctx) => {
-      return { 
-        user: ctx.user, 
-        loaders: createLoaders() 
+      return {
+        user: ctx.user,
+        loaders: createLoaders()
       };
     }
   }, wsServer);
@@ -272,7 +272,7 @@ const startServer = async () => {
         if (authHeader.startsWith('Bearer ')) {
           try {
             user = verifyToken(authHeader.split(' ')[1]);
-          } catch (e) {}
+          } catch (e) { }
         }
         return { user, loaders: createLoaders() };
       },

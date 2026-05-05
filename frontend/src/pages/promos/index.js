@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_MY_PROMO_CODES, DELETE_PROMO_CODE, UPDATE_PROMO_CODE, GET_MY_EVENTS } from '@/features/events/graphql/queries';
+import { GET_MY_PROMO_CODES, GET_MY_EVENTS } from '@/features/events/graphql/queries';
+import { DELETE_PROMO_CODE, UPDATE_PROMO_CODE } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
 import Head from 'next/head';

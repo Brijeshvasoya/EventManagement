@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { jwtDecode } from 'jwt-decode';
 import { useApolloClient, useMutation } from '@apollo/client/react';
-import { LOGOUT } from '@/features/events/graphql/queries';
+import { LOGOUT } from '@/features/events/graphql/mutations';
 
 const AuthContext = createContext();
 

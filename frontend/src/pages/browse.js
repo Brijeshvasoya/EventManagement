@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_EVENTS, GET_MY_BOOKINGS, DELETE_EVENT, UPDATE_EVENT, GET_MY_VENDORS } from '@/features/events/graphql/queries';
+import { GET_EVENTS, GET_MY_BOOKINGS, GET_MY_VENDORS } from '@/features/events/graphql/queries';
+import { DELETE_EVENT, UPDATE_EVENT } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import { Tabs, Tag, Button, Modal, Spin, Empty, Popconfirm, Select, Tooltip, Form, Input, DatePicker, Upload } from 'antd';
@@ -101,13 +102,13 @@ export default function Browse() {
     const handleEditOpen = (event) => {
         setSelectedEvent(event);
         setPreviewImage(event.imageUrl);
-        setEditVendorIds(event.vendors?.map(v => v.id) || []);
+        setEditVendorIds(event?.vendors?.map(v => v.id) || []);
         editForm.setFieldsValue({
-            title: event.title,
-            description: event.description,
-            location: event.location,
-            date: dayjs(isNaN(Number(event.date)) ? event.date : Number(event.date)),
-            eventType: event.eventType
+            title: event?.title,
+            description: event?.description,
+            location: event?.location,
+            date: dayjs(isNaN(Number(event?.date)) ? event?.date : Number(event?.date)),
+            eventType: event?.eventType
         });
         setIsEditModalOpen(true);
     };
@@ -140,7 +141,7 @@ export default function Browse() {
             });
             toast.success('Event Updated Successfully!');
             setIsEditModalOpen(false);
-            refetchEvents();
+            refetchEvents?.();
         } catch (e) {
             console?.error("Update Error:", e);
             toast.error(e?.message);
@@ -163,7 +164,7 @@ export default function Browse() {
 
     const EventGrid = ({ events, emptyMsg }) => (
         events.length === 0 ? (
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 style={{
@@ -178,15 +179,15 @@ export default function Browse() {
                 <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', margin: 0 }}>{emptyMsg}</p>
             </motion.div>
         ) : (
-            <motion.div 
+            <motion.div
                 variants={staggerContainer}
                 initial="initial"
                 whileInView="animate"
                 viewport={{ once: false, amount: 0.1 }}
-                className="event-grid grid-cols-auto-340" 
+                className="event-grid grid-cols-auto-340"
                 style={{ gap: '24px' }}
             >
-                {events.map((e, index) => {
+                {events?.map((e, index) => {
                     const isBooked = myBookedEventIds.includes(e?.id);
                     const isOwner = user?.id === e?.organizer?.id || user?.role === 'ADMIN';
 
@@ -320,7 +321,7 @@ export default function Browse() {
 
                                 <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
                                     <span style={{ color: 'var(--primary-color)', fontWeight: 800, fontSize: '1.1rem' }}>
-                                        {e?.amountPaid ? `Paid: $${Number(e.amountPaid).toLocaleString()}` : (e?.ticketTypes?.[0] ? `From $${Math.min(...e?.ticketTypes.map(t => t.price)).toLocaleString()}` : 'Free')}
+                                        {e?.amountPaid ? `Paid: $${Number(e?.amountPaid).toLocaleString()}` : (e?.ticketTypes?.[0] ? `From $${Math.min(...e?.ticketTypes?.map(t => t?.price)).toLocaleString()}` : 'Free')}
                                     </span>
 
                                     {isOwner ? (
@@ -352,16 +353,23 @@ export default function Browse() {
     const upcomingEvents = allEvents.filter(e => {
         const isUpcoming = new Date(isNaN(Number(e?.date)) ? e?.date : Number(e?.date)) >= now;
         if (user?.role === 'ORGANIZER') {
-            return isUpcoming && e?.organizer?.id === user.id;
+            return isUpcoming && e?.organizer?.id === user?.id;
         }
         return isUpcoming;
+    });
+
+    const vendors = (vendorData?.myVendors || []).filter(v => {
+        const matchesSearch = v?.name?.toLowerCase().includes(searchText?.toLowerCase()) || 
+          v?.contactInfo?.toLowerCase().includes(searchText?.toLowerCase());
+        const matchesCategory = categoryFilter === 'ALL' || v?.category === categoryFilter;
+        return matchesSearch && matchesCategory;
     });
 
     const completedEvents = allEvents
         .filter(e => {
             const isPast = new Date(isNaN(Number(e?.date)) ? e?.date : Number(e?.date)) < now;
             if (user?.role === 'ORGANIZER') {
-                return isPast && e?.organizer?.id === user.id;
+                return isPast && e?.organizer?.id === user?.id;
             }
             return isPast;
         })

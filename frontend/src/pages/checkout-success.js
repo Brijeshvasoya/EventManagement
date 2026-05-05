@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useMutation } from '@apollo/client/react';
-import { BOOK_EVENT } from '@/features/events/graphql/queries';
+import { BOOK_EVENT } from '@/features/events/graphql/mutations';
 import toast from 'react-hot-toast';
 import Head from 'next/head';
 

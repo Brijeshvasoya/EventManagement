@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { gql } from '@apollo/client';
-import { CREATE_EVENT, UPDATE_EVENT, GET_MY_VENDORS, GET_EVENT_DETAILS } from '@/features/events/graphql/queries';
+import { GET_MY_VENDORS, GET_EVENT_DETAILS } from '@/features/events/graphql/queries';
+import { CREATE_EVENT, UPDATE_EVENT } from '@/features/events/graphql/mutations';
 import { Select, ConfigProvider, theme, Form, Input, InputNumber, Button, Divider, Typography, Space, Avatar } from 'antd';
 import { useRouter } from 'next/router';
 import Head from 'next/head';

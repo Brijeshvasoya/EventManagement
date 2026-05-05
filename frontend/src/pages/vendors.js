@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_MY_VENDORS, CREATE_VENDOR, UPDATE_VENDOR, DELETE_VENDOR, GET_MY_EVENTS } from '@/features/events/graphql/queries';
+import { GET_MY_VENDORS, GET_MY_EVENTS } from '@/features/events/graphql/queries';
+import { CREATE_VENDOR, UPDATE_VENDOR, DELETE_VENDOR } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import { Table, Button, Modal, Form, Input, InputNumber, Select, Space, Tag, Spin, Popconfirm } from 'antd';
