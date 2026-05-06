@@ -58,7 +58,7 @@ export default function BillingPage() {
       }
     };
     if (router.isReady) confirm();
-  }, [router.isReady, router.query]);
+  }, [router, confirmPurchase, login, refetch]);
 
   if (!user || user.role !== 'ORGANIZER') return null;
 

@@ -32,10 +32,12 @@ export default function AutoVerify() {
   useEffect(() => {
     if (id && !authLoading) {
       if (!user) {
-        setStatus('unauthorized');
+        setTimeout(() => setStatus('unauthorized'), 0);
       } else if (user.role === 'USER') {
-        setStatus('error');
-        setErrorMsg('Only organizers can verify tickets.');
+        setTimeout(() => {
+          setStatus('error');
+          setErrorMsg('Only organizers can verify tickets.');
+        }, 0);
       } else {
     verifyTicket({ variables: { bookingId: id.toString() } });
       }

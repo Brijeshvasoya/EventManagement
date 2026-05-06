@@ -82,7 +82,7 @@ export function GlobalActionsProvider({ children }) {
   const [markAllRead] = useMutation(MARK_ALL_NOTIFICATIONS_AS_READ);
 
   useEffect(() => {
-    setMounted(true);
+    setTimeout(() => setMounted(true), 0);
   }, []);
 
   useEffect(() => {

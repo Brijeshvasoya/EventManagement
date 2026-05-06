@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -41,7 +42,7 @@ export default function LandingPage() {
   };
 
   useEffect(() => {
-    setMounted(true);
+    setTimeout(() => setMounted(true), 0);
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
@@ -71,7 +72,7 @@ export default function LandingPage() {
         className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}
       >
         <div className={styles.logo}>
-          <img src="/logo.png" alt="EventHub Logo" style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '8px' }} />
+          <Image src="/logo.png" alt="EventHub Logo" width={32} height={32} style={{ objectFit: 'contain', borderRadius: '8px' }} />
           EventHub
         </div>
         <div className={styles.navLinks}>
@@ -116,7 +117,13 @@ export default function LandingPage() {
             className={styles.heroRight}
           >
             <div className={styles.heroImageContainer}>
-              <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1000" alt="Concert crowd" />
+                <Image 
+                  src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1000" 
+                  alt="Concert crowd" 
+                  fill
+                  unoptimized
+                  style={{ objectFit: 'cover' }}
+                />
             </div>
           </motion.div>
         </div>
@@ -174,7 +181,14 @@ export default function LandingPage() {
           transition={{ duration: 0.8 }}
           className={styles.aboutImageWrapper}
         >
-          <img src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=1000" alt="Tech conference" className={styles.aboutImage} />
+          <Image 
+            src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=1000" 
+            alt="Tech conference" 
+            fill
+            unoptimized
+            style={{ objectFit: 'cover' }}
+            className={styles.aboutImage} 
+          />
           <motion.div
             initial={{ scale: 0 }}
             whileInView={{ scale: 1 }}

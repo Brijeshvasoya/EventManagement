@@ -1,40 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# 🎪 EventHub Frontend
 
-## Getting Started
+**Elevate your event management experience with EventHub.** This repository contains the high-fidelity frontend application built with Next.js, meticulously crafted for performance and aesthetic excellence.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🌟 Key Features
+
+### 🏢 For Organizers
+- **Intelligent Dashboard**: Real-time sales insights, revenue analytics, and attendee distribution charts.
+- **Roster Management**: Export attendee lists to Excel and track guest statuses (Confirmed, Checked-in, Cancelled).
+- **Gatekeeper Tools**: Integrated QR scanning for rapid venue entry and ticket verification.
+- **Promo Engine**: Create and manage dynamic discount codes to drive sales.
+
+### 👥 For Attendees
+- **Seamless Discovery**: Browse events with advanced filtering and vibrant category tags.
+- **Secure Checkout**: Stripe-integrated ticket purchasing with instant confirmation.
+- **Digital Passes**: Premium digital tickets with unique QR codes, downloadable as high-quality PDFs.
+- **AI Chatbot**: Context-aware assistance for finding events and navigating the platform.
+- **Rewards System**: Earn loyalty points with every booking and unlock exclusive perks.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Core**: [Next.js](https://nextjs.org) 14+ (Pages Router)
+- **UI Framework**: [Ant Design](https://ant.design) for robust, accessible components.
+- **Animations**: [Framer Motion](https://www.framer.com/motion/) for fluid, premium transitions.
+- **Data Fetching**: [Apollo Client](https://www.apollographql.com/docs/react/) for GraphQL interaction.
+- **Payments**: [Stripe](https://stripe.com) for secure transactions.
+- **AI Integration**: [Mistral AI](https://mistral.ai) & [Mastra](https://mastra.ai).
+
+---
+
+## 📁 Directory Structure
+
+```text
+src/
+├── components/   # Reusable global UI elements
+├── context/      # Authentication & Global State providers
+├── features/     # Feature-specific components, queries & mutations
+├── lib/          # Utilities, constants, and helper functions
+├── pages/        # Next.js routing and page components
+└── styles/       # Global CSS and Design System tokens
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+## 🚀 Getting Started
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+### 1. Prerequisites
+- **Node.js**: v18 or later
+- **Backend**: Running instance of the EventHub Backend
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+### 2. Installation
+```bash
+git clone <repository-url>
+cd frontend
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Environment Setup
+Create a `.env.local` file in the root:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:4000/graphql
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+```
 
-## Learn More
+### 4. Launch
+```bash
+npm run dev
+```
+Visit `http://localhost:3000` to see the magic. ✨
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+## 📦 Available Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `npm run dev`: Start development server with hot-reloading.
+- `npm run build`: Generate a production-optimized build.
+- `npm run start`: Run the production server.
+- `npm run lint`: Run ESLint for code quality checks.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🎨 Design Philosophy
+EventHub is built on a **Rich Aesthetic** foundation:
+- **Glassmorphism**: Subtle blurs and translucent layers for a modern feel.
+- **Micro-interactions**: Interactive hover states and spring-based animations.
+- **Accessibility**: Semantic HTML and full keyboard navigation support.
+- **Responsive**: Fluid layouts that look stunning from mobile to ultra-wide displays.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+---
+
+## 📄 License
+This project is proprietary. All rights reserved.

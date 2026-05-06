@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
@@ -129,7 +130,7 @@ export default function Login() {
                 position: 'relative'
               }}
             >
-              <img src="/logo.png" alt="Icon" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+              <Image src="/logo.png" alt="Icon" width={40} height={40} style={{ objectFit: 'contain' }} />
               <div className="pulse-ring"></div>
             </motion.div>
             <motion.h1 
@@ -256,7 +257,7 @@ export default function Login() {
           >
             <div style={{ textAlign: 'center', marginBottom: '10px' }}>
               <div className="logo-hover" style={{ width: '56px', height: '56px', background: 'white', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', position: 'relative', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-                <img src="/logo.png" alt="Icon" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+                <Image src="/logo.png" alt="Icon" width={40} height={40} style={{ objectFit: 'contain' }} />
                 <div className="spinner-ring"></div>
               </div>
               <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: 600 }}>Authorize to access your ecosystem.</p>

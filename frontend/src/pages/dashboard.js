@@ -1,4 +1,5 @@
 import { useContext, useState } from 'react';
+import Image from 'next/image';
 import { GlobalActionsContext } from '../components/GlobalActions';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
@@ -184,7 +185,6 @@ export default function Dashboard() {
     const eventsWithRev = events.map(e => {
       let eventRev = 0;
       let eventTickets = 0;
-      console.log("DASHBOARD EVENT:", e.title, "ATTENDEES:", e.attendees);
       e.attendees?.forEach(att => {
         if (att.status !== 'CANCELLED') {
           const amt = (att.amountPaid || 0);
@@ -197,10 +197,11 @@ export default function Dashboard() {
           monthlyMap[monthKey] += amt;
         }
       });
-      organizerRevenue += eventRev;
-      totalTicketsSold += eventTickets;
       return { title: e.title, revenue: eventRev, tickets: eventTickets };
     });
+
+    organizerRevenue = eventsWithRev.reduce((acc, curr) => acc + curr.revenue, 0);
+    totalTicketsSold = eventsWithRev.reduce((acc, curr) => acc + curr.tickets, 0);
 
     let platformPlanRevenue = 0;
     users.forEach(u => {
@@ -803,7 +804,7 @@ export default function Dashboard() {
                       </div>
                       <Title level={4} style={{ color: '#1B2A4E', fontWeight: 800, marginBottom: '8px' }}>Launch Your Next Event</Title>
                       <AntText style={{ color: '#64748B', display: 'block', marginBottom: '32px', fontSize: '1rem' }}>
-                        You don't have any upcoming events scheduled. Create one now to start selling tickets!
+                        You don&apos;t have any upcoming events scheduled. Create one now to start selling tickets!
                       </AntText>
                       <Button
                         type="primary"
@@ -984,10 +985,15 @@ export default function Dashboard() {
                           }}
                         >
                           <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', alignItems: 'center' }}>
-                            <img
-                              src={b.event.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}
-                              style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover' }}
-                            />
+                            <div style={{ position: 'relative', width: '60px', height: '60px', borderRadius: '12px', overflow: 'hidden' }}>
+                              <Image
+                                src={b.event.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87'}
+                                alt={b.event.title || 'Event'}
+                                fill
+                                unoptimized
+                                style={{ objectFit: 'cover' }}
+                              />
+                            </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <h4 style={{ margin: '0 0 2px 0', fontSize: '1rem', fontWeight: 800, color: '#1B2A4E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.event.title}</h4>
                               <Tag style={{
@@ -1005,8 +1011,16 @@ export default function Dashboard() {
                           </div>
 
                           <div style={{ background: '#F8FAFB', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-                            <div style={{ textAlign: 'center', background: 'white', padding: '6px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', opacity: b.status === 'PENDING' ? 0.3 : 1 }}>
-                              <img src={b.qrCode} style={{ width: '100px', height: '100px', cursor: b.status === 'PENDING' ? 'not-allowed' : 'pointer' }} onClick={() => b.status !== 'PENDING' && showBigQR(b)} alt="QR" />
+                            <div style={{ textAlign: 'center', background: 'white', padding: '6px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', opacity: b.status === 'PENDING' ? 0.3 : 1, position: 'relative', width: '112px', height: '112px' }}>
+                              <Image 
+                                src={b.qrCode || '/qr-placeholder.png'} 
+                                width={100} 
+                                height={100} 
+                                cursor={b.status === 'PENDING' ? 'not-allowed' : 'pointer'} 
+                                onClick={() => b.status !== 'PENDING' && showBigQR(b)} 
+                                alt="QR" 
+                                unoptimized
+                              />
                             </div>
                             <div style={{ textAlign: 'right' }}>
                               <div style={{ color: '#6B7280', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Ticket Info</div>
@@ -1121,8 +1135,8 @@ export default function Dashboard() {
                                   </div>
                                 </div>
                                 <div style={{ background: '#F8FAFC', borderRadius: '40px', padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px solid #F1F5F9' }}>
-                                  <div style={{ background: 'white', padding: '25px', borderRadius: '30px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
-                                    <img src={b.qrCode} style={{ width: '280px', height: '280px' }} alt="QR" />
+                                  <div style={{ background: 'white', padding: '25px', borderRadius: '30px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', position: 'relative', width: '330px', height: '330px' }}>
+                                    <Image src={b.qrCode || '/qr-placeholder.png'} width={280} height={280} alt="QR" unoptimized />
                                   </div>
                                   <p style={{ marginTop: '30px', textTransform: 'uppercase', letterSpacing: '3px', fontWeight: '900', color: '#1e1b4b', fontSize: '1rem' }}>Validate Access</p>
                                 </div>
@@ -1204,8 +1218,8 @@ export default function Dashboard() {
                         {isBooked ? (
                           <>
                             <div style={{ background: '#F8FAFB', borderRadius: '20px', padding: '20px', display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
-                              <div style={{ background: 'white', padding: '8px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                                <img src={b.qrCode} style={{ width: '80px', height: '80px', cursor: 'pointer' }} onClick={() => showBigQR(b)} alt="QR" />
+                              <div style={{ background: 'white', padding: '8px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', position: 'relative', width: '96px', height: '96px' }}>
+                                <Image src={b.qrCode || '/qr-placeholder.png'} width={80} height={80} style={{ cursor: 'pointer' }} onClick={() => showBigQR(b)} alt="QR" unoptimized />
                               </div>
                               <div style={{ flex: 1 }}>
                                 <div style={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pass Details</div>

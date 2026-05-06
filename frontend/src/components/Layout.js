@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { TopbarMobileIcons, DesktopHeaderActions } from './GlobalActions';
 import AIChatBot from './AIChatBot';
 import { Button, Avatar, Typography, ConfigProvider, theme, Drawer, Dropdown } from 'antd';
@@ -179,7 +180,7 @@ export default function AppLayout({ children }) {
         }}>
           {/* Logo Space */}
           <div style={{ padding: '32px 24px 24px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }} onClick={() => router.push("/dashboard")}>
-            <img src="/logo.png" alt="EventHub Logo" style={{ width: '44px', height: '44px', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+            <Image src="/logo.png" alt="EventHub Logo" width={44} height={44} style={{ objectFit: 'contain', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
             <h2 style={{
               margin: 0,
               color: 'var(--text-primary)',
@@ -249,7 +250,7 @@ export default function AppLayout({ children }) {
           padding: '0 20px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="/logo.png" alt="EventHub Logo" style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '8px' }} />
+            <Image src="/logo.png" alt="EventHub Logo" width={32} height={32} style={{ objectFit: 'contain', borderRadius: '8px' }} />
             <h2 style={{ margin: 0, color: 'var(--text-primary)', fontWeight: 900, fontSize: '1.4rem' }}>EventHub</h2>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -260,7 +261,7 @@ export default function AppLayout({ children }) {
 
         {/* MOBILE DRAWER */}
         <Drawer
-          title={<div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><img src="/logo.png" alt="logo" style={{ width: '28px', borderRadius: '8px' }} /> <span style={{ fontWeight: 800 }}>EventHub</span></div>}
+          title={<div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Image src="/logo.png" alt="logo" width={28} height={28} style={{ borderRadius: '8px' }} /> <span style={{ fontWeight: 800 }}>EventHub</span></div>}
           placement="right"
           onClose={() => setMobileMenuOpen(false)}
           open={mobileMenuOpen}

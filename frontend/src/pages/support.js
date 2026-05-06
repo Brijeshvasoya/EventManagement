@@ -88,7 +88,7 @@ export default function SupportPage() {
     if (selectedTicket && tickets.length > 0) {
       const updated = tickets.find(t => t.id === selectedTicket.id);
       if (updated && JSON.stringify(updated) !== JSON.stringify(selectedTicket)) {
-        setSelectedTicket(updated);
+        setTimeout(() => setSelectedTicket(updated), 0);
       }
     }
   }, [tickets, selectedTicket]);

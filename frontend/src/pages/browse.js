@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Image from 'next/image';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { GET_EVENTS, GET_MY_BOOKINGS, GET_MY_VENDORS } from '@/features/events/graphql/queries';
 import { DELETE_EVENT, UPDATE_EVENT } from '@/features/events/graphql/mutations';
@@ -211,10 +212,13 @@ export default function Browse() {
                             }}
                         >
                             <div style={{ height: '220px', position: 'relative', overflow: 'hidden' }}>
-                                <img
+                                <Image
                                     src={e?.imageUrl || '/event-placeholder.jpg'}
+                                    alt={e?.title || 'Event'}
+                                    fill
+                                    unoptimized
                                     style={{
-                                        width: '100%', height: '100%', objectFit: 'cover'
+                                        objectFit: 'cover'
                                     }}
                                     className="event-card-img"
                                 />
@@ -456,13 +460,15 @@ export default function Browse() {
                                 transition: 'all 0.3s ease'
                             }}>
                                 {previewImage ? (
-                                    <img
-                                        src={previewImage}
-                                        crossOrigin="anonymous"
-                                        referrerPolicy="no-referrer"
-                                        style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px', marginBottom: '10px' }}
-                                        alt="Preview"
-                                    />
+                                    <div style={{ position: 'relative', width: '100%', height: '160px' }}>
+                                        <Image
+                                            src={previewImage}
+                                            fill
+                                            unoptimized
+                                            style={{ objectFit: 'cover', borderRadius: '10px' }}
+                                            alt="Preview"
+                                        />
+                                    </div>
                                 ) : (
                                     <div style={{ padding: '20px', color: '#6b6b80' }}>📸 Image preview here</div>
                                 )}

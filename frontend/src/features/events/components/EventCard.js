@@ -1,4 +1,5 @@
 import React, { useState, useEffect, memo } from 'react';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { Modal, Button, Popconfirm, Form, Input, DatePicker, Select, InputNumber, Space, Divider, Progress, Badge, Tag, Upload } from 'antd';
 import { EditOutlined, DeleteOutlined, ShoppingCartOutlined, UserOutlined, PlusOutlined, DeleteFilled, InboxOutlined } from '@ant-design/icons';
@@ -214,7 +215,15 @@ const EventCard = memo(({ event, onBook, onDelete, onUpdate }) => {
               style={{ background: '#F9FAFB', borderRadius: '8px' }}
             >
               {imageUrl ? (
-                <img src={imageUrl} alt="Event" style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '4px' }} />
+                <div style={{ position: 'relative', width: '100%', height: '150px' }}>
+                  <Image 
+                    src={imageUrl} 
+                    alt="Event" 
+                    fill 
+                    unoptimized 
+                    style={{ objectFit: 'cover', borderRadius: '4px' }} 
+                  />
+                </div>
               ) : (
                 <div>
                   <p className="ant-upload-drag-icon"><InboxOutlined /></p>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
@@ -96,7 +97,7 @@ export default function ForgotPassword() {
               position: 'relative',
               animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
             }}>
-              <img src="/logo.png" alt="Icon" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+              <Image src="/logo.png" alt="Icon" width={40} height={40} style={{ objectFit: 'contain' }} />
               <div className="pulse-ring"></div>
             </div>
             <h1 style={{ fontSize: '4.5rem', fontWeight: 900, color: '#312E81', margin: 0, letterSpacing: '-2px' }}>
@@ -106,7 +107,7 @@ export default function ForgotPassword() {
           </div>
 
           <p style={{ fontSize: '1.2rem', color: '#64748B', maxWidth: '500px', marginBottom: '60px', lineHeight: 1.6, animation: 'fadeInUp 1s ease-out 0.4s both' }}>
-            No worries! We'll help you get back into your account and continue managing your events.
+            No worries! We&apos;ll help you get back into your account and continue managing your events.
           </p>
 
           <div className="grid-cols-2" style={{ gap: '20px', maxWidth: '700px', marginBottom: '48px' }}>
@@ -195,7 +196,7 @@ export default function ForgotPassword() {
                     <div className="spinner-ring"></div>
                   </div>
                   <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1B2A4E', marginBottom: '8px' }}>Forgot Password?</h2>
-                  <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: 600 }}>We'll send you reset instructions.</p>
+                  <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: 600 }}>We&apos;ll send you reset instructions.</p>
                 </div>
 
                 <Form layout="vertical" onFinish={onFinish} size="large" requiredMark={false}>
@@ -233,7 +234,7 @@ export default function ForgotPassword() {
                 </div>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1B2A4E', marginBottom: '12px' }}>Check your email</h2>
                 <p style={{ color: '#64748B', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '32px', fontWeight: 500 }}>
-                  We've sent a password reset link to your email address. Please check your inbox.
+                  We&apos;ve sent a password reset link to your email address. Please check your inbox.
                 </p>
                 <Button 
                   type="default" 
@@ -241,7 +242,7 @@ export default function ForgotPassword() {
                   onClick={() => setSubmitted(false)}
                   style={{ height: '50px', borderRadius: '12px', fontWeight: 600 }}
                 >
-                  Didn't receive? Try again
+                  Didn&apos;t receive? Try again
                 </Button>
               </div>
             )}

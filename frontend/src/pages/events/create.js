@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 import { GET_MY_VENDORS, GET_EVENT_DETAILS } from '@/features/events/graphql/queries';
@@ -422,11 +423,17 @@ export default function CreateEvent() {
                   minHeight: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden'
                 }}>
                   {previewImage ? (
-                    <div style={{ position: 'relative' }}>
-                      <img src={previewImage} style={{ width: '100%', maxHeight: '140px', objectFit: 'cover', borderRadius: '12px' }} />
+                    <div style={{ position: 'relative', width: '100%', height: '140px' }}>
+                      <Image 
+                        src={previewImage} 
+                        alt="Event Poster" 
+                        fill
+                        unoptimized
+                        style={{ objectFit: 'cover', borderRadius: '12px' }} 
+                      />
                       <Button
                         type="primary" danger size="small"
-                        style={{ position: 'absolute', top: 8, right: 8, borderRadius: '6px', fontWeight: 800, fontSize: '0.7rem' }}
+                        style={{ position: 'absolute', top: 8, right: 8, borderRadius: '6px', fontWeight: 800, fontSize: '0.7rem', zIndex: 1 }}
                         onClick={() => { setPreviewImage(''); setImageFile(null); }}
                       >
                         CHANGE

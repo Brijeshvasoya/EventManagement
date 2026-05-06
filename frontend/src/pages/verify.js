@@ -70,7 +70,7 @@ export default function TicketVerifier() {
                             <CameraOutlined style={{ fontSize: '4rem', color: '#6366f1', marginBottom: '1.5rem' }} />
                             <Title level={4} style={{ color: 'white' }}>Scan Attendee QR</Title>
                             <Text style={{ color: '#94a3b8', display: 'block', marginBottom: '2rem' }}>
-                                Point your camera at the digital or printed QR code on the guest's ticket.
+                                Point your camera at the digital or printed QR code on the guest&apos;s ticket.
                             </Text>
                             <Button
                                 type="primary"

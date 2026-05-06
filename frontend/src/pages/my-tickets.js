@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Image from 'next/image';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { GET_MY_BOOKINGS } from '@/features/events/graphql/queries';
 import { CANCEL_BOOKING } from '@/features/events/graphql/mutations';
@@ -77,7 +78,7 @@ export default function MyTickets() {
             overflow: 'hidden',
             flexShrink: 0
           }}>
-            <img src={record?.event?.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <Image src={record?.event?.imageUrl || '/event-placeholder.jpg'} alt={text || 'Event'} fill unoptimized style={{ objectFit: 'cover' }} />
           </div>
           <Text strong>{text}</Text>
         </div>

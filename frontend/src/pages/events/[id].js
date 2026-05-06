@@ -935,7 +935,7 @@ export default function EventDetailsPage() {
                                   <CheckCircleFilled />
                                 </div>
                                 <AntText style={{ color: '#166534', fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.3px' }}>BOOKING CONFIRMED</AntText>
-                                <AntText style={{ color: '#15803d', fontSize: '0.9rem', fontWeight: 500 }}>You're all set! We've sent your tickets to your email.</AntText>
+                                <AntText style={{ color: '#15803d', fontSize: '0.9rem', fontWeight: 500 }}>You&apos;re all set! We&apos;ve sent your tickets to your email.</AntText>
                               </div>
                             )}
                             <Popconfirm

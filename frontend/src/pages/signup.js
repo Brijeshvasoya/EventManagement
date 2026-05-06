@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
@@ -143,7 +144,7 @@ export default function Signup() {
                 position: 'relative'
               }}
             >
-              <img src="/logo.png" alt="Icon" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+              <Image src="/logo.png" alt="Icon" width={40} height={40} style={{ objectFit: 'contain' }} />
               <div className="pulse-ring"></div>
             </motion.div>
             <motion.h1 
@@ -204,7 +205,7 @@ export default function Signup() {
               {"★ ★ ★ ★ ★"}
             </div>
             <p style={{ fontSize: '1.1rem', color: '#312E81', fontWeight: 500, lineHeight: 1.6, marginBottom: '24px', fontStyle: 'italic' }}>
-              "EventHub made our event coordination seamless. Managing bookings and tracking attendee growth has never been this efficient. A must-have for every organizer!"
+              &quot;EventHub made our event coordination seamless. Managing bookings and tracking attendee growth has never been this efficient. A must-have for every organizer!&quot;
             </p>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -263,7 +264,7 @@ export default function Signup() {
           >
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <div className="logo-hover" style={{ width: '56px', height: '56px', background: 'white', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', position: 'relative', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-                <img src="/logo.png" alt="Icon" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+                <Image src="/logo.png" alt="Icon" width={40} height={40} style={{ objectFit: 'contain' }} />
                 <div className="spinner-ring"></div>
               </div>
               <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: 600 }}>Join the ecosystem and start creating.</p>

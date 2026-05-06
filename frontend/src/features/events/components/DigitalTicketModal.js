@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { Modal, Typography, Tag, Button, Popconfirm } from 'antd';
 import { AuditOutlined, ScanOutlined } from '@ant-design/icons';
 import { jsPDF } from 'jspdf';
@@ -72,8 +73,14 @@ export default function DigitalTicketModal({ open, onCancel, booking, onCancelTi
         }}>
           {/* Ticket Header */}
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-              <img src={booking.event?.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div style={{ width: '64px', height: '64px', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', position: 'relative' }}>
+              <Image 
+                src={booking.event?.imageUrl || '/event-placeholder.jpg'} 
+                alt={booking.event?.title || 'Event'} 
+                fill
+                unoptimized
+                style={{ objectFit: 'cover' }} 
+              />
             </div>
             <div>
               <Title level={4} style={{ margin: 0, color: '#1B2A4E', fontWeight: 800 }}>{booking.event?.title}</Title>
@@ -96,9 +103,18 @@ export default function DigitalTicketModal({ open, onCancel, booking, onCancelTi
               background: 'white',
               padding: '12px',
               borderRadius: '16px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+              position: 'relative',
+              width: '124px',
+              height: '124px'
             }}>
-              <img src={booking.qrCode || `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${booking.id}`} style={{ width: '100px', height: '100px' }} />
+              <Image 
+                src={booking.qrCode || `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${booking.id}`} 
+                alt="Ticket QR Code" 
+                width={100}
+                height={100}
+                unoptimized
+              />
             </div>
             <div style={{ flex: 1 }}>
               <Text type="secondary" style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ticket Info</Text>
@@ -225,8 +241,14 @@ export default function DigitalTicketModal({ open, onCancel, booking, onCancelTi
               </div>
             </div>
             <div style={{ background: '#F8FAFC', borderRadius: '40px', padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px solid #F1F5F9' }}>
-              <div style={{ background: 'white', padding: '25px', borderRadius: '30px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
-                <img src={booking.qrCode} style={{ width: '280px', height: '280px' }} alt="QR" />
+              <div style={{ background: 'white', padding: '25px', borderRadius: '30px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', position: 'relative', width: '330px', height: '330px' }}>
+                <Image 
+                  src={booking.qrCode || '/qr-placeholder.png'} 
+                  width={280} 
+                  height={280} 
+                  alt="QR" 
+                  unoptimized
+                />
               </div>
               <p style={{ marginTop: '30px', textTransform: 'uppercase', letterSpacing: '3px', fontWeight: '900', color: '#1e1b4b', fontSize: '1rem' }}>Validate Access</p>
             </div>

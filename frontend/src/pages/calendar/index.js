@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Calendar, Card, Typography, Spin, Drawer, List, Tag, Alert, Modal, Button } from 'antd';
 import { useQuery } from '@apollo/client/react';
 import { GET_MY_EVENTS, GET_MY_BOOKINGS, GET_EVENTS } from '@/features/events/graphql/queries';
@@ -427,8 +428,8 @@ export default function CalendarPage() {
                   </div>
                 </div>
                 <div style={{ background: '#F8FAFC', borderRadius: '40px', padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px solid #F1F5F9' }}>
-                  <div style={{ background: 'white', padding: '25px', borderRadius: '30px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
-                    {b.qrCode && <img src={b.qrCode} style={{ width: '280px', height: '280px' }} alt="QR" />}
+                  <div style={{ background: 'white', padding: '25px', borderRadius: '30px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', position: 'relative', width: '330px', height: '330px' }}>
+                    {b.qrCode && <Image src={b.qrCode} width={280} height={280} alt="QR" unoptimized />}
                   </div>
                   <p style={{ marginTop: '30px', textTransform: 'uppercase', letterSpacing: '3px', fontWeight: '900', color: '#1e1b4b', fontSize: '1rem' }}>Validate Access</p>
                 </div>

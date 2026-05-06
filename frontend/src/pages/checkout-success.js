@@ -49,7 +49,7 @@ export default function CheckoutSuccess() {
     };
 
     finalizeBooking();
-  }, [router.isReady, eventId]);
+  }, [router, bookEvent, eventId, ticketType, quantity, sessionId]);
 
   return (
     <>

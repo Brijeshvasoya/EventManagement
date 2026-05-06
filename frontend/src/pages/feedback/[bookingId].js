@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
@@ -120,7 +121,7 @@ export default function FeedbackPage() {
               position: 'relative',
               animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
             }}>
-              <img src="/logo.png" alt="Icon" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+              <Image src="/logo.png" alt="Icon" width={40} height={40} style={{ objectFit: 'contain' }} />
               <div className="pulse-ring"></div>
             </div>
             <h1 style={{ fontSize: '4.5rem', fontWeight: 900, color: '#312E81', margin: 0, letterSpacing: '-2px' }}>
@@ -234,7 +235,7 @@ export default function FeedbackPage() {
                 </div>
 
                 <Form.Item
-                  label={<Text style={{ fontWeight: 700, color: '#94A3B8', fontSize: '0.75rem', letterSpacing: '1px' }}>YOUR COMMENTS</Text>}
+                  label={<AntText style={{ fontWeight: 700, color: '#94A3B8', fontSize: '0.75rem', letterSpacing: '1px' }}>YOUR COMMENTS</AntText>}
                   name="comment"
                 >
                   <Input.TextArea
