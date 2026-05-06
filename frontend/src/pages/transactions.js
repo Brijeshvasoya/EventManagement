@@ -3,7 +3,7 @@ import { GET_MY_EVENTS, GET_MY_ANALYTICS, GET_EVENTS, GET_ME, GET_MY_PAYOUTS } f
 import { REQUEST_PAYOUT, UPDATE_BANK_DETAILS } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
-import { Table, Tag, Card, Row, Col, Statistic, Empty, Button, Modal, InputNumber, Form, message, Alert, Input, Space, Typography, Tooltip as AntTooltip, Select } from 'antd';
+import { Table, Tag, Card, Row, Col, Statistic, Empty, Button, Modal, InputNumber, Form, message, Alert, Input, Space, Typography, Tooltip as AntTooltip, Select, App } from 'antd';
 import { TagOutlined, DownloadOutlined, WalletOutlined, HistoryOutlined, BankOutlined, CheckCircleFilled, InfoCircleOutlined, SearchOutlined, FilterOutlined, ArrowUpOutlined, CreditCardOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { IndianRupee } from 'lucide-react';
@@ -11,6 +11,15 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
 export default function Transactions() {
+  return (
+    <App>
+      <TransactionsContent />
+    </App>
+  );
+}
+
+function TransactionsContent() {
+  const { message: msg } = App.useApp();
   const { user, loading: authLoading } = useAuth();
   const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
   const [isBankModalOpen, setIsBankModalOpen] = useState(false);
@@ -30,22 +39,22 @@ export default function Transactions() {
 
   const [requestPayout, { loading: requestingPayout }] = useMutation(REQUEST_PAYOUT, {
     onCompleted: () => {
-      message.success('Payout request submitted successfully!');
+      msg.success('Payout request submitted successfully!');
       setIsPayoutModalOpen(false);
       payoutForm.resetFields();
       refetchUser();
       refetchPayouts();
     },
-    onError: (error) => message.error(error.message)
+    onError: (error) => msg.error(error.message)
   });
 
   const [updateBankDetails, { loading: updatingBank }] = useMutation(UPDATE_BANK_DETAILS, {
     onCompleted: () => {
-      message.success('Bank details updated successfully!');
+      msg.success('Bank details updated successfully!');
       setIsBankModalOpen(false);
       refetchUser();
     },
-    onError: (error) => message.error(error.message)
+    onError: (error) => msg.error(error.message)
   });
 
   const { data: allEventsData, loading: loadingAllEvents } = useQuery(GET_EVENTS, {
@@ -107,7 +116,7 @@ export default function Transactions() {
 
   const handlePayoutSubmit = (values) => {
     if (!hasBankDetails) {
-      message.warning('Please add your bank details before requesting a payout.');
+      msg.warning('Please add your bank details before requesting a payout.');
       return;
     }
     requestPayout({ variables: { amount: values.amount } });
@@ -155,11 +164,30 @@ export default function Transactions() {
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status) => (
-        <Tag color={status === 'CONFIRMED' || status === 'CHECKED_IN' ? 'success' : 'error'} style={{ fontWeight: 700, borderRadius: '8px' }}>
-          {status}
-        </Tag>
-      )
+      render: (status) => {
+        let color = '#10B981';
+        let bg = '#ECFDF5';
+        if (status === 'CANCELLED') { color = '#EF4444'; bg = '#FEF2F2'; }
+        if (status === 'CHECKED_IN') { color = '#6366F1'; bg = '#EEF2FF'; }
+
+        return (
+          <span style={{
+            color,
+            background: bg,
+            padding: '6px 12px',
+            borderRadius: '10px',
+            fontSize: '0.75rem',
+            fontWeight: 800,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            border: `1px solid ${color}20`
+          }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color }} />
+            {status}
+          </span>
+        );
+      }
     }
   ];
 
@@ -169,7 +197,17 @@ export default function Transactions() {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => <Tag color={status === 'COMPLETED' ? 'success' : status === 'PENDING' ? 'warning' : 'error'}>{status}</Tag>
+      render: (status) => {
+        let color = '#F59E0B';
+        let bg = '#FFFBEB';
+        if (status === 'COMPLETED') { color = '#10B981'; bg = '#ECFDF5'; }
+        if (status === 'ERROR') { color = '#EF4444'; bg = '#FEF2F2'; }
+        return (
+          <span style={{ color, background: bg, padding: '4px 10px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 700, border: `1px solid ${color}20` }}>
+            {status}
+          </span>
+        );
+      }
     },
     {
       title: 'Date',
@@ -201,38 +239,62 @@ export default function Transactions() {
 
       <Row gutter={[24, 24]}>
         <Col xs={24} sm={12} lg={8}>
-          <Card bordered={false} className="glass-card" style={{ borderRadius: '24px', height: '100%', transition: 'all 0.3s ease' }}>
+          <Card variant="borderless" className="glass-card premium-hover" style={{ borderRadius: '24px', height: '100%', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, right: 0, padding: '20px', opacity: 0.1 }}>
+              <WalletOutlined style={{ fontSize: '48px', color: '#4338CA' }} />
+            </div>
             <Statistic
-              title={<span style={{ fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.75rem' }}>Lifetime Revenue</span>}
+              title={<span style={{ fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>Lifetime Revenue</span>}
               value={stats.totalRevenue}
               precision={2}
-              prefix={<IndianRupee size={20} style={{ marginRight: 8, color: '#4338CA' }} />}
-              valueStyle={{ color: '#1E293B', fontWeight: 900, fontSize: '1.8rem' }}
+              prefix={<IndianRupee size={20} style={{ marginRight: 4, color: '#4338CA' }} />}
+              styles={{ content: { color: '#1E293B', fontWeight: 900, fontSize: '2rem' } }}
             />
-            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '4px', color: '#10B981', fontWeight: 600, fontSize: '0.85rem' }}>
-              <ArrowUpOutlined /> <span>Total earnings across all events</span>
+            <div style={{ marginTop: '8px', fontSize: '0.8rem', color: '#64748B', fontWeight: 500 }}>
+              Total earnings across all events
             </div>
           </Card>
         </Col>
+
         <Col xs={24} sm={12} lg={8}>
+          <Card variant="borderless" className="glass-card premium-hover" style={{ borderRadius: '24px', height: '100%', background: 'linear-gradient(135deg, #F8FAFC 0%, #FFFFFF 100%)' }}>
+            <Statistic
+              title={<span style={{ fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>Total Processed</span>}
+              value={stats.totalRevenue - availablePayout}
+              precision={2}
+              prefix={<IndianRupee size={20} style={{ marginRight: 4, color: '#64748B' }} />}
+              styles={{ content: { color: '#64748B', fontWeight: 900, fontSize: '2rem' } }}
+            />
+            <div style={{ marginTop: '8px', fontSize: '0.8rem', color: '#64748B', fontWeight: 500 }}>
+              Withdrawals + Platform Fees
+            </div>
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={8}>
           <Card
-            bordered={false}
-            className="glass-card"
+            variant="borderless"
+            className="glass-card premium-hover"
             style={{
               borderRadius: '24px',
               height: '100%',
-              background: 'linear-gradient(135deg, #F0FDF4 0%, #FFFFFF 100%)',
+              background: 'linear-gradient(135deg, #ECFDF5 0%, #FFFFFF 100%)',
               border: '1px solid rgba(16, 185, 129, 0.1)'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <Statistic
-                title={<span style={{ fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.75rem' }}>Available Balance</span>}
-                value={availablePayout}
-                precision={2}
-                prefix={<WalletOutlined style={{ marginRight: 8 }} />}
-                valueStyle={{ color: '#059669', fontWeight: 900, fontSize: '1.8rem' }}
-              />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <Statistic
+                  title={<span style={{ fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>Available Balance</span>}
+                  value={availablePayout}
+                  precision={2}
+                  prefix={<IndianRupee size={20} style={{ marginRight: 4, color: '#10B981' }} />}
+                  styles={{ content: { color: '#059669', fontWeight: 900, fontSize: '2.2rem' } }}
+                />
+                <div style={{ marginTop: '4px', fontSize: '0.8rem', color: '#059669', fontWeight: 600, opacity: 0.8 }}>
+                  Ready to withdraw
+                </div>
+              </div>
               <Button
                 type="primary"
                 shape="round"
@@ -240,57 +302,25 @@ export default function Transactions() {
                 disabled={availablePayout <= 0 || !hasBankDetails}
                 onClick={() => setIsPayoutModalOpen(true)}
                 style={{
-                  background: '#10B981',
-                  borderColor: '#10B981',
-                  fontWeight: 700,
-                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
+                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                  border: 'none',
+                  fontWeight: 800,
+                  height: '50px',
+                  padding: '0 32px',
+                  boxShadow: '0 10px 20px rgba(16, 185, 129, 0.2)'
                 }}
               >
                 Withdraw
               </Button>
             </div>
             {!hasBankDetails && (
-              <div style={{ fontSize: '0.75rem', color: '#EF4444', marginTop: 8, fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ fontSize: '0.75rem', color: '#EF4444', marginTop: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(239, 68, 68, 0.05)', padding: '8px 12px', borderRadius: '10px' }}>
                 <InfoCircleOutlined /> Add bank details to enable withdrawals
               </div>
             )}
           </Card>
         </Col>
-        <Col xs={24} lg={8}>
-          <Card bordered={false} className="glass-card" style={{ borderRadius: '24px', height: '100%', border: '1px solid rgba(67, 56, 202, 0.05)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <span style={{ fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.75rem' }}>Settlement Account</span>
-              <AntTooltip title="Update Bank Details">
-                <Button icon={<CreditCardOutlined />} onClick={() => setIsBankModalOpen(true)} type="text" style={{ color: '#4338CA' }} />
-              </AntTooltip>
-            </div>
-            {hasBankDetails ? (
-              <div style={{ background: '#F8FAFC', padding: '12px 16px', borderRadius: '16px', border: '1px solid #F1F5F9' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
-                    <BankOutlined style={{ color: '#4338CA', fontSize: '1.2rem' }} />
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.95rem' }}>{userData.me.bankDetails.bankName}</div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B' }}>•••• {userData.me.bankDetails.accountNumber.slice(-4)}</div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <Button
-                type="dashed"
-                block
-                icon={<PlusCircleOutlined />}
-                onClick={() => setIsBankModalOpen(true)}
-                style={{ height: '54px', borderRadius: '16px', color: '#4338CA', borderColor: '#4338CA' }}
-              >
-                Link Bank Account
-              </Button>
-            )}
-          </Card>
-        </Col>
       </Row>
-
       <Row gutter={[24, 24]}>
         <Col xs={24} xl={16}>
           <div style={{ background: 'white', padding: '32px', borderRadius: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
@@ -328,8 +358,66 @@ export default function Transactions() {
             />
           </div>
         </Col>
-        <Col xs={24} xl={8}>
-          <div style={{ background: 'white', padding: '32px', borderRadius: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', height: '100%' }}>
+        <Col xs={24} xl={8} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <Card variant="borderless" className="glass-card" style={{ borderRadius: '24px', overflow: 'hidden', padding: 0 }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <span style={{ fontWeight: 800, color: '#1E293B', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>Settlement Account</span>
+                <Button
+                  icon={<CreditCardOutlined />}
+                  onClick={() => setIsBankModalOpen(true)}
+                  type="primary"
+                  size="small"
+                  style={{ color: '#FFFFFF', border: 'none', fontWeight: 700, borderRadius: '8px', padding: '4px 12px' }}
+                >
+                  Update
+                </Button>
+              </div>
+
+              {hasBankDetails ? (
+                <div style={{
+                  background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 100%)',
+                  padding: '24px',
+                  borderRadius: '20px',
+                  color: 'white',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  boxShadow: '0 10px 25px rgba(27, 42, 78, 0.2)'
+                }}>
+                  <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: '120px', height: '120px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                    <BankOutlined style={{ fontSize: '24px', opacity: 0.8 }} />
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', opacity: 0.6 }}>Primary Account</span>
+                  </div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 700, letterSpacing: '2px', marginBottom: '8px' }}>
+                    •••• •••• •••• {userData?.me?.bankDetails?.accountNumber?.slice(-4)}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                    <div>
+                      <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', opacity: 0.6, marginBottom: '2px' }}>Bank Name</div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{userData?.me?.bankDetails?.bankName}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', opacity: 0.6, marginBottom: '2px' }}>IFSC</div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{userData?.me?.bankDetails?.ifscCode}</div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  type="dashed"
+                  block
+                  icon={<PlusCircleOutlined />}
+                  onClick={() => setIsBankModalOpen(true)}
+                  style={{ height: '80px', borderRadius: '16px', color: '#4338CA', borderColor: '#4338CA', background: '#F5F7FF', fontWeight: 700 }}
+                >
+                  Link Bank Account
+                </Button>
+              )}
+            </div>
+          </Card>
+
+          <div style={{ background: 'white', padding: '32px', borderRadius: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.4rem' }}>Payout Ledger</h3>
               <Select
@@ -381,7 +469,7 @@ export default function Transactions() {
         footer={null}
         centered
       >
-        <Alert message="Automated Payouts" description="We use RazorpayX to securely process your payouts to this bank account." type="info" showIcon style={{ marginBottom: 16 }} />
+        <Alert title="Automated Payouts" description="We use RazorpayX to securely process your payouts to this bank account." type="info" showIcon style={{ marginBottom: 16 }} />
         <Form form={bankForm} layout="vertical" onFinish={(v) => updateBankDetails({ variables: v })}>
           <Form.Item label="Account Holder Name" name="accountHolderName" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item label="Account Number" name="accountNumber" rules={[{ required: true }]}><Input /></Form.Item>
@@ -395,10 +483,18 @@ export default function Transactions() {
 
       <style jsx global>{`
         .glass-card {
-          background: rgba(255, 255, 255, 0.8) !important;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.3) !important;
-          box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05) !important;
+          background: rgba(255, 255, 255, 0.9) !important;
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.5) !important;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03) !important;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .premium-hover:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06) !important;
+        }
+        .premium-table .ant-table {
+          background: transparent !important;
         }
         .premium-table .ant-table-thead > tr > th { 
           background: #F8FAFC !important; 
@@ -406,19 +502,28 @@ export default function Transactions() {
           font-weight: 800 !important; 
           border-bottom: 2px solid #F1F5F9 !important;
           text-transform: uppercase;
-          font-size: 0.75rem;
-          letter-spacing: 0.5px;
+          font-size: 0.7rem;
+          letter-spacing: 1px;
+          padding: 16px 20px !important;
         }
         .premium-table .ant-table-tbody > tr > td { 
-          border-bottom: 1px solid #F8FAFC !important;
-          padding: 16px !important;
+          border-bottom: 1px solid #F1F5F9 !important;
+          padding: 20px !important;
+          transition: all 0.2s ease;
         }
         .premium-table .ant-table-row:hover > td {
-          background-color: #FBFBFF !important;
+          background-color: #F8FAFF !important;
         }
         .premium-select .ant-select-selector {
           border-radius: 12px !important;
           border: 1px solid #E2E8F0 !important;
+          height: 40px !important;
+          padding: 4px 12px !important;
+        }
+        @keyframes pulse-glow {
+          0% { box-shadow: 0 0 0 0 rgba(67, 56, 202, 0.4); }
+          70% { box-shadow: 0 0 0 15px rgba(67, 56, 202, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(67, 56, 202, 0); }
         }
       `}</style>
     </div>

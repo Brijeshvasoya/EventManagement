@@ -76,23 +76,23 @@ export default function SuperAdminPayments() {
 
   const paymentData = Object.values(organizerMap)
     .filter(item => {
-      const matchesSearch = item.name.toLowerCase().includes(searchText.toLowerCase()) || 
+      const matchesSearch = item.name.toLowerCase().includes(searchText.toLowerCase()) ||
         item.email.toLowerCase().includes(searchText.toLowerCase());
-      const matchesRevenue = revenueFilter === 'ALL' || 
+      const matchesRevenue = revenueFilter === 'ALL' ||
         (revenueFilter === 'HAS_REVENUE' ? item.totalRevenue > 0 : item.totalRevenue === 0);
       return matchesSearch && matchesRevenue;
     })
     .sort((a, b) => b.totalRevenue - a.totalRevenue);
 
   const pendingPayouts = (payoutData?.allPayouts?.filter(p => p.status === 'PENDING') || [])
-    .filter(p => 
-      p.organizer?.name?.toLowerCase().includes(searchText.toLowerCase()) || 
+    .filter(p =>
+      p.organizer?.name?.toLowerCase().includes(searchText.toLowerCase()) ||
       p.organizer?.email?.toLowerCase().includes(searchText.toLowerCase())
     );
 
   const completedPayouts = (payoutData?.allPayouts?.filter(p => p.status === 'COMPLETED') || [])
-    .filter(p => 
-      p.organizer?.name?.toLowerCase().includes(searchText.toLowerCase()) || 
+    .filter(p =>
+      p.organizer?.name?.toLowerCase().includes(searchText.toLowerCase()) ||
       p.organizer?.email?.toLowerCase().includes(searchText.toLowerCase())
     );
 
@@ -201,7 +201,7 @@ export default function SuperAdminPayments() {
             size="small"
             onClick={() => approvePayout({ variables: { payoutId: record.id } })}
             loading={approving}
-            style={{ borderRadius: '6px' }}
+            style={{ borderRadius: '6px', padding: '4px 12px' }}
           >
             Approve
           </Button>
