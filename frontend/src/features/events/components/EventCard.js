@@ -5,6 +5,21 @@ import { Modal, Button, Popconfirm, Form, Input, DatePicker, Select, InputNumber
 import { EditOutlined, DeleteOutlined, ShoppingCartOutlined, UserOutlined, PlusOutlined, DeleteFilled, InboxOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
+const BookingSummary = ({ ticketTypes }) => {
+  const selectedTicketName = Form.useWatch('ticketType');
+  const selectedQuantity = Form.useWatch('quantity') || 1;
+  const currentTicket = ticketTypes.find(t => t.name === selectedTicketName) || ticketTypes[0];
+
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <span style={{ fontSize: '1.1rem', fontWeight: 600 }}>Total Amount:</span>
+      <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4F46E5' }}>
+        ${((currentTicket?.price || 0) * selectedQuantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </span>
+    </div>
+  );
+};
+
 const EventCard = memo(({ event, onBook, onDelete, onUpdate }) => {
   const { user } = useAuth();
   const dateObj = new Date(parseInt(event?.date) || event?.date);
@@ -66,9 +81,7 @@ const EventCard = memo(({ event, onBook, onDelete, onUpdate }) => {
   };
 
   const ticketTypes = event?.ticketTypes || [{ name: 'REGULAR', price: 50 }];
-  const selectedTicketName = Form.useWatch('ticketType', bookForm);
-  const selectedQuantity = Form.useWatch('quantity', bookForm) || 1;
-  const currentTicket = ticketTypes.find(t => t.name === selectedTicketName) || ticketTypes[0];
+
 
   const bookedCount = event?.bookedCount || 0;
   const remainingCount = Math.max(0, (event?.capacity || 0) - bookedCount);
@@ -165,12 +178,7 @@ const EventCard = memo(({ event, onBook, onDelete, onUpdate }) => {
 
           <Divider />
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <span style={{ fontSize: '1.1rem', fontWeight: 600 }}>Total Amount:</span>
-            <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4F46E5' }}>
-              ${((currentTicket?.price || 0) * selectedQuantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-          </div>
+          <BookingSummary ticketTypes={ticketTypes} />
 
           <Button type="primary" size="large" block htmlType="submit">
             Proceed to Secure Payment

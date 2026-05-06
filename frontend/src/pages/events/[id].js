@@ -438,7 +438,7 @@ export default function EventDetailsPage() {
                 style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               />
             </Tooltip>
-            <Dropdown menu={{ items: shareMenuItems }} placement="bottomCenter" arrow>
+            <Dropdown menu={{ items: shareMenuItems }} placement="bottom" arrow>
               <Tooltip title="Share Event">
                 <Button
                   shape="circle"
@@ -475,7 +475,7 @@ export default function EventDetailsPage() {
             zIndex: 20
           }}
         >
-          <Space direction="vertical" size={24} style={{ maxWidth: '800px' }}>
+          <Space orientation="vertical" size={24} style={{ maxWidth: '800px' }}>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
               <Tag color="blue" style={{ borderRadius: '100px', padding: '6px 20px', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', border: 'none', background: 'rgba(99, 102, 241, 0.3)', backdropFilter: 'blur(10px)', color: '#fff' }}>
                 {event.eventType}
@@ -725,7 +725,7 @@ export default function EventDetailsPage() {
                     <AntTitle level={4} style={{ margin: 0, fontWeight: 800 }}>Tickets</AntTitle>
                     {!isBooked && <p style={{ color: '#64748b', marginBottom: '24px' }}>Choose your tier and join the experience</p>}
 
-                    <Space direction="vertical" size={24} style={{ width: '100%' }}>
+                    <Space orientation="vertical" size={24} style={{ width: '100%' }}>
                       {!isBooked && event?.status !== 'COMPLETED' && event?.status !== 'CANCELLED' && (event?.capacity - (event?.bookedCount || 0)) > 0 && (
                         <>
                           <div className="booking-control">
@@ -810,7 +810,7 @@ export default function EventDetailsPage() {
                       )}
 
                       {event.status === 'COMPLETED' ? (
-                        <Space direction="vertical" style={{ width: '100%' }}>
+                        <Space orientation="vertical" style={{ width: '100%' }}>
                           <Button
                             block
                             disabled
@@ -827,7 +827,7 @@ export default function EventDetailsPage() {
                           </Button>
                         </Space>
                       ) : event?.status === 'CANCELLED' ? (
-                        <Space direction="vertical" style={{ width: '100%' }}>
+                        <Space orientation="vertical" style={{ width: '100%' }}>
                           <Button
                             block
                             disabled
@@ -848,7 +848,7 @@ export default function EventDetailsPage() {
                         const isPending = booking?.status === 'PENDING';
 
                         return (
-                          <Space direction="vertical" style={{ width: '100%' }}>
+                          <Space orientation="vertical" style={{ width: '100%' }}>
                             {isPending ? (
                               <div style={{
                                 background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
@@ -963,7 +963,7 @@ export default function EventDetailsPage() {
                         );
                       })()
                         : (event?.capacity - (event?.bookedCount || 0)) <= 0 ? (
-                          <Space direction="vertical" style={{ width: '100%' }}>
+                          <Space orientation="vertical" style={{ width: '100%' }}>
                             <Button
                               block
                               disabled

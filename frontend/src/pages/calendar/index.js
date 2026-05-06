@@ -216,7 +216,7 @@ export default function CalendarPage() {
           placement="right"
           onClose={() => setDrawerVisible(false)}
           open={drawerVisible}
-          width={420}
+          style={{ width: 420 }}
           styles={{ header: { borderBottom: '1px solid #E2E8F0', padding: '20px 24px' }, body: { padding: '24px', background: '#F8FAFC' } }}
         >
           {dayItems.length > 0 ? (

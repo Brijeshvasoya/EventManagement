@@ -221,7 +221,7 @@ export default function PromosPage() {
               pageSize: 8, 
               showSizeChanger: true,
               responsive: true,
-              position: ['bottomCenter']
+              placement: 'bottom'
             }}
             className="premium-table"
             scroll={{ x: 800 }}
@@ -236,6 +236,7 @@ export default function PromosPage() {
         onCancel={() => setIsEditModalOpen(false)}
         footer={null}
         centered
+        forceRender
         width={600}
         styles={{ content: { borderRadius: '28px', padding: 'clamp(16px, 4vw, 32px)' } }}
       >

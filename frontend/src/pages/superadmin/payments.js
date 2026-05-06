@@ -35,10 +35,13 @@ export default function SuperAdminPayments() {
 
   const { message } = App.useApp();
   const [approvePayout, { loading: approving }] = useMutation(APPROVE_PAYOUT, {
+    refetchQueries: [
+      { query: GET_EVENTS },
+      { query: GET_ALL_PAYOUTS }
+    ],
+    awaitRefetchQueries: true,
     onCompleted: () => {
       message.success('Payout approved successfully!');
-      refetchPayouts();
-      refetchEvents();
     },
     onError: (error) => message.error(error.message)
   });
@@ -103,7 +106,7 @@ export default function SuperAdminPayments() {
       fixed: 'left',
       width: 250,
       render: (_, record) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong style={{ color: '#1B2A4E' }}>{record.name}</Text>
           <Text type="secondary" style={{ fontSize: '0.8rem' }} ellipsis={{ tooltip: record.email }}>
             {record.email}
@@ -156,7 +159,7 @@ export default function SuperAdminPayments() {
       fixed: 'left',
       width: 220,
       render: (text, record) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong>{text}</Text>
           <Text type="secondary" style={{ fontSize: '0.8rem' }} ellipsis={{ tooltip: record.organizer.email }}>
             {record.organizer.email}

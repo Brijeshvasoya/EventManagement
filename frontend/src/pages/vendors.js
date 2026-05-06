@@ -239,6 +239,7 @@ export default function VendorManagement() {
         onCancel={() => setIsModalVisible(false)}
         footer={null}
         centered
+        forceRender
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ marginTop: '20px' }}>
           <Form.Item name="name" label="Vendor Name" rules={[{ required: true }]}>

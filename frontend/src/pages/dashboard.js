@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { GlobalActionsContext } from '../components/GlobalActions';
 import { useQuery, useMutation } from '@apollo/client/react';
@@ -56,6 +56,12 @@ export default function Dashboard() {
   const [isRewardsModalVisible, setIsRewardsModalVisible] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('Hosted');
   const [chartVersion, setChartVersion] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const { refetchGlobalNotifications } = useContext(GlobalActionsContext);
 
@@ -267,9 +273,9 @@ export default function Dashboard() {
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}
           >
             <Card title={<span style={{ fontWeight: 800, fontSize: '1.2rem', color: '#1B2A4E' }}>Revenue Growth</span>} bordered={false} style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-              <div style={{ height: 300, width: '100%' }}>
-                {monthlyDataArray.length > 0 ? (
-                  <ResponsiveContainer>
+              <div style={{ width: '100%', height: 300, minWidth: 0, overflow: 'hidden', position: 'relative' }}>
+                {monthlyDataArray.length > 0 && isMounted ? (
+                  <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={monthlyDataArray}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} dy={10} />
@@ -551,36 +557,38 @@ export default function Dashboard() {
                         <div style={{ color: '#10B981', background: '#D1FAE5', padding: '2px 8px', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 700, marginBottom: '4px' }}>Active</div>
                       </div>
                     </div>
-                    <div style={{ height: '220px', minWidth: 0 }}>
-                      <ResponsiveContainer width="100%" height="100%" debounce={100}>
-                        <BarChart key={chartVersion} data={analyticsData?.myAnalytics?.monthlyData || []}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                          <XAxis dataKey="n" stroke="#9CA3AF" axisLine={false} tickLine={false} fontSize={12} dy={10} />
-                          <YAxis stroke="#9CA3AF" axisLine={false} tickLine={false} fontSize={12} tickFormatter={(v) => `${(v / 1000)}k`} />
-                          <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
-                          <Bar
-                            dataKey="c"
-                            fill="rgb(67, 56, 202)"
-                            radius={[6, 6, 6, 6]}
-                            barSize={12}
-                            name="Total Revenue (₹)"
-                            animationDuration={1500}
-                            animationEasing="ease-out"
-                          />
-                          <Bar
-                            dataKey="t"
-                            fill="rgb(67, 56, 202)"
-                            radius={[6, 6, 6, 6]}
-                            barSize={12}
-                            name="Tickets Sold"
-                            animationBegin={300}
-                            animationDuration={1500}
-                            animationEasing="ease-out"
-                          />
+                    <div style={{ width: '100%', height: 220, minWidth: 0, overflow: 'hidden', position: 'relative' }}>
+                      {isMounted && (
+                        <ResponsiveContainer width="100%" height={220} debounce={100}>
+                          <BarChart key={chartVersion} data={analyticsData?.myAnalytics?.monthlyData || []}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                            <XAxis dataKey="n" stroke="#9CA3AF" axisLine={false} tickLine={false} fontSize={12} dy={10} />
+                            <YAxis stroke="#9CA3AF" axisLine={false} tickLine={false} fontSize={12} tickFormatter={(v) => `${(v / 1000)}k`} />
+                            <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+                            <Bar
+                              dataKey="c"
+                              fill="rgb(67, 56, 202)"
+                              radius={[6, 6, 6, 6]}
+                              barSize={12}
+                              name="Total Revenue (₹)"
+                              animationDuration={1500}
+                              animationEasing="ease-out"
+                            />
+                            <Bar
+                              dataKey="t"
+                              fill="rgb(67, 56, 202)"
+                              radius={[6, 6, 6, 6]}
+                              barSize={12}
+                              name="Tickets Sold"
+                              animationBegin={300}
+                              animationDuration={1500}
+                              animationEasing="ease-out"
+                            />
 
 
-                        </BarChart>
-                      </ResponsiveContainer>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
                     </div>
                   </Card>
 
@@ -602,27 +610,29 @@ export default function Dashboard() {
                         const pieData = Object.entries(distribution).map(([name, value]) => ({ name, value }));
                         const COLORS = ['#8338EC', '#3A86FF', '#FB5607', '#FF006E', '#FFBE0B'];
 
-                        return pieData.length > 0 ? (
-                          <ResponsiveContainer>
-                            <PieChart key={chartVersion}>
-                              <Pie
-                                data={pieData}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={40}
-                                outerRadius={60}
-                                fill="#8884d8"
-                                paddingAngle={5}
-                                dataKey="value"
-                              >
-                                {pieData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                              </Pie>
-                              <Tooltip />
-                              <Legend verticalAlign="bottom" height={36} />
-                            </PieChart>
-                          </ResponsiveContainer>
+                        return pieData.length > 0 && isMounted ? (
+                          <div style={{ width: '100%', height: 220, minWidth: 0, overflow: 'hidden', position: 'relative' }}>
+                            <ResponsiveContainer width="100%" height={220}>
+                              <PieChart key={chartVersion}>
+                                <Pie
+                                  data={pieData}
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius={40}
+                                  outerRadius={60}
+                                  fill="#8884d8"
+                                  paddingAngle={5}
+                                  dataKey="value"
+                                >
+                                  {pieData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                  ))}
+                                </Pie>
+                                <Tooltip />
+                                <Legend verticalAlign="bottom" height={36} />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
                         ) : (
                           <Empty description="No ticket sales data" style={{ marginTop: '20px' }} />
                         );
@@ -641,7 +651,7 @@ export default function Dashboard() {
                         onChange={setCategoryFilter}
                         variant="borderless"
                         style={{ background: '#F3F4F6', borderRadius: '100px', fontWeight: 600, minWidth: '100px' }}
-                        dropdownStyle={{ borderRadius: '12px' }}
+                        styles={{ popup: { root: { borderRadius: '12px' } } }}
                         options={[
                           { value: 'Hosted', label: 'Hosted' },
                           { value: 'Attended', label: 'Attended' }
@@ -946,16 +956,18 @@ export default function Dashboard() {
 
                   <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
                     <h3 style={{ margin: '0 0 20px 0', color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Booking Trends</h3>
-                    <div style={{ height: '220px', minWidth: 0 }}>
-                      <ResponsiveContainer width="100%" height="100%" debounce={100}>
-                        <BarChart data={last6Months}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 12 }} />
-                          <YAxis hide domain={[0, 'dataMax + 2']} />
-                          <Tooltip cursor={{ fill: '#F8FAFC' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-                          <Bar dataKey="Total Tickets" fill="rgb(67, 56, 202)" radius={[4, 4, 0, 0]} barSize={100} />
-                        </BarChart>
-                      </ResponsiveContainer>
+                    <div style={{ width: '100%', height: 220, minWidth: 0, overflow: 'hidden', position: 'relative' }}>
+                      {isMounted && (
+                        <ResponsiveContainer width="100%" height={220} debounce={100}>
+                          <BarChart data={last6Months}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 12 }} />
+                            <YAxis hide domain={[0, 'dataMax + 2']} />
+                            <Tooltip cursor={{ fill: '#F8FAFC' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                            <Bar dataKey="Total Tickets" fill="rgb(67, 56, 202)" radius={[4, 4, 0, 0]} barSize={100} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
                     </div>
                   </Card>
                 </div>
@@ -1012,13 +1024,13 @@ export default function Dashboard() {
 
                           <div style={{ background: '#F8FAFB', borderRadius: '16px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                             <div style={{ textAlign: 'center', background: 'white', padding: '6px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', opacity: b.status === 'PENDING' ? 0.3 : 1, position: 'relative', width: '112px', height: '112px' }}>
-                              <Image 
-                                src={b.qrCode || '/qr-placeholder.png'} 
-                                width={100} 
-                                height={100} 
-                                cursor={b.status === 'PENDING' ? 'not-allowed' : 'pointer'} 
-                                onClick={() => b.status !== 'PENDING' && showBigQR(b)} 
-                                alt="QR" 
+                              <Image
+                                src={b.qrCode || '/qr-placeholder.png'}
+                                width={100}
+                                height={100}
+                                style={{ cursor: b.status === 'PENDING' ? 'not-allowed' : 'pointer' }}
+                                onClick={() => b.status !== 'PENDING' && showBigQR(b)}
+                                alt="QR"
                                 unoptimized
                               />
                             </div>

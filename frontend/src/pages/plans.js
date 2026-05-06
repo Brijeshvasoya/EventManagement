@@ -104,7 +104,7 @@ export default function PlansPage() {
               <ExclamationCircleOutlined style={{ fontSize: '2.5rem', color: '#f59e0b', marginBottom: 16 }} />
               <div style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: 8 }}>Switch to Basic Plan?</div>
               <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: 24 }}>
-                Your Pro plan stays active until <strong>{new Date(user?.planExpiresAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</strong>. After that, Basic plan (5 events limit) will activate automatically. No refund is issued.
+                Your Pro plan stays active until <strong>{billingData?.myBilling?.planExpiresAt ? new Date(billingData.myBilling.planExpiresAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '...'}</strong>. After that, Basic plan (5 events limit) will activate automatically. No refund is issued.
               </div>
               <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
                 <Button onClick={() => setConfirmModal(null)}>Keep Pro</Button>
@@ -188,35 +188,35 @@ export default function PlansPage() {
 
           {/* Header */}
           <div className="plans-header">
-          {/* Active Pro plan — locked notice (no upgrade needed) */}
-          {isActivePlan && currentPlanId === 'PRO' && !scheduledPlanId && (
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(67,56,202,0.06), rgba(67,56,202,0.12))',
-              border: '1px solid rgba(67,56,202,0.2)',
-              borderRadius: '16px',
-              padding: '14px 22px',
-              marginBottom: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              fontSize: '0.9rem',
-              color: 'rgb(67,56,202)',
-              fontWeight: 600,
-            }}>
-              <span style={{ fontSize: '1.3rem' }}>👑</span>
-              <span>You are on the <strong>Pro Plan</strong>. Switch to Basic anytime — it activates at the end of your current cycle.</span>
-            </div>
-          )}
+            {/* Active Pro plan — locked notice (no upgrade needed) */}
+            {isActivePlan && currentPlanId === 'PRO' && !scheduledPlanId && (
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(67,56,202,0.06), rgba(67,56,202,0.12))',
+                border: '1px solid rgba(67,56,202,0.2)',
+                borderRadius: '16px',
+                padding: '14px 22px',
+                marginBottom: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                fontSize: '0.9rem',
+                color: 'rgb(67,56,202)',
+                fontWeight: 600,
+              }}>
+                <span style={{ fontSize: '1.3rem' }}>👑</span>
+                <span>You are on the <strong>Pro Plan</strong>. Switch to Basic anytime — it activates at the end of your current cycle.</span>
+              </div>
+            )}
 
-          <div className="plans-eyebrow">
-            <ThunderboltOutlined style={{ marginRight: 6 }} />
-            Organizer Plans
+            <div className="plans-eyebrow">
+              <ThunderboltOutlined style={{ marginRight: 6 }} />
+              Organizer Plans
+            </div>
+            <h1 className="plans-title">Choose Your Plan</h1>
+            <p className="plans-subtitle">
+              Unlock powerful tools to create and manage unforgettable events.
+            </p>
           </div>
-          <h1 className="plans-title">Choose Your Plan</h1>
-          <p className="plans-subtitle">
-            Unlock powerful tools to create and manage unforgettable events.
-          </p>
-        </div>
 
           {/* Cards */}
           <div className="plans-grid">
@@ -297,13 +297,13 @@ export default function PlansPage() {
 
               {/* Pro card CTA logic */}
               {!isActivePlan && (
-                <Button type="primary" size="large" block loading={creating} onClick={() => handleSubscribe('PRO')} icon={<RocketOutlined />} className="btn-pro-action">Upgrade to Pro</Button>
+                <Button type="primary" size="large" block style={{ color: '#ffff' }} loading={creating} onClick={() => handleSubscribe('PRO')} icon={<RocketOutlined />} className="btn-pro-action">Upgrade to Pro</Button>
               )}
               {isActivePlan && currentPlanId === 'PRO' && (
-                <Button type="primary" size="large" block disabled className="btn-pro-action">✓ Active Plan</Button>
+                <Button type="primary" size="large" block style={{ color: '#ffff' }} disabled className="btn-pro-action">✓ Active Plan</Button>
               )}
               {isActivePlan && currentPlanId === 'BASIC' && (
-                <Button type="primary" size="large" block loading={creating} onClick={() => handleSubscribe('PRO')} icon={<RocketOutlined />} className="btn-pro-action">
+                <Button type="primary" size="large" block style={{ color: '#ffff' }} loading={creating} onClick={() => handleSubscribe('PRO')} icon={<RocketOutlined />} className="btn-pro-action">
                   Upgrade Now — ₹{proratedUpgradeAmount.toLocaleString('en-IN')}
                 </Button>
               )}

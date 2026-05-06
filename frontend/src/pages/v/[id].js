@@ -60,7 +60,7 @@ export default function AutoVerify() {
             status="success"
             title={<span style={{ color: 'white', fontSize: '2rem', fontWeight: '800' }}>ACCESS GRANTED</span>}
             subTitle={
-              <Space direction="vertical" style={{ width: '100%', marginTop: '20px' }}>
+              <Space orientation="vertical" style={{ width: '100%', marginTop: '20px' }}>
                 <div style={{ color: '#94a3b8', fontSize: '1.1rem' }}>Entry confirmed for:</div>
                 <div style={{ color: 'white', fontSize: '1.5rem', fontWeight: '700' }}>{ticketData?.user.name}</div>
                 <div style={{ color: '#6366f1', fontSize: '1.2rem' }}>{ticketData?.event.title}</div>

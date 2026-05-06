@@ -416,6 +416,7 @@ export default function Browse() {
                     onCancel={() => setIsEditModalOpen(false)}
                     footer={null}
                     centered
+                    forceRender
                     width={720}
                     styles={{ body: { padding: '24px' } }}
                 >
@@ -501,7 +502,7 @@ export default function Browse() {
                                 value={editVendorIds}
                                 onChange={setEditVendorIds}
                                 loading={vendorLoading}
-                                dropdownStyle={{ background: '#1a1a2e', border: '1px solid #312e81' }}
+                                styles={{ popup: { root: { background: '#1a1a2e', border: '1px solid #312e81' } } }}
                                 className="premium-select-compact"
                             >
                                 {vendorData?.myVendors?.map(v => (

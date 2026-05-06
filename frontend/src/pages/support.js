@@ -33,6 +33,48 @@ const fadeInUp = {
   transition: { duration: 0.4 }
 };
 
+const ReplyAction = () => {
+  const messageValue = Form.useWatch('message');
+  return (
+    <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
+      <Form.Item name="message" rules={[{ required: true, message: '' }]} style={{ flex: 1, marginBottom: 0 }}>
+        <TextArea
+          placeholder="Type your message here..."
+          autoSize={{ minRows: 1, maxRows: 6 }}
+          style={{
+            borderRadius: '20px',
+            padding: '12px 20px',
+            border: '2px solid #F1F5F9',
+            background: '#FAFBFF',
+            fontSize: '15px'
+          }}
+        />
+      </Form.Item>
+      <Form.Item style={{ marginBottom: 0 }}>
+        <Button
+          type="primary"
+          htmlType="submit"
+          icon={<SendOutlined style={{ color: '#ffff' }} />}
+          size="large"
+          disabled={!messageValue?.trim()}
+          style={{
+            borderRadius: '20px',
+            height: '48px',
+            width: '48px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: !messageValue?.trim() ? '#E2E8F0' : 'linear-gradient(135deg, #4F46E5 0%, #3730A3 100%)',
+            border: 'none',
+            boxShadow: !messageValue?.trim() ? 'none' : '0 4px 12px rgba(79, 70, 229, 0.3)',
+            transition: 'all 0.3s ease'
+          }}
+        />
+      </Form.Item>
+    </div>
+  );
+};
+
 export default function SupportPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -45,7 +87,7 @@ export default function SupportPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
-  const messageValue = Form.useWatch('message', replyForm);
+
 
   const { data: ticketsData, loading: ticketsLoading, refetch: refetchTickets, subscribeToMore } = useQuery(GET_MY_SUPPORT_TICKETS, {
     variables: {
@@ -266,7 +308,7 @@ export default function SupportPage() {
                   onChange={setStatusFilter}
                   style={{ flex: 1, minWidth: '150px', height: '48px' }}
                   suffixIcon={<ClockCircleOutlined />}
-                  dropdownStyle={{ borderRadius: '12px' }}
+                  styles={{ popup: { root: { borderRadius: '12px' } } }}
                 >
                   <Option value="ALL">All Status</Option>
                   <Option value="OPEN">Open</Option>
@@ -278,7 +320,7 @@ export default function SupportPage() {
                     value={eventFilter}
                     onChange={setEventFilter}
                     style={{ flex: 1, minWidth: '150px', height: '48px' }}
-                    dropdownStyle={{ borderRadius: '12px' }}
+                    styles={{ popup: { root: { borderRadius: '12px' } } }}
                   >
                     <Option value="ALL">All Events</Option>
                     {(eventsData?.myEvents || []).map(e => <Option key={e.id} value={e.id}>{e.title}</Option>)}
@@ -461,41 +503,7 @@ export default function SupportPage() {
                   {selectedTicket.status === 'OPEN' && (
                     <div style={{ padding: '24px 32px', background: 'white', borderTop: '1px solid #F1F5F9' }}>
                       <Form form={replyForm} onFinish={handleReply} layout="vertical">
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
-                          <Form.Item name="message" rules={[{ required: true, message: '' }]} style={{ flex: 1, marginBottom: 0 }}>
-                            <TextArea
-                              placeholder="Type your message here..."
-                              autoSize={{ minRows: 1, maxRows: 6 }}
-                              style={{
-                                borderRadius: '20px',
-                                padding: '12px 20px',
-                                border: '2px solid #F1F5F9',
-                                background: '#FAFBFF',
-                                fontSize: '15px'
-                              }}
-                            />
-                          </Form.Item>
-                          <Button
-                            type="primary"
-                            htmlType="submit"
-                            icon={<SendOutlined style={{ color: '#ffff' }} />}
-                            size="large"
-                            loading={replying}
-                            disabled={!messageValue?.trim()}
-                            style={{
-                              borderRadius: '20px',
-                              height: '48px',
-                              width: '48px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              background: !messageValue?.trim() ? '#E2E8F0' : 'linear-gradient(135deg, #4F46E5 0%, #3730A3 100%)',
-                              border: 'none',
-                              boxShadow: !messageValue?.trim() ? 'none' : '0 4px 12px rgba(79, 70, 229, 0.3)',
-                              transition: 'all 0.3s ease'
-                            }}
-                          />
-                        </div>
+                        <ReplyAction />
                       </Form>
                     </div>
                   )}

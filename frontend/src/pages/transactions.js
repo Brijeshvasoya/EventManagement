@@ -4,7 +4,7 @@ import { REQUEST_PAYOUT, UPDATE_BANK_DETAILS } from '@/features/events/graphql/m
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import { Table, Tag, Card, Row, Col, Statistic, Empty, Button, Modal, InputNumber, Form, message, Alert, Input, Space, Typography, Tooltip as AntTooltip, Select, App } from 'antd';
-import { TagOutlined, DownloadOutlined, WalletOutlined, HistoryOutlined, BankOutlined, CheckCircleFilled, InfoCircleOutlined, SearchOutlined, FilterOutlined, ArrowUpOutlined, CreditCardOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { HistoryOutlined, BankOutlined, InfoCircleOutlined, SearchOutlined, CreditCardOutlined, PlusCircleOutlined, DollarCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { IndianRupee } from 'lucide-react';
 import { useRouter } from 'next/router';
@@ -241,7 +241,7 @@ function TransactionsContent() {
         <Col xs={24} sm={12} lg={8}>
           <Card variant="borderless" className="glass-card premium-hover" style={{ borderRadius: '24px', height: '100%', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: 0, right: 0, padding: '20px', opacity: 0.1 }}>
-              <WalletOutlined style={{ fontSize: '48px', color: '#4338CA' }} />
+              <DollarCircleOutlined style={{ fontSize: '48px', color: '#4338CA' }} />
             </div>
             <Statistic
               title={<span style={{ fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>Lifetime Revenue</span>}
@@ -258,6 +258,9 @@ function TransactionsContent() {
 
         <Col xs={24} sm={12} lg={8}>
           <Card variant="borderless" className="glass-card premium-hover" style={{ borderRadius: '24px', height: '100%', background: 'linear-gradient(135deg, #F8FAFC 0%, #FFFFFF 100%)' }}>
+            <div style={{ position: 'absolute', top: 0, right: 0, padding: '20px', opacity: 0.1 }}>
+              <HistoryOutlined style={{ fontSize: '48px', color: '#64748B' }} />
+            </div>
             <Statistic
               title={<span style={{ fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem' }}>Total Processed</span>}
               value={stats.totalRevenue - availablePayout}

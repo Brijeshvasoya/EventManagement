@@ -72,7 +72,7 @@ export default function LandingPage() {
         className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}
       >
         <div className={styles.logo}>
-          <Image src="/logo.png" alt="EventHub Logo" width={32} height={32} style={{ objectFit: 'contain', borderRadius: '8px' }} />
+          <Image src="/logo.png" alt="EventHub Logo" width={32} height={32} priority style={{ objectFit: 'contain', borderRadius: '8px' }} />
           EventHub
         </div>
         <div className={styles.navLinks}>
