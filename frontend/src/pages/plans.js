@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { gql } from '@apollo/client';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import toast from 'react-hot-toast';
@@ -100,57 +99,43 @@ export default function PlansPage() {
           width={420}
         >
           {confirmModal?.type === 'downgrade' && (
-            <div style={{ textAlign: 'center', padding: '8px 0 16px' }}>
-              <ExclamationCircleOutlined style={{ fontSize: '2.5rem', color: '#f59e0b', marginBottom: 16 }} />
-              <div style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: 8 }}>Switch to Basic Plan?</div>
-              <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: 24 }}>
+            <div className="confirm-box">
+              <ExclamationCircleOutlined className="confirm-icon confirm-icon-warning" />
+              <div className="confirm-title">Switch to Basic Plan?</div>
+              <div className="confirm-text">
                 Your Pro plan stays active until <strong>{billingData?.myBilling?.planExpiresAt ? new Date(billingData.myBilling.planExpiresAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '...'}</strong>. After that, Basic plan (5 events limit) will activate automatically. No refund is issued.
               </div>
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <div className="confirm-actions">
                 <Button onClick={() => setConfirmModal(null)}>Keep Pro</Button>
                 <Button type="primary" danger loading={scheduling} onClick={handleScheduleDowngrade}>Yes, Schedule Downgrade</Button>
               </div>
             </div>
           )}
           {confirmModal?.type === 'cancel' && (
-            <div style={{ textAlign: 'center', padding: '8px 0 16px' }}>
-              <ExclamationCircleOutlined style={{ fontSize: '2.5rem', color: 'rgb(67,56,202)', marginBottom: 16 }} />
-              <div style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: 8 }}>Cancel Scheduled Downgrade?</div>
-              <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: 24 }}>
+            <div className="confirm-box">
+              <ExclamationCircleOutlined className="confirm-icon confirm-icon-primary" />
+              <div className="confirm-title">Cancel Scheduled Downgrade?</div>
+              <div className="confirm-text">
                 Your Pro plan will continue to renew at full price after the current cycle.
               </div>
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <div className="confirm-actions">
                 <Button onClick={() => setConfirmModal(null)}>Close</Button>
                 <Button type="primary" loading={cancelling} onClick={handleCancelDowngrade}>Yes, Stay on Pro</Button>
               </div>
             </div>
           )}
         </Modal>
-
-        {/* Background orbs */}
-        <div className="orb orb-1" />
-        <div className="orb orb-2" />
-
         <div className="plans-inner">
 
           {/* Plan Expired Notice */}
           {isPlanExpired && (
-            <div style={{
-              background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
-              border: '1px solid rgba(234,88,12,0.25)',
-              borderRadius: '16px',
-              padding: '16px 24px',
-              marginBottom: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '14px'
-            }}>
-              <span style={{ fontSize: '1.8rem' }}>⏰</span>
+            <div className="status-banner status-banner-warning">
+              <span className="status-banner-icon">⏰</span>
               <div>
-                <div style={{ fontWeight: 700, color: '#c2410c', fontSize: '1rem', marginBottom: '2px' }}>
+                <div className="status-banner-title">
                   Your {user?.planId === 'PRO' ? 'Pro' : 'Basic'} Plan has expired
                 </div>
-                <div style={{ fontSize: '0.85rem', color: '#78350f' }}>
+                <div className="status-banner-text">
                   Your existing events and all purchased tickets remain intact. Renew your plan to create new events.
                 </div>
               </div>
@@ -159,28 +144,17 @@ export default function PlansPage() {
 
           {/* Scheduled Downgrade Banner */}
           {scheduledPlanId === 'BASIC' && scheduledDowngradeAt && (
-            <div style={{
-              background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
-              border: '1px solid rgba(245,158,11,0.3)',
-              borderRadius: '16px',
-              padding: '14px 22px',
-              marginBottom: '28px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '12px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '1.4rem' }}>📅</span>
+            <div className="status-banner status-banner-scheduled">
+              <div className="status-banner-group">
+                <span className="status-banner-icon-small">📅</span>
                 <div>
-                  <div style={{ fontWeight: 700, color: '#92400e', fontSize: '0.95rem' }}>Downgrade Scheduled</div>
-                  <div style={{ fontSize: '0.82rem', color: '#78350f' }}>
+                  <div className="status-banner-title">Downgrade Scheduled</div>
+                  <div className="status-banner-text">
                     Your plan will switch to <strong>Basic</strong> on {new Date(scheduledDowngradeAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}. Pro features remain active until then.
                   </div>
                 </div>
               </div>
-              <Button size="small" onClick={() => setConfirmModal({ type: 'cancel' })} style={{ borderRadius: 8, fontWeight: 700 }}>
+              <Button size="small" onClick={() => setConfirmModal({ type: 'cancel' })} className="btn-inline-action">
                 Cancel Downgrade
               </Button>
             </div>
@@ -188,35 +162,18 @@ export default function PlansPage() {
 
           {/* Header */}
           <div className="plans-header">
-            {/* Active Pro plan — locked notice (no upgrade needed) */}
-            {isActivePlan && currentPlanId === 'PRO' && !scheduledPlanId && (
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(67,56,202,0.06), rgba(67,56,202,0.12))',
-                border: '1px solid rgba(67,56,202,0.2)',
-                borderRadius: '16px',
-                padding: '14px 22px',
-                marginBottom: '32px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                fontSize: '0.9rem',
-                color: 'rgb(67,56,202)',
-                fontWeight: 600,
-              }}>
-                <span style={{ fontSize: '1.3rem' }}>👑</span>
-                <span>You are on the <strong>Pro Plan</strong>. Switch to Basic anytime — it activates at the end of your current cycle.</span>
-              </div>
-            )}
-
-            <div className="plans-eyebrow">
-              <ThunderboltOutlined style={{ marginRight: 6 }} />
-              Organizer Plans
-            </div>
             <h1 className="plans-title">Choose Your Plan</h1>
             <p className="plans-subtitle">
               Unlock powerful tools to create and manage unforgettable events.
             </p>
           </div>
+          {/* Active Pro plan — locked notice (no upgrade needed) */}
+          {isActivePlan && currentPlanId === 'PRO' && !scheduledPlanId && (
+            <div className="status-banner status-banner-info">
+              <span className="status-banner-icon-small">👑</span>
+              <span>You are on the <strong>Pro Plan</strong>. Switch to Basic anytime — it activates at the end of your current cycle.</span>
+            </div>
+          )}
 
           {/* Cards */}
           <div className="plans-grid">
@@ -252,7 +209,7 @@ export default function PlansPage() {
                 <Button size="large" block disabled className="btn-basic-action">✓ Current Plan</Button>
               )}
               {isActivePlan && currentPlanId === 'PRO' && !scheduledPlanId && (
-                <Button size="large" block onClick={() => setConfirmModal({ type: 'downgrade' })} className="btn-basic-action" style={{ borderColor: '#f59e0b', color: '#92400e' }}>
+                <Button size="large" block onClick={() => setConfirmModal({ type: 'downgrade' })} className="btn-basic-action btn-basic-warning">
                   ⬇ Switch to Basic (Next Cycle)
                 </Button>
               )}
@@ -279,7 +236,7 @@ export default function PlansPage() {
               </div>
               {/* Prorated notice for BASIC → PRO upgrade */}
               {isActivePlan && currentPlanId === 'BASIC' && proratedUpgradeAmount < 2499 && (
-                <div style={{ fontSize: '0.78rem', color: '#059669', fontWeight: 700, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div className="prorated-note">
                   <span>✂️</span>
                   <span>₹{(2499 - proratedUpgradeAmount).toLocaleString('en-IN')} credit applied (unused Basic days)</span>
                 </div>
@@ -290,7 +247,7 @@ export default function PlansPage() {
                 {proFeatures.map((f, i) => (
                   <li key={i} className="feature-item">
                     <CheckCircleFilled className="check-icon pro-check" />
-                    <span style={{ fontWeight: i >= 3 ? 600 : 400 }}>{f}</span>
+                    <span className={i >= 3 ? 'feature-emphasis' : ''}>{f}</span>
                   </li>
                 ))}
               </ul>
@@ -315,14 +272,10 @@ export default function PlansPage() {
 
       <style jsx>{`
         .plans-page {
-          min-height: 100vh;
           background: var(--bg-color);
           position: relative;
           overflow: hidden;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 48px 24px;
+          margin: auto;
           font-family: 'Inter', sans-serif;
         }
 
@@ -333,18 +286,6 @@ export default function PlansPage() {
           filter: blur(90px);
           pointer-events: none;
           z-index: 0;
-        }
-        .orb-1 {
-          width: 480px; height: 480px;
-          top: -120px; left: -120px;
-          background: radial-gradient(circle, rgba(67,56,202,0.12) 0%, transparent 70%);
-          animation: driftOrb 18s ease-in-out infinite alternate;
-        }
-        .orb-2 {
-          width: 560px; height: 560px;
-          bottom: -150px; right: -150px;
-          background: radial-gradient(circle, rgba(56,189,248,0.1) 0%, transparent 70%);
-          animation: driftOrb 22s ease-in-out infinite alternate-reverse;
         }
         @keyframes driftOrb {
           from { transform: translate(0,0) scale(1); }
@@ -358,10 +299,90 @@ export default function PlansPage() {
           max-width: 960px;
         }
 
+        .confirm-box {
+          text-align: center;
+          padding: 8px 0 16px;
+        }
+        .confirm-icon {
+          font-size: 2.5rem;
+          margin-bottom: 16px;
+        }
+        .confirm-icon-warning { color: var(--warning); }
+        .confirm-icon-primary { color: var(--primary-color); }
+        .confirm-title {
+          font-size: 1.1rem;
+          font-weight: 800;
+          margin-bottom: 8px;
+          color: var(--text-primary);
+        }
+        .confirm-text {
+          font-size: 0.9rem;
+          color: var(--text-secondary);
+          margin-bottom: 24px;
+        }
+        .confirm-actions {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+        }
+
+        .status-banner {
+          border-radius: var(--radius-lg);
+          padding: 14px 22px;
+          margin-bottom: 28px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          border: 1px solid;
+        }
+        .status-banner-warning {
+          background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+          border-color: rgba(234,88,12,0.25);
+        }
+        .status-banner-scheduled {
+          background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+          border-color: rgba(245,158,11,0.3);
+          justify-content: space-between;
+          flex-wrap: wrap;
+        }
+        .status-banner-info {
+          background: linear-gradient(135deg, rgba(67,56,202,0.06), rgba(67,56,202,0.12));
+          border-color: rgba(67,56,202,0.2);
+          margin-bottom: 32px;
+          color: var(--primary-color);
+          font-size: 0.9rem;
+          font-weight: 600;
+        }
+        .status-banner-group {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .status-banner-icon {
+          font-size: 1.8rem;
+        }
+        .status-banner-icon-small {
+          font-size: 1.35rem;
+        }
+        .status-banner-title {
+          font-weight: 700;
+          color: #92400e;
+          font-size: 0.95rem;
+          margin-bottom: 2px;
+        }
+        .status-banner-text {
+          font-size: 0.84rem;
+          color: #78350f;
+        }
+        :global(.btn-inline-action) {
+          border-radius: var(--radius-sm) !important;
+          font-weight: 700 !important;
+        }
+
         /* Header */
         .plans-header {
           text-align: center;
-          margin-bottom: 52px;
+          margin-bottom: 24px;
         }
         .plans-eyebrow {
           display: inline-flex;
@@ -391,7 +412,6 @@ export default function PlansPage() {
         .plans-subtitle {
           font-size: 1.15rem;
           color: var(--text-secondary);
-          max-width: 500px;
           margin: 0 auto;
           line-height: 1.65;
         }
@@ -493,14 +513,9 @@ export default function PlansPage() {
         }
 
         .current-badge-pro {
-          background: linear-gradient(135deg, rgba(67,56,202,0.1), rgba(67,56,202,0.18));
-          color: rgb(67,56,202);
-          border: 1px solid rgba(67,56,202,0.2);
-        }
-
-        .plan-card-current {
-          border-color: rgba(16,185,129,0.3) !important;
-          box-shadow: 0 0 0 2px rgba(16,185,129,0.12), 0 20px 60px rgba(16,185,129,0.08) !important;
+          background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.2));
+          color: #059669;
+          border: 1px solid rgba(16,185,129,0.25);
         }
 
         .locked-note {
@@ -593,6 +608,9 @@ export default function PlansPage() {
           color: var(--text-primary);
           line-height: 1.4;
         }
+        .feature-emphasis {
+          font-weight: 600;
+        }
         .check-icon {
           font-size: 1rem;
           flex-shrink: 0;
@@ -618,6 +636,16 @@ export default function PlansPage() {
           color: rgb(67,56,202) !important;
           transform: translateY(-1px);
         }
+        :global(.btn-basic-warning) {
+          border-color: rgba(245,158,11,0.5) !important;
+          color: #92400e !important;
+          background: rgba(245,158,11,0.05) !important;
+        }
+        :global(.btn-basic-warning:hover) {
+          border-color: rgba(245,158,11,0.75) !important;
+          color: #78350f !important;
+          background: rgba(245,158,11,0.12) !important;
+        }
         :global(.btn-pro-action) {
           height: 52px !important;
           border-radius: 14px !important;
@@ -634,6 +662,16 @@ export default function PlansPage() {
           opacity: 0.92;
         }
 
+        .prorated-note {
+          font-size: 0.78rem;
+          color: var(--success);
+          font-weight: 700;
+          margin-bottom: 4px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
         /* Footer note */
         .plans-footer-note {
           text-align: center;
@@ -647,6 +685,10 @@ export default function PlansPage() {
           .plans-title { font-size: 2.2rem; }
           .plans-grid  { flex-direction: column; align-items: center; }
           .plan-card   { max-width: 100%; }
+          .confirm-actions { flex-direction: column; }
+          .status-banner { padding: 12px 14px; }
+          .status-banner-info { align-items: flex-start; }
+          .status-banner-group { align-items: flex-start; }
         }
       `}</style>
     </ConfigProvider>
