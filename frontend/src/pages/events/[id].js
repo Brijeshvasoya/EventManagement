@@ -304,56 +304,73 @@ export default function EventDetailsPage() {
       key: 'status',
       width: '25%',
       align: 'center',
-      render: (status) => (
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '100px', background: status === 'CONFIRMED' ? '#f0fdf4' : status === 'PENDING' ? '#fffbeb' : '#f8fafc' }}>
-          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: status === 'CONFIRMED' ? '#10b981' : status === 'PENDING' ? '#f59e0b' : '#6366f1', flexShrink: 0 }} />
-          <AntText style={{ fontWeight: 800, color: status === 'CONFIRMED' ? '#166534' : status === 'PENDING' ? '#92400e' : '#1e1b4b', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.5px' }}>
-            {status}
-          </AntText>
-        </div>
-      )
+      render: (status) => {
+        const statusConfigs = {
+          'CONFIRMED': { bg: '#f0fdf4', dot: '#10b981', text: '#166534' },
+          'PENDING': { bg: '#fffbeb', dot: '#f59e0b', text: '#92400e' },
+          'CHECKED_IN': { bg: '#eef2ff', dot: '#6366f1', text: '#3730a3' },
+          'CANCELLED': { bg: '#fef2f2', dot: '#ef4444', text: '#991b1b' },
+          'default': { bg: '#f8fafc', dot: '#64748b', text: '#1e1b4b' }
+        };
+        const config = statusConfigs[status] || statusConfigs.default;
+        return (
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '100px', background: config.bg }}>
+            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: config.dot, flexShrink: 0 }} />
+            <AntText style={{ fontWeight: 800, color: config.text, textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.5px' }}>
+              {status}
+            </AntText>
+          </div>
+        );
+      }
     },
     {
       title: 'Action',
       key: 'action',
       width: '30%',
       align: 'right',
-      render: (_, record) => (
-        record.status === 'PENDING' ? (
-          <Popconfirm
-            title="Confirm Payment"
-            onConfirm={() => handleConfirmPayment(record.id)}
-            okText="Confirm"
-            cancelText="No"
-            okButtonProps={{ style: { background: '#10b981', border: 'none' } }}
-          >
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                color: 'white',
-                padding: '8px 14px',
-                borderRadius: '10px',
-                fontSize: '10px',
-                fontWeight: 900,
-                cursor: 'pointer',
-                textAlign: 'center',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)',
-                minWidth: '130px',
-                whiteSpace: 'nowrap'
-              }}
+      render: (_, record) => {
+        if (record.status === 'PENDING') {
+          return (
+            <Popconfirm
+              title="Confirm Payment"
+              onConfirm={() => handleConfirmPayment(record.id)}
+              okText="Confirm"
+              cancelText="No"
+              okButtonProps={{ style: { background: '#10b981', border: 'none' } }}
             >
-              Confirm Payment
-            </div>
-          </Popconfirm>
-        ) : (
-          <AntText style={{ color: '#10b981', fontSize: '10px', fontWeight: 800, paddingRight: '12px' }}>PAID</AntText>
-        )
-      )
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: 'white',
+                  padding: '8px 14px',
+                  borderRadius: '10px',
+                  fontSize: '10px',
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)',
+                  minWidth: '130px',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                Confirm Payment
+              </div>
+            </Popconfirm>
+          );
+        }
+        if (record.status === 'CANCELLED') {
+          return <AntText style={{ color: '#ef4444', fontSize: '10px', fontWeight: 800, paddingRight: '12px' }}>CANCELLED</AntText>;
+        }
+        if (record.status === 'CHECKED_IN') {
+          return <AntText style={{ color: '#6366f1', fontSize: '10px', fontWeight: 800, paddingRight: '12px' }}>CHECKED IN</AntText>;
+        }
+        return <AntText style={{ color: '#10b981', fontSize: '10px', fontWeight: 800, paddingRight: '12px' }}>PAID</AntText>;
+      }
     }
   ];
 
@@ -631,10 +648,17 @@ export default function EventDetailsPage() {
                                         <AntText type="secondary" style={{ fontSize: '9px', display: 'block', textTransform: 'uppercase', fontWeight: 800, marginBottom: '8px' }}>Booking Info</AntText>
                                         <AntText style={{ fontSize: '11px', color: '#64748b', lineHeight: '1.5' }}>
                                           ID: <strong style={{ color: '#0f172a' }}>#{record.id.slice(-8).toUpperCase()}</strong><br />
-                                          Status: <strong style={{ color: record.status === 'PENDING' ? '#f59e0b' : '#10b981' }}>{record.status}</strong>. {
+                                          Status: <strong style={{ 
+                                            color: record.status === 'CONFIRMED' ? '#10b981' : 
+                                                   record.status === 'PENDING' ? '#f59e0b' : 
+                                                   record.status === 'CANCELLED' ? '#ef4444' : 
+                                                   record.status === 'CHECKED_IN' ? '#6366f1' : '#64748b' 
+                                          }}>{record.status}</strong>. {
                                             record.status === 'PENDING' ? 'Awaiting offline payment. Please verify and confirm above.' :
                                               record.status === 'CONFIRMED' ? 'Payment verified. Guest is ready for check-in.' :
-                                                'Check-in completed. Guest has entered the venue.'
+                                                record.status === 'CHECKED_IN' ? 'Check-in completed. Guest has entered the venue.' :
+                                                  record.status === 'CANCELLED' ? 'This booking has been cancelled and is no longer valid.' :
+                                                    'Booking status is being processed.'
                                           }
                                         </AntText>
                                       </div>

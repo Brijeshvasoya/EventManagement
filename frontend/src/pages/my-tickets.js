@@ -5,21 +5,16 @@ import { CANCEL_BOOKING } from '@/features/events/graphql/mutations';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
-import { Table, Tag, Button, Space, Card, Typography, Spin, Empty, Modal, Popconfirm } from 'antd';
+import { Table, Tag, Button, Space, Card, Typography, Spin, Empty, Popconfirm } from 'antd';
 import { EyeOutlined, CalendarOutlined, AuditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/router';
 import dayjs from 'dayjs';
-
-import { jsPDF } from 'jspdf';
-
 import DigitalTicketModal from '@/features/events/components/DigitalTicketModal';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export default function MyTickets() {
-  const router = useRouter();
   const { user } = useAuth();
-  const { data, loading, error } = useQuery(GET_MY_BOOKINGS, {
+  const { data, loading } = useQuery(GET_MY_BOOKINGS, {
     fetchPolicy: 'network-only',
     skip: !user
   });
