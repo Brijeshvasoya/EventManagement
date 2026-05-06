@@ -82,7 +82,8 @@ export default function PlansPage() {
     'Advanced analytics & reporting',
     'Priority 24/7 dedicated support',
     'Premium vendor access network',
-    'Custom branding & white-labeling',
+    'Custom branding',
+    'white-labeling'
   ];
 
   return (
@@ -251,6 +252,11 @@ export default function PlansPage() {
                   <li key={i} className="feature-item">
                     <CheckCircleFilled className="check-icon pro-check" />
                     <span className={i >= 3 ? 'feature-emphasis' : ''}>{f}</span>
+                    {f === 'Custom branding' || f === 'white-labeling' ? (
+                      <span className="coming-soon-badge">Coming Soon</span>
+                    ) : (
+                      null
+                    )}
                   </li>
                 ))}
               </ul>
@@ -609,6 +615,7 @@ export default function PlansPage() {
         }
         .feature-emphasis {
           font-weight: 600;
+          white-space: nowrap;
         }
         .check-icon {
           font-size: 1rem;
@@ -617,6 +624,22 @@ export default function PlansPage() {
         }
         .basic-check { color: #10b981; }
         .pro-check   { color: rgb(67,56,202); }
+
+        .coming-soon-badge {
+          font-size: 0.6rem;
+          background: rgba(67, 56, 202, 0.1);
+          color: rgb(67, 56, 202);
+          padding: 2px 10px;
+          border-radius: 100px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          border: 1px solid rgba(67, 56, 202, 0.2);
+          display: inline-flex;
+          align-items: center;
+          align-self: center;
+          white-space: nowrap;
+        }
 
         /* Buttons */
         :global(.btn-basic-action) {
