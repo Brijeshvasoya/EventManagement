@@ -11,8 +11,8 @@ exports.sendTicketEmail = async (user, booking, event, pdfBuffer = null) => {
   try {
     const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000';
     const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const ticketUrl = `${BACKEND_URL}/api/tickets/download/${booking.id}`;
-    const verifyUrl = `${FRONTEND_URL}/v/${booking.id}`;
+    const ticketUrl = `${BACKEND_URL}/api/tickets/download/${booking.id || booking._id}`;
+    const verifyUrl = `${FRONTEND_URL}/v/${booking.id || booking._id}`;
 
 
 
@@ -45,7 +45,7 @@ Guest: ${user.name}
 Date: ${formattedDate}
 Location: ${event.location}
 Tier: ${booking.ticketType}
-Booking ID: #${booking.id.slice(-8).toUpperCase()}
+Booking ID: #${(booking.id || booking._id).toString().slice(-8).toUpperCase()}
 
 View your ticket: ${ticketUrl}
       `,
@@ -72,13 +72,13 @@ View your ticket: ${ticketUrl}
             <p><strong>Date:</strong> ${formattedDate}</p>
             <p><strong>Location:</strong> ${event.location}</p>
             <p><strong>Tier:</strong> ${booking.ticketType}</p>
-            <p><strong>Booking ID:</strong> #${booking.id.slice(-8).toUpperCase()}</p>
+            <p><strong>Booking ID:</strong> #${(booking.id || booking._id).toString().slice(-8).toUpperCase()}</p>
 
             <!-- QR Code Section -->
             <div style="text-align: center; margin-top: 30px; padding: 20px; border: 1px dashed #e2e8f0; border-radius: 12px;">
               <p style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; color: #1e1b4b;">Scan QR Code for Ticket Download</p>
-              <img src="${BACKEND_URL}/api/tickets/qr/${booking.id}" alt="Entry QR Code" style="width: 180px; height: 180px;" />
-              <p style="margin: 10px 0 0 0; font-size: 12px; color: #94a3b8; font-family: monospace;">#${booking.id.slice(-8).toUpperCase()}</p>
+              <img src="${BACKEND_URL}/api/tickets/qr/${booking.id || booking._id}" alt="Entry QR Code" style="width: 180px; height: 180px;" />
+              <p style="margin: 10px 0 0 0; font-size: 12px; color: #94a3b8; font-family: monospace;">#${(booking.id || booking._id).toString().slice(-8).toUpperCase()}</p>
             </div>
 
 
@@ -207,7 +207,7 @@ exports.sendCancellationEmail = async (user, booking, event, pdfBuffer = null) =
       from: FROM_EMAIL,
       to: recipient,
       subject: `Ticket Cancelled: ${event.title} ❌`,
-      text: `Hi ${user.name},\n\nYour ticket for "${event.title}" has been successfully cancelled.\n\nBooking ID: #${booking.id.slice(-8).toUpperCase()}\nEvent Date: ${formattedDate}\nLocation: ${event.location}\n\nWe hope to see you at another event soon!`,
+      text: `Hi ${user.name},\n\nYour ticket for "${event.title}" has been successfully cancelled.\n\nBooking ID: #${(booking.id || booking._id).toString().slice(-8).toUpperCase()}\nEvent Date: ${formattedDate}\nLocation: ${event.location}\n\nWe hope to see you at another event soon!`,
       html: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;">
           <div style="background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%); padding: 40px; color: white; text-align: center;">
@@ -221,7 +221,7 @@ exports.sendCancellationEmail = async (user, booking, event, pdfBuffer = null) =
               <h3 style="color: #1e1b4b; margin-top: 0;">${event.title}</h3>
               <p style="margin: 5px 0;"><strong>Date:</strong> ${formattedDate}</p>
               <p style="margin: 5px 0;"><strong>Location:</strong> ${event.location}</p>
-              <p style="margin: 5px 0;"><strong>Booking ID:</strong> #${booking.id.slice(-8).toUpperCase()}</p>
+              <p style="margin: 5px 0;"><strong>Booking ID:</strong> #${(booking.id || booking._id).toString().slice(-8).toUpperCase()}</p>
             </div>
             <p>Your refund slip has been attached to this email.</p>
             <p style="color: #64748b; font-size: 14px;">We hope to see you at another event soon! Any applicable refunds will be processed according to the event's policy.</p>
@@ -253,7 +253,7 @@ exports.sendCheckInFeedbackEmail = async (user, booking, event) => {
   const recipient = (process.env.RESEND_TEST_RECIPIENT || user.email).trim();
   const FROM_EMAIL = (process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev').trim();
   const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-  const feedbackUrl = `${FRONTEND_URL}/feedback/${booking.id}`;
+  const feedbackUrl = `${FRONTEND_URL}/feedback/${booking.id || booking._id}`;
 
   try {
     const emailOptions = {

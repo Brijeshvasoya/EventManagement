@@ -5,7 +5,7 @@ import { GET_EVENTS, GET_MY_BOOKINGS, GET_MY_VENDORS } from '@/features/events/g
 import { DELETE_EVENT, UPDATE_EVENT } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
-import { Tabs, Tag, Button, Modal, Spin, Empty, Popconfirm, Select, Tooltip, Form, Input, DatePicker, Upload } from 'antd';
+import { Tabs, Tag, Button, Modal, Spin, Empty, Popconfirm, Select, Tooltip, Form, Input, DatePicker, Upload, Segmented } from 'antd';
 import { CalendarOutlined, EnvironmentOutlined, CheckCircleOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, EyeOutlined, ArrowRightOutlined, UploadOutlined } from '@ant-design/icons';
 import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
@@ -38,6 +38,7 @@ export default function Browse() {
     const { user } = useAuth();
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('upcoming');
     const [previewImage, setPreviewImage] = useState('');
     const [editForm] = Form.useForm();
 
@@ -395,17 +396,32 @@ export default function Browse() {
                     <p style={{ margin: '0 auto', fontSize: '1.2rem', color: 'rgba(255,255,255,0.8)', maxWidth: '600px' }}>Find and join top-rated upcoming events curated exclusively for you.</p>
                 </div>
 
-                <Tabs
-                    defaultActiveKey="1"
-                    centered
-                    size="large"
-                    items={[
-                        { key: '1', label: '🔥 Upcoming', children: <EventGrid events={upcomingEvents} emptyMsg="No upcoming events found." /> },
-                        user?.role !== 'ORGANIZER' && { key: '2', label: '🎫 Participated', children: <EventGrid events={participatedEvents} emptyMsg="You haven't booked any events yet." /> },
-                        { key: '3', label: '✅ Completed', children: <EventGrid events={completedEvents} emptyMsg="No past events found." /> }
-                    ].filter(Boolean)}
-                    style={{ marginBottom: '4rem' }}
-                />
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '40px' }}>
+                    <Segmented
+                        size="large"
+                        value={activeTab}
+                        onChange={setActiveTab}
+                        options={[
+                            { label: '🔥 Upcoming', value: 'upcoming' },
+                            ...(user?.role !== 'ORGANIZER' ? [{ label: '🎫 Participated', value: 'participated' }] : []),
+                            { label: '✅ Completed', value: 'completed' }
+                        ]}
+                        style={{
+                            background: 'rgba(255, 255, 255, 0.8)',
+                            backdropFilter: 'blur(10px)',
+                            padding: '6px',
+                            borderRadius: '16px',
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+                            border: '1px solid rgba(67, 56, 202, 0.08)'
+                        }}
+                    />
+                </div>
+
+                <div style={{ marginBottom: '4rem' }}>
+                    {activeTab === 'upcoming' && <EventGrid events={upcomingEvents} emptyMsg="No upcoming events found." />}
+                    {activeTab === 'participated' && user?.role !== 'ORGANIZER' && <EventGrid events={participatedEvents} emptyMsg="You haven't booked any events yet." />}
+                    {activeTab === 'completed' && <EventGrid events={completedEvents} emptyMsg="No past events found." />}
+                </div>
 
                 {/* Modals removed, user is now redirected directly to events/[id].js */}
 
@@ -544,6 +560,34 @@ export default function Browse() {
                 }
                 .premium-select-compact :global(.ant-select-arrow) {
                     color: #6b6b80 !important;
+                }
+                
+                /* Segmented Premium Style */
+                .ant-segmented {
+                    background: rgba(255, 255, 255, 0.8) !important;
+                    padding: 4px !important;
+                    border-radius: 16px !important;
+                }
+                .ant-segmented-item-selected {
+                    background: linear-gradient(135deg, #312E81 0%, #4338CA 100%) !important;
+                    box-shadow: 0 4px 15px rgba(67, 56, 202, 0.3) !important;
+                    border-radius: 12px !important;
+                }
+                .ant-segmented-item-selected .ant-segmented-item-label {
+                    color: white !important;
+                    font-weight: 800 !important;
+                }
+                .ant-segmented-item {
+                    transition: all 0.3s ease !important;
+                    border-radius: 12px !important;
+                }
+                .ant-segmented-item-label {
+                    padding: 8px 32px !important;
+                    font-weight: 600 !important;
+                    color: #475569 !important;
+                }
+                .ant-segmented-item:hover:not(.ant-segmented-item-selected) {
+                    background: rgba(67, 56, 202, 0.05) !important;
                 }
             `}</style>
         </>

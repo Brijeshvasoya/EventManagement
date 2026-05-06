@@ -102,7 +102,7 @@ exports.generateTicketPDF = async (user, booking, event) => {
 
       // Row 3: Ticket ID & Type
       doc.fillColor(accent).font('Helvetica-Bold').fontSize(9).text('TICKET ID', leftX, currentY);
-      doc.fillColor(textMain).font('Helvetica').fontSize(11).text(`#${booking.id.slice(-8).toUpperCase()}`, leftX, currentY + 14);
+      doc.fillColor(textMain).font('Helvetica').fontSize(11).text(`#${(booking.id || booking._id).toString().slice(-8).toUpperCase()}`, leftX, currentY + 14);
 
       doc.fillColor(accent).font('Helvetica-Bold').fontSize(9).text('TIER / ACCESS', col2X, currentY);
       doc.fillColor(accent).font('Helvetica-Bold').fontSize(14).text(booking.ticketType || 'REGULAR', col2X, currentY + 14);
@@ -123,7 +123,7 @@ exports.generateTicketPDF = async (user, booking, event) => {
 
       // Generate QR Code
       const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-      const qrDataUrl = await QRCode.toDataURL(`${FRONTEND_URL}/v/${booking.id}`, {
+      const qrDataUrl = await QRCode.toDataURL(`${FRONTEND_URL}/v/${booking.id || booking._id}`, {
         margin: 1,
         width: 400,
         color: {
@@ -140,7 +140,7 @@ exports.generateTicketPDF = async (user, booking, event) => {
          .text('SCAN FOR GATE ENTRY', qrAreaX, startY + headerHeight + 175, { width: qrSectionWidth, align: 'center' });
 
       doc.fillColor(textMuted).font('Helvetica').fontSize(6)
-         .text(booking.id, qrAreaX + 10, startY + ticketHeight - 20, { width: qrSectionWidth - 20, align: 'center' });
+         .text((booking.id || booking._id).toString(), qrAreaX + 10, startY + ticketHeight - 20, { width: qrSectionWidth - 20, align: 'center' });
 
       // --- FOOTER ---
       doc.fillColor('#94a3b8')
@@ -231,7 +231,7 @@ exports.generateRefundSlipPDF = async (user, booking, event) => {
       // ── META ROW (Date + Slip Number + Status Badge) ────────────
       const metaY = headerH + 5 + 28;
       const issueDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-      const refNumber = `REF-${booking.id.slice(-8).toUpperCase()}`;
+      const refNumber = `REF-${(booking.id || booking._id).toString().slice(-8).toUpperCase()}`;
 
       doc.fillColor(textMuted)
          .font('Helvetica')
@@ -290,7 +290,7 @@ exports.generateRefundSlipPDF = async (user, booking, event) => {
       doc.fillColor(textMuted)
          .font('Helvetica')
          .fontSize(9)
-         .text(`Booking ID: #${booking.id.slice(-8).toUpperCase()}`, card2X + 16, cardTop + 32)
+         .text(`Booking ID: #${(booking.id || booking._id).toString().slice(-8).toUpperCase()}`, card2X + 16, cardTop + 32)
          .text(`Event: ${event.title}`, card2X + 16, cardTop + 48, { width: cardW - 32, ellipsis: true })
          .text(`Date: ${fDate}  |  Tier: ${booking.ticketType || 'REGULAR'}`, card2X + 16, cardTop + 63);
 
