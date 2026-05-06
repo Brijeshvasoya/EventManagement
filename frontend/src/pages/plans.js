@@ -445,18 +445,14 @@ export default function PlansPage() {
         }
         .plan-card:hover {
           transform: translateY(-8px);
-          box-shadow: var(--shadow-hover);
+          // box-shadow: var(--shadow-hover);
           border-color: rgba(67,56,202,0.18);
         }
 
         /* Pro card highlight */
         .plan-card-pro {
           border-color: rgba(67,56,202,0.25);
-          box-shadow: var(--shadow-glow);
-        }
-        .plan-card-pro:hover {
-          box-shadow: 0 20px 40px rgba(67,56,202,0.22);
-          border-color: rgba(67,56,202,0.4);
+          // box-shadow: var(--shadow-glow);
         }
         .plan-card-pro::after {
           content: '';
