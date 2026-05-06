@@ -171,7 +171,10 @@ export default function PlansPage() {
           {isActivePlan && currentPlanId === 'PRO' && !scheduledPlanId && (
             <div className="status-banner status-banner-info">
               <span className="status-banner-icon-small">👑</span>
-              <span>You are on the <strong>Pro Plan</strong>. Switch to Basic anytime — it activates at the end of your current cycle.</span>
+              <span>
+                You’re currently on the <strong>Pro Plan</strong>. If you switch to the Basic Plan, the change will take effect at the end of your current billing cycle
+                {billing?.planExpiresAt ? ` on ${new Date(billing.planExpiresAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}` : ''}.
+              </span>
             </div>
           )}
 
