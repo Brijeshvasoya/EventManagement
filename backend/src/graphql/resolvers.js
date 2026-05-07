@@ -26,10 +26,13 @@ const resolvers = {
     },
     events: (_, args) => eventService.getEvents(args),
     event: (_, { id }) => eventService.getEventById(id),
-    myEvents: async (_, __, { user }) => {
+    myEvents: async (_, { limit = 1000, offset = 0 }, { user }) => {
       if (!user) throw new GraphQLError('Unauthorized');
       const Event = require('../models/Event');
-      return await Event.find({ organizer: user.id }).sort({ date: -1 });
+      return await Event.find({ organizer: user.id })
+        .sort({ date: -1 })
+        .skip(offset)
+        .limit(limit);
     },
     myBookings: (_, __, { user }) => bookingService.getMyBookings(user),
     booking: async (_, { id }, { user }) => {

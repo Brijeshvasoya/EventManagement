@@ -28,7 +28,7 @@ const typeDefs = `#graphql
     me: User
     events(limit: Int, offset: Int): [Event!]!
     event(id: ID!): Event
-    myEvents: [Event!]!
+    myEvents(limit: Int, offset: Int): [Event!]!
     myBookings: [Booking!]!
     booking(id: ID!): Booking!
     vendors: [Vendor!]!

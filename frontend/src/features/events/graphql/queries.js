@@ -76,8 +76,8 @@ export const GET_MY_VENDORS = gql`
 `;
 
 export const GET_MY_EVENTS = gql`
-  query GetMyEvents {
-    myEvents {
+  query GetMyEvents($limit: Int, $offset: Int) {
+    myEvents(limit: $limit, offset: $offset) {
       id title date location capacity imageUrl description eventType status bookedCount checkedInCount
       ticketTypes { name price capacity }
       attendees { 
