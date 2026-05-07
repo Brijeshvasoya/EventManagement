@@ -10,5 +10,6 @@ module.exports = {
   EVENTS: {
     NOTIFICATION_ADDED,
     TICKET_UPDATED,
+    CHECK_IN_UPDATED: 'CHECK_IN_UPDATED'
   },
 };

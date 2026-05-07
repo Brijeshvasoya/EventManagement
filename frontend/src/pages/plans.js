@@ -162,11 +162,32 @@ export default function PlansPage() {
           )}
 
           {/* Header */}
-          <div className="plans-header">
-            <h1 className="plans-title">Choose Your Plan</h1>
-            <p className="plans-subtitle">
-              Unlock powerful tools to create and manage unforgettable events.
-            </p>
+          <div className="header-responsive" style={{
+            background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)',
+            borderRadius: '24px',
+            color: 'white',
+            marginBottom: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '32px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+              <div style={{
+                width: '64px', height: '64px',
+                background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
+                borderRadius: '18px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '28px',
+                border: '1.5px solid rgba(255,255,255,0.2)',
+                boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+              }}>
+                💎
+              </div>
+              <div>
+                <h1 style={{ margin: 0, fontWeight: 900, color: 'white', fontSize: '2.2rem', letterSpacing: '-0.8px' }}>Choose Your Plan</h1>
+                <p style={{ margin: '4px 0 0 0', color: 'rgba(255,255,255,0.7)', fontSize: '1.1rem' }}>Unlock powerful tools to create and manage unforgettable events.</p>
+              </div>
+            </div>
           </div>
           {/* Active Pro plan — locked notice (no upgrade needed) */}
           {isActivePlan && currentPlanId === 'PRO' && !scheduledPlanId && (
@@ -305,7 +326,7 @@ export default function PlansPage() {
           position: relative;
           z-index: 1;
           width: 100%;
-          max-width: 960px;
+          max-width: 1200px;
         }
 
         .confirm-box {
@@ -386,43 +407,6 @@ export default function PlansPage() {
         :global(.btn-inline-action) {
           border-radius: var(--radius-sm) !important;
           font-weight: 700 !important;
-        }
-
-        /* Header */
-        .plans-header {
-          text-align: center;
-          margin-bottom: 24px;
-        }
-        .plans-eyebrow {
-          display: inline-flex;
-          align-items: center;
-          background: rgba(67,56,202,0.08);
-          color: rgb(67,56,202);
-          font-size: 0.82rem;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          padding: 6px 16px;
-          border-radius: 20px;
-          border: 1px solid rgba(67,56,202,0.15);
-          margin-bottom: 20px;
-        }
-        .plans-title {
-          font-size: 3rem;
-          font-weight: 900;
-          color: var(--text-primary);
-          margin: 0 0 14px;
-          letter-spacing: -1px;
-          background: var(--gradient-main);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-        .plans-subtitle {
-          font-size: 1.15rem;
-          color: var(--text-secondary);
-          margin: 0 auto;
-          line-height: 1.65;
         }
 
         /* Grid */

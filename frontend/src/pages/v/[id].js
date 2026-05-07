@@ -19,6 +19,7 @@ export default function AutoVerify() {
 
   const [checkInCount, setCheckInCount] = useState(1);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [justVerified, setJustVerified] = useState(false);
 
   const { data, loading: queryLoading, error: queryError, refetch } = useQuery(GET_BOOKING, {
     variables: { id },
@@ -29,6 +30,7 @@ export default function AutoVerify() {
   const [verifyTicket] = useMutation(VERIFY_TICKET, {
     onCompleted: (data) => {
       setIsVerifying(false);
+      setJustVerified(true);
       toast.success(`Successfully checked in ${checkInCount} ticket(s)!`);
       refetch();
     },
@@ -60,8 +62,8 @@ export default function AutoVerify() {
     if (authLoading || (queryLoading && !booking)) {
       return (
         <div style={{ textAlign: 'center', padding: '100px 0' }}>
-          <Spin indicator={<LoadingOutlined style={{ fontSize: 64, color: '#6366f1' }} spin />} />
-          <Title level={3} style={{ color: 'white', marginTop: '30px' }}>Loading Ticket Details...</Title>
+          <Spin indicator={<LoadingOutlined style={{ fontSize: 64, color: '#4338CA' }} spin />} />
+          <Title level={3} style={{ color: '#1B2A4E', marginTop: '30px', fontWeight: 800 }}>Loading Ticket Details...</Title>
         </div>
       );
     }
@@ -69,9 +71,9 @@ export default function AutoVerify() {
     if (!user) {
       return (
         <Result
-          icon={<LoginOutlined style={{ color: '#6366f1' }} />}
-          title={<span style={{ color: 'white', fontSize: '2rem', fontWeight: '800' }}>Organizer Login Required</span>}
-          subTitle={<div style={{ color: '#94a3b8', fontSize: '1.1rem', marginTop: '10px' }}>Please sign in to your organizer account to verify this ticket.</div>}
+          icon={<LoginOutlined style={{ color: '#4338CA' }} />}
+          title={<span style={{ color: '#1B2A4E', fontSize: '2rem', fontWeight: '900' }}>Organizer Login Required</span>}
+          subTitle={<div style={{ color: '#64748B', fontSize: '1.1rem', marginTop: '10px', fontWeight: 500 }}>Please sign in to your organizer account to verify this ticket.</div>}
           extra={[
             <Button
               type="primary"
@@ -91,8 +93,8 @@ export default function AutoVerify() {
       return (
         <Result
           status="error"
-          title={<span style={{ color: 'white', fontSize: '2rem', fontWeight: '800' }}>ACCESS DENIED</span>}
-          subTitle={<div style={{ color: '#f87171', fontSize: '1.2rem', marginTop: '10px' }}>Only organizers can verify tickets.</div>}
+          title={<span style={{ color: '#1B2A4E', fontSize: '2rem', fontWeight: '900' }}>ACCESS DENIED</span>}
+          subTitle={<div style={{ color: '#EF4444', fontSize: '1.2rem', marginTop: '10px', fontWeight: 600 }}>Only organizers can verify tickets.</div>}
           extra={[
             <Button
               type="primary"
@@ -112,8 +114,8 @@ export default function AutoVerify() {
       return (
         <Result
           status="error"
-          title={<span style={{ color: 'white', fontSize: '2rem', fontWeight: '800' }}>INVALID TICKET</span>}
-          subTitle={<div style={{ color: '#f87171', fontSize: '1.2rem', marginTop: '10px' }}>{queryError.message}</div>}
+          title={<span style={{ color: '#1B2A4E', fontSize: '2rem', fontWeight: '900' }}>INVALID TICKET</span>}
+          subTitle={<div style={{ color: '#EF4444', fontSize: '1.2rem', marginTop: '10px', fontWeight: 600 }}>{queryError.message}</div>}
           extra={[
             <Button
               type="primary"
@@ -132,25 +134,32 @@ export default function AutoVerify() {
     if (!booking) return null;
 
     if (remaining === 0) {
+      const isDuplicateScan = !justVerified && booking.checkedInCount > 0;
+      
       return (
         <Result
-          status="success"
-          title={<span style={{ color: 'white', fontSize: '2rem', fontWeight: '800' }}>FULLY CHECKED IN</span>}
+          status={isDuplicateScan ? "warning" : "success"}
+          title={<span style={{ color: '#1B2A4E', fontSize: '1.5rem', fontWeight: '900' }}>{isDuplicateScan ? "ALREADY CHECKED IN" : "FULLY CHECKED IN ✨"}</span>}
           subTitle={
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', marginTop: '20px' }}>
-              <div style={{ color: '#94a3b8', fontSize: '1.1rem' }}>All tickets for this booking have been scanned:</div>
-              <div style={{ color: 'white', fontSize: '1.5rem', fontWeight: '700' }}>{booking.user.name}</div>
-              <div style={{ color: '#6366f1', fontSize: '1.2rem' }}>{booking.event.title}</div>
-              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '16px', borderRadius: '16px', marginTop: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', marginTop: '8px' }}>
+              <div style={{ color: '#64748B', fontSize: '0.95rem', fontWeight: 500 }}>
+                {isDuplicateScan 
+                  ? "This ticket has already been used."
+                  : "All tickets scanned successfully:"}
+              </div>
+              <div style={{ color: '#1B2A4E', fontSize: '1.4rem', fontWeight: '900', lineHeight: 1.2 }}>{booking.user.name}</div>
+              <div style={{ color: '#4338CA', fontSize: '1.1rem', fontWeight: 700 }}>{booking.event.title}</div>
+              <div style={{ background: isDuplicateScan ? '#FFFBEB' : '#ECFDF5', padding: '16px', borderRadius: '20px', marginTop: '12px', border: isDuplicateScan ? '1px solid #FEF3C7' : '1px solid #D1FAE5' }}>
                 <Statistic
-                  title={<span style={{ color: '#10b981' }}>Total Tickets</span>}
+                  title={<span style={{ color: isDuplicateScan ? '#92400E' : '#065F46', fontWeight: 700, fontSize: '0.8rem' }}>{isDuplicateScan ? 'PREVIOUS RECORD' : 'TOTAL VERIFIED'}</span>}
                   value={booking.quantity}
-                  prefix={<CheckCircleOutlined />}
-                  styles={{ content: { color: 'white', fontWeight: 800 } }}
+                  prefix={isDuplicateScan ? <CloseCircleOutlined style={{ color: '#D97706', fontSize: '1.2rem' }} /> : <CheckCircleOutlined style={{ color: '#059669', fontSize: '1.2rem' }} />}
+                  styles={{ content: { color: isDuplicateScan ? '#92400E' : '#065F46', fontWeight: 900, fontSize: '1.8rem' } }}
                 />
               </div>
             </div>
           }
+          style={{ padding: '24px 0' }}
           extra={[
             <Button
               key="scan"
@@ -158,16 +167,22 @@ export default function AutoVerify() {
               size="large"
               icon={<DashboardOutlined />}
               onClick={() => router.push('/verify')}
-              style={{ height: '56px', borderRadius: '14px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', minWidth: '200px', border: 'none' }}
+              style={{ 
+                height: '48px', 
+                borderRadius: '12px', 
+                background: isDuplicateScan ? '#F59E0B' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
+                minWidth: '180px', 
+                border: 'none',
+                fontWeight: 700
+              }}
             >
-              Scan Next Ticket
+              Scan Next
             </Button>,
             <Button
               key="dash"
               size="large"
-              icon={<LoginOutlined />}
               onClick={() => router.push('/dashboard')}
-              style={{ height: '56px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', minWidth: '150px' }}
+              style={{ height: '48px', borderRadius: '12px', background: '#F1F5F9', color: '#475569', border: 'none', minWidth: '120px', fontWeight: 700 }}
             >
               Dashboard
             </Button>
@@ -178,69 +193,72 @@ export default function AutoVerify() {
 
     return (
       <div className="gate-entry-container" style={{ padding: '0px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <Tag color="#6366f1" style={{ borderRadius: '100px', padding: '2px 12px', fontSize: '0.8rem', marginBottom: '12px' }}>GATE ENTRY</Tag>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <Tag color="#4338CA" style={{ borderRadius: '100px', padding: '2px 16px', fontSize: '0.75rem', fontWeight: 800, marginBottom: '16px', border: 'none', background: '#EEF2FF', color: '#4338CA' }}>GATE ENTRY</Tag>
           <Title level={2} style={{
-            color: 'white',
-            margin: '0 0 8px 0',
-            fontWeight: 800,
-            fontSize: 'clamp(1.2rem, 5vw, 1.75rem)',
-            lineHeight: 1.2
+            color: '#1B2A4E',
+            margin: '0 0 12px 0',
+            fontWeight: 900,
+            fontSize: '2rem',
+            letterSpacing: '-0.8px'
           }}>{booking.event.title}</Title>
-          <div style={{ color: '#94a3b8', fontSize: '1rem' }}>
-            Ticket Holder: <span style={{ color: 'white', fontWeight: 700 }}>{booking.user?.name}</span>
+          <div style={{ color: '#64748B', fontSize: '1.1rem', fontWeight: 500 }}>
+            Ticket Holder: <span style={{ color: '#1B2A4E', fontWeight: 800 }}>{booking.user?.name}</span>
           </div>
         </div>
 
-        <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+        <Row gutter={[16, 16]} style={{ marginBottom: '32px' }}>
           <Col xs={12} sm={12}>
-            <Card style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '16px', textAlign: 'center' }} styles={{ body: { padding: '16px 8px' } }}>
+            <Card style={{ background: '#F8FAFC', border: '1px solid #F1F5F9', borderRadius: '20px', textAlign: 'center' }} styles={{ body: { padding: '16px 8px' } }}>
               <Statistic
-                title={<span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Total</span>}
+                title={<span style={{ color: '#64748B', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total</span>}
                 value={booking.quantity}
-                prefix={<TeamOutlined style={{ color: '#6366f1' }} />}
-                styles={{ content: { color: 'white', fontSize: '1.4rem', fontWeight: 700 } }}
+                prefix={<TeamOutlined style={{ color: '#4338CA', fontSize: '1.2rem' }} />}
+                styles={{ content: { color: '#1B2A4E', fontSize: '1.4rem', fontWeight: 900 } }}
               />
             </Card>
           </Col>
           <Col xs={12} sm={12}>
-            <Card style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '16px', textAlign: 'center' }} styles={{ body: { padding: '16px 8px' } }}>
+            <Card style={{ background: '#FFF7ED', border: '1px solid #FFEDD5', borderRadius: '20px', textAlign: 'center' }} styles={{ body: { padding: '16px 8px' } }}>
               <Statistic
-                title={<span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Remaining</span>}
+                title={<span style={{ color: '#9A3412', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Left</span>}
                 value={remaining - (checkInCount || 0)}
-                prefix={<UserOutlined style={{ color: '#f59e0b' }} />}
-                styles={{ content: { color: 'white', fontSize: '1.4rem', fontWeight: 700 } }}
+                prefix={<UserOutlined style={{ color: '#EA580C', fontSize: '1.2rem' }} />}
+                styles={{ content: { color: '#9A3412', fontSize: '1.4rem', fontWeight: 900 } }}
               />
             </Card>
           </Col>
         </Row>
 
-        <Divider style={{ borderColor: 'rgba(255,255,255,0.1)', margin: '16px 0' }} />
+        <Divider style={{ borderColor: '#F1F5F9', margin: '24px 0' }} />
 
         <div style={{ textAlign: 'center' }}>
-          <Text style={{ color: '#94a3b8', display: 'block', marginBottom: '12px', fontSize: '1rem' }}>
-            Check-in count:
+          <Text style={{ color: '#64748B', display: 'block', marginBottom: '16px', fontSize: '1rem', fontWeight: 600 }}>
+            Select Check-in count:
           </Text>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', alignItems: 'center', marginBottom: '24px' }}>
             <Button
               size="large"
               shape="circle"
               onClick={() => setCheckInCount(Math.max(1, checkInCount - 1))}
-              style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', width: '40px', height: '40px' }}
+              style={{ background: '#F1F5F9', color: '#1B2A4E', border: 'none', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 800 }}
             >-</Button>
             <InputNumber
               min={1}
               max={remaining}
               value={checkInCount}
               onChange={setCheckInCount}
+              className="premium-input-number"
               style={{
-                width: '70px',
-                height: '44px',
+                width: 'clamp(70px, 20vw, 90px)',
+                height: '48px',
                 borderRadius: '12px',
-                background: 'rgba(255,255,255,0.1)',
-                color: 'white',
+                background: '#F8FAFC',
+                border: '2px solid #EEF2FF',
                 fontSize: '1.2rem',
-                textAlign: 'center'
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
               controls={false}
             />
@@ -248,7 +266,7 @@ export default function AutoVerify() {
               size="large"
               shape="circle"
               onClick={() => setCheckInCount(Math.min(remaining, checkInCount + 1))}
-              style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', width: '40px', height: '40px' }}
+              style={{ background: '#F1F5F9', color: '#1B2A4E', border: 'none', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 800 }}
             >+</Button>
           </div>
 
@@ -264,11 +282,11 @@ export default function AutoVerify() {
               style={{
                 height: '56px',
                 borderRadius: '16px',
-                background: 'linear-gradient(135deg, #4338ca 0%, #6366f1 100%)',
+                background: 'linear-gradient(135deg, #4338CA 0%, #6366F1 100%)',
                 border: 'none',
                 fontSize: '1.1rem',
-                fontWeight: 600,
-                boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)'
+                fontWeight: 800,
+                boxShadow: '0 8px 16px rgba(67, 56, 202, 0.15)'
               }}
             >
               CONFIRM ENTRY
@@ -282,10 +300,11 @@ export default function AutoVerify() {
               style={{
                 height: '56px',
                 borderRadius: '16px',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: 'white',
-                fontSize: '1rem'
+                background: 'white',
+                border: '1px solid #E2E8F0',
+                color: '#475569',
+                fontSize: '1rem',
+                fontWeight: 700
               }}
             >
               SCAN NEXT TICKET
@@ -295,7 +314,7 @@ export default function AutoVerify() {
           <Button
             type="link"
             onClick={() => router.push('/dashboard')}
-            style={{ color: '#94a3b8', marginTop: '12px', fontSize: '0.9rem', width: '100%' }}
+            style={{ color: '#94A3B8', marginTop: '24px', fontSize: '1rem', fontWeight: 600 }}
           >
             Cancel and Return
           </Button>
@@ -305,22 +324,24 @@ export default function AutoVerify() {
   };
 
   return (
-    <Layout style={{ background: '#0f172a', position: 'relative', overflow: 'hidden' }}>
+    <Layout style={{ background: '#F8FAFC', position: 'relative', overflow: 'hidden' }}>
       <Head><title>Gate Entry Verification | EventHub</title></Head>
 
-      {/* CSS to ensure mobile responsiveness works perfectly */}
       <style jsx global>{`
         @media (max-width: 767px) {
           .hidden-mobile {
             display: none !important;
           }
         }
+        .premium-input-number .ant-input-number-input {
+          text-align: center !important;
+          font-weight: 800 !important;
+          color: #1B2A4E !important;
+        }
       `}</style>
 
-      {/* Premium Background Effects Removed */}
-
       <Content style={{
-        padding: '16px',
+        padding: '24px 16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -329,44 +350,46 @@ export default function AutoVerify() {
       }}>
         <div style={{ width: '100%', maxWidth: '900px' }}>
           <Card style={{
-            borderRadius: '24px',
-            background: 'rgba(30, 41, 59, 0.5)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            backdropFilter: 'blur(24px)',
+            borderRadius: '32px',
+            background: 'white',
+            border: '1px solid rgba(67, 56, 202, 0.08)',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.05)',
             overflow: 'hidden'
           }} styles={{ body: { padding: 0 } }}>
             <Row>
               {/* Left Side: Event Context (Hidden on Mobile) */}
               <Col xs={0} md={10} className="hidden-mobile" style={{
-                background: 'rgba(99, 102, 241, 0.05)',
-                borderRight: '1px solid rgba(255,255,255,0.05)',
-                padding: '40px',
+                background: '#F5F7FF',
+                borderRight: '1px solid #EEF2FF',
+                padding: '48px 40px',
                 display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center'
+                flexDirection: 'column'
               }}>
-                <Tag color="#6366f1" style={{ width: 'fit-content', borderRadius: '100px', padding: '4px 16px', marginBottom: '24px' }}>EVENT INFO</Tag>
-                <Title level={2} style={{ color: 'white', marginBottom: '16px', fontWeight: 800 }}>{booking?.event.title}</Title>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <Tag color="indigo" style={{ width: 'fit-content', borderRadius: '100px', padding: '4px 16px', marginBottom: '24px', fontWeight: 700 }}>EVENT INFO</Tag>
+                <Title level={2} style={{ color: '#1B2A4E', marginBottom: '24px', fontWeight: 900, fontSize: '1.8rem', letterSpacing: '-0.5px' }}>{booking?.event.title}</Title>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                   <div>
-                    <Text style={{ color: '#94a3b8', display: 'block' }}>Location</Text>
-                    <Text style={{ color: 'white', fontSize: '1.1rem' }}>{booking?.event.location}</Text>
+                    <Text style={{ color: '#64748B', display: 'block', textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '1px', marginBottom: '4px' }}>Location</Text>
+                    <Text style={{ color: '#1E293B', fontSize: '1.1rem', fontWeight: 600 }}>{booking?.event.location}</Text>
                   </div>
                   <div>
-                    <Text style={{ color: '#94a3b8', display: 'block' }}>Ticket Type</Text>
-                    <Tag color="blue" style={{ marginTop: '4px' }}>{booking?.ticketType}</Tag>
+                    <Text style={{ color: '#64748B', display: 'block', textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '1px', marginBottom: '8px' }}>Ticket Type</Text>
+                    <Tag color="blue" style={{ borderRadius: '8px', padding: '4px 12px', fontWeight: 700 }}>{booking?.ticketType}</Tag>
                   </div>
-                  <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-                  <div style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
-                    <CheckCircleOutlined style={{ marginRight: '8px', color: '#10b981' }} />
-                    Securely verified by EventHub Gatekeeper
+
+                  <div style={{ marginTop: 'auto', paddingTop: '32px', borderTop: '1px solid #E2E8F0' }}>
+                    <div style={{ color: '#059669', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <CheckCircleOutlined style={{ fontSize: '1.2rem' }} />
+                      Verified by EventHub
+                    </div>
                   </div>
                 </div>
               </Col>
 
               {/* Right Side: Check-in Actions */}
               <Col xs={24} md={14} style={{ padding: '0px' }}>
-                <div style={{ padding: '24px 16px' }}>
+                <div style={{ padding: '40px 32px' }}>
                   {renderContent()}
                 </div>
               </Col>

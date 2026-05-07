@@ -1,10 +1,10 @@
 import { useContext, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { GlobalActionsContext } from '../components/GlobalActions';
-import { useQuery, useMutation } from '@apollo/client/react';
+import { useQuery, useMutation, useSubscription } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 import { motion } from 'framer-motion';
-import { GET_MY_BOOKINGS, GET_MY_ANALYTICS, GET_MY_EVENTS, GET_EVENTS, GET_MY_PROMO_CODES } from '@/features/events/graphql/queries';
+import { GET_MY_BOOKINGS, GET_MY_ANALYTICS, GET_MY_EVENTS, GET_EVENTS, GET_MY_PROMO_CODES, CHECK_IN_SUBSCRIPTION } from '@/features/events/graphql/queries';
 import { CANCEL_BOOKING, REDEEM_REWARD } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
@@ -72,12 +72,23 @@ export default function Dashboard() {
     fetchPolicy: 'cache-and-network'
   });
 
-  const { data: analyticsData } = useQuery(GET_MY_ANALYTICS, {
-    skip: !user || user.role === 'USER' || isSuperAdmin, fetchPolicy: 'cache-and-network'
+  const { data: myEventsData, loading: eventsLoading, refetch: refetchMyEvents } = useQuery(GET_MY_EVENTS, {
+    skip: !isOrganizer, fetchPolicy: 'cache-and-network'
   });
 
-  const { data: myEventsData, loading: eventsLoading } = useQuery(GET_MY_EVENTS, {
-    skip: !isOrganizer, fetchPolicy: 'cache-and-network'
+  // Real-time Dashboard Updates
+  useSubscription(CHECK_IN_SUBSCRIPTION, {
+    variables: { eventId: "" }, // We can use a dummy or a specific logic, but better to refetch all on any check-in for organizer
+    skip: !isOrganizer,
+    onData: () => {
+      refetchAnalytics();
+      refetchMyEvents();
+      toast.success('Live Update: Someone just checked in! ⚡', { icon: '🎫', duration: 2000 });
+    }
+  });
+
+  const { data: analyticsData, refetch: refetchAnalytics } = useQuery(GET_MY_ANALYTICS, {
+    skip: !user || user.role === 'USER' || isSuperAdmin, fetchPolicy: 'cache-and-network'
   });
 
   const { data: allEventsData } = useQuery(GET_EVENTS, {
@@ -324,7 +335,7 @@ export default function Dashboard() {
         initial="initial"
         animate="animate"
         variants={staggerContainer}
-        style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
+        style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: '32px' }}
       >
         {/* Digital Ticket Modal */}
         <DigitalTicketModal
@@ -442,16 +453,12 @@ export default function Dashboard() {
 
 
         {/* EVENTHUB HEADER */}
-        <motion.div
-          variants={fadeInUp}
-          className="header-responsive"
-          style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-        >
+        <div className="header-responsive" style={{ background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)', borderRadius: '24px', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)', color: 'white' }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: '2.2rem', fontWeight: 800, color: '#1B2A4E', letterSpacing: '-0.5px' }}>Dashboard</h1>
-            <p style={{ color: '#6B7280', margin: '4px 0 0 0', fontSize: '1rem' }}>Hello {user?.name}, welcome back!</p>
+            <h2 style={{ margin: '0 0 8px 0', fontWeight: 900, fontSize: '2.5rem', letterSpacing: '-0.5px' }}>Dashboard</h2>
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.7)', fontSize: '1.1rem' }}>Hello {user?.name}, welcome back!</p>
           </div>
-        </motion.div>
+        </div>
 
         {isOrganizer ? (() => {
           const upcomingEvents = (myEventsData?.myEvents?.filter(e => new Date(isNaN(Number(e.date)) ? e.date : Number(e.date)) >= now) || [])
@@ -486,21 +493,44 @@ export default function Dashboard() {
                 {/* TOP KPI CARDS ROW */}
                 <motion.div
                   variants={staggerContainer}
-                  className="grid-cols-auto-320"
-                  style={{ gap: '24px' }}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '24px'
+                  }}
                 >
                   {[
                     { label: 'Upcoming Events', val: upcomingEvents.length, icon: '📅', color: 'rgb(67, 56, 202)', bg: 'rgba(67, 56, 202, 0.1)' },
-                    { label: 'Total Bookings', val: analyticsData?.myAnalytics?.confirmedBookingsCount || 0, icon: '☑️', color: 'rgb(67, 56, 202)', bg: 'rgba(67, 56, 202, 0.1)' },
+                    {
+                      label: 'Total Checked In',
+                      val: analyticsData?.myAnalytics?.totalCheckedIn || 0,
+                      suffix: `/ ${ticketsSold}`,
+                      icon: '⚡',
+                      color: '#10B981',
+                      bg: 'rgba(16, 185, 129, 0.1)',
+                      extra: (
+                        <Progress
+                          percent={Math.round(((analyticsData?.myAnalytics?.totalCheckedIn || 0) / (ticketsSold || 1)) * 100)}
+                          size="small"
+                          showInfo={false}
+                          strokeColor="#10B981"
+                          style={{ marginTop: '8px', width: '100%' }}
+                        />
+                      )
+                    },
                     { label: 'Tickets Sold', val: ticketsSold, icon: '🎟️', color: 'rgb(67, 56, 202)', bg: 'rgba(67, 56, 202, 0.1)' },
                     { label: 'Global Rating', val: user?.averageRating?.toFixed(1) || '0.0', icon: '⭐', color: '#FBBF24', bg: 'rgba(251, 191, 36, 0.1)' }
                   ].map((kpi, i) => (
                     <motion.div key={i} variants={fadeInUp} whileHover={hoverScale.whileHover}>
                       <Card styles={{ body: { padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' } }} style={{ borderRadius: '20px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', height: '100%' }}>
                         <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: kpi.bg, color: kpi.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>{kpi.icon}</div>
-                        <div>
+                        <div style={{ flex: 1 }}>
                           <div style={{ color: '#6B7280', fontSize: '0.9rem', fontWeight: 600, marginBottom: '4px' }}>{kpi.label}</div>
-                          <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{kpi.val}</div>
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                            <div style={{ color: '#1B2A4E', fontSize: '1.8rem', fontWeight: 800, lineHeight: 1 }}>{kpi.val}</div>
+                            {kpi.suffix && <div style={{ color: '#9CA3AF', fontSize: '1rem', fontWeight: 600 }}>{kpi.suffix}</div>}
+                          </div>
+                          {kpi.extra}
                         </div>
                       </Card>
                     </motion.div>

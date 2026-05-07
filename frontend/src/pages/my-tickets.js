@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { GET_MY_BOOKINGS } from '@/features/events/graphql/queries';
 import { CANCEL_BOOKING } from '@/features/events/graphql/mutations';
@@ -22,8 +23,19 @@ export default function MyTickets() {
 
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const [cancelBooking] = useMutation(CANCEL_BOOKING);
+
+  const bookings = useMemo(() =>
+    (data?.myBookings || []).filter(b => b?.status === 'CONFIRMED' || b?.status === 'PENDING' || b?.status === 'CHECKED_IN'),
+    [data]
+  );
+
+  const stats = useMemo(() => ({
+    confirmed: bookings.filter(b => b.status === 'CONFIRMED').length,
+    pending: bookings.filter(b => b.status === 'PENDING').length,
+    checkedIn: bookings.filter(b => b.status === 'CHECKED_IN').length,
+    total: bookings.length
+  }), [bookings]);
 
   const handleCancel = async (id) => {
     try {
@@ -56,8 +68,6 @@ export default function MyTickets() {
       </div>
     );
   }
-
-  const bookings = (data?.myBookings || []).filter(b => b?.status === 'CONFIRMED' || b?.status === 'PENDING' || b?.status === 'CHECKED_IN');
 
   const handleViewTicket = (booking) => {
     setSelectedBooking(booking);
@@ -114,7 +124,7 @@ export default function MyTickets() {
       key: 'status',
       render: (status) => (
         <Tag color={status === 'CONFIRMED' ? 'green' : status === 'PENDING' ? 'orange' : 'red'} style={{ borderRadius: '100px', padding: '2px 12px' }}>
-          {status === 'PENDING' ? 'PAYMENT PENDING' : status}
+          {status === 'PENDING' ? 'PAYMENT PENDING' : status?.replaceAll('_', ' ')}
         </Tag>
       )
     },
@@ -123,44 +133,68 @@ export default function MyTickets() {
       key: 'action',
       align: 'center',
       render: (_, record) => (
-        <Space>
-          {record.status === 'PENDING' ? (
-            <Button
-              type="primary"
-              onClick={() => record.paymentUrl && (window.location.href = record.paymentUrl)}
-              style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', border: 'none', borderRadius: '8px', fontWeight: 600 }}
-            >
-              Pay Now
-            </Button>
-          ) : (
-            <Button
-              type="primary"
-              shape="circle"
-              icon={<EyeOutlined />}
-              onClick={() => handleViewTicket(record)}
-              style={{ background: 'var(--primary-color)', boxShadow: '0 4px 10px rgba(79, 70, 229, 0.2)' }}
-              title="View Ticket"
-            />
-          )}
-          {record.status !== 'CANCELLED' && (
-            <Popconfirm
-              title="Cancel Ticket"
-              description="Sure you want to cancel?"
-              onConfirm={() => handleCancel(record.id)}
-              okText="Yes"
-              cancelText="No"
-              okButtonProps={{ danger: true }}
-            >
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', minWidth: '100px' }}>
+          {/* View Button Slot */}
+          <div style={{ width: '40px', display: 'flex', justifyContent: 'center' }}>
+            {record.status === 'PENDING' ? (
               <Button
-                danger
+                type="primary"
+                onClick={() => record.paymentUrl && (window.location.href = record.paymentUrl)}
+                style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', border: 'none', borderRadius: '8px', fontWeight: 600, width: '80px', position: 'relative', left: '-20px' }}
+              >
+                Pay
+              </Button>
+            ) : (
+              <Button
+                type="primary"
                 shape="circle"
-                icon={<DeleteOutlined />}
-                style={{ boxShadow: '0 4px 10px rgba(255, 77, 79, 0.2)' }}
-                title="Cancel Ticket"
+                icon={<EyeOutlined />}
+                onClick={() => handleViewTicket(record)}
+                style={{ background: 'var(--primary-color)', boxShadow: '0 4px 10px rgba(79, 70, 229, 0.2)' }}
+                title="View Ticket"
               />
-            </Popconfirm>
-          )}
-        </Space>
+            )}
+          </div>
+
+          {/* Cancel Button Slot */}
+          <div style={{ width: '40px', display: 'flex', justifyContent: 'center' }}>
+            {record.status !== 'CANCELLED' && record.status !== 'CHECKED_IN' && (
+              <Popconfirm
+                title="Cancel Ticket"
+                description={() => {
+                  const eventDate = dayjs(isNaN(Number(record.event?.date)) ? record.event?.date : Number(record.event?.date));
+                  const hoursRemaining = eventDate.diff(dayjs(), 'hour');
+                  let refundMsg = "";
+                  const amount = record.amountPaid || 0;
+
+                  if (hoursRemaining > 72) refundMsg = `Estimated Refund: 90% ($${(amount * 0.9).toFixed(2)})`;
+                  else if (hoursRemaining > 48) refundMsg = `Estimated Refund: 75% ($${(amount * 0.75).toFixed(2)})`;
+                  else if (hoursRemaining > 24) refundMsg = `Estimated Refund: 50% ($${(amount * 0.5).toFixed(2)})`;
+                  else refundMsg = "No refund (less than 24h remaining)";
+
+                  return (
+                    <div>
+                      <p style={{ margin: 0 }}>Are you sure you want to cancel?</p>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: hoursRemaining > 12 ? '#10B981' : '#EF4444', fontWeight: 600 }}>{refundMsg}</p>
+                    </div>
+                  );
+                }}
+                onConfirm={() => handleCancel(record.id)}
+                okText="Yes"
+                cancelText="No"
+                okButtonProps={{ danger: true }}
+              >
+                <Button
+                  danger
+                  shape="circle"
+                  icon={<DeleteOutlined />}
+                  style={{ boxShadow: '0 4px 10px rgba(255, 77, 79, 0.2)' }}
+                  title="Cancel Ticket"
+                />
+              </Popconfirm>
+            )}
+          </div>
+        </div>
       )
     }
   ];
@@ -168,19 +202,59 @@ export default function MyTickets() {
   return (
     <>
       <Head><title>My Digital Tickets | EventHub</title></Head>
-      <div style={{ width: '100%', minHeight: '100vh', padding: '40px' }}>
-        <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' }}>
-          <Card variant="borderless" style={{ borderRadius: '20px', background: 'linear-gradient(135deg, #4F46E5 0%, #3730A3 100%)', color: 'white' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <AuditOutlined style={{ fontSize: '24px' }} />
-              </div>
-              <div>
-                <div style={{ opacity: 0.8, fontSize: '0.85rem' }}>Total Active Tickets</div>
-                <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{bookings.length}</div>
-              </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        style={{ width: '100%', minHeight: '100vh', padding: '40px 20px', background: '#F8FAFC' }}
+      >
+        <div className="header-responsive" style={{
+          background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)',
+          borderRadius: '24px',
+          boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)',
+          color: 'white',
+          marginBottom: '32px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '32px 40px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+            <div style={{
+              width: '64px', height: '64px',
+              background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
+              borderRadius: '18px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '28px',
+              border: '1.5px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+            }}>
+              🎟️
             </div>
-          </Card>
+            <div>
+              <h2 style={{ margin: 0, fontWeight: 900, color: 'white', fontSize: '2.2rem', letterSpacing: '-0.8px' }}>My Tickets</h2>
+              <p style={{ margin: '4px 0 0 0', color: 'rgba(255,255,255,0.7)', fontSize: '1.1rem' }}>Manage your event bookings and access your digital passes</p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Pending</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#F59E0B' }}>{stats.pending}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Confirmed</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#10B981' }}>{stats.confirmed}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Checked In</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#6366F1' }}>{stats.checkedIn}</div>
+            </div>
+            <div className="stats-divider" style={{ width: '1px', background: 'rgba(255,255,255,0.1)', height: '40px', margin: '0 8px' }} />
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Total Active</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{stats.total}</div>
+            </div>
+          </div>
         </div>
 
         {/* Content Section */}
@@ -203,7 +277,14 @@ export default function MyTickets() {
           booking={selectedBooking}
           onCancelTicket={handleCancel}
         />
-      </div>
+        <style jsx global>{`
+          @media (max-width: 768px) {
+            .stats-divider {
+              display: none !important;
+            }
+          }
+        `}</style>
+      </motion.div>
     </>
   );
 }

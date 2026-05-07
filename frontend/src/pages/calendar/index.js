@@ -170,10 +170,10 @@ export default function CalendarPage() {
   return (
     <>
       <div style={{ padding: '0px', maxWidth: '1400px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        <div className="header-responsive" style={{ padding: 0 }}>
+        <div className="header-responsive" style={{ background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)', borderRadius: '24px', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)', color: 'white' }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: '2.2rem', fontWeight: 800, color: '#1B2A4E', letterSpacing: '-0.5px' }}>My Calendar</h1>
-            <p style={{ color: '#6B7280', margin: '4px 0 0 0', fontSize: '1rem' }}>{isOrganizer ? "Manage and track your upcoming events." : "Keep track of your booked events and tickets."}</p>
+            <h2 style={{ margin: '0 0 8px 0', fontWeight: 900, fontSize: '2.5rem', letterSpacing: '-0.5px' }}>My Calendar</h2>
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.7)', fontSize: '1.1rem' }}>{isOrganizer ? "Manage and track your upcoming events." : "Keep track of your booked events and tickets."}</p>
           </div>
         </div>
 
@@ -277,9 +277,9 @@ export default function CalendarPage() {
                           {isBooking ? (
                             <>
                               {data.status === 'PENDING' ? (
-                                <a 
-                                  style={{ flex: 2, color: 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)', padding: '10px', borderRadius: '12px', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(249,115,22,0.3)', textDecoration: 'none' }} 
-                                  onClick={() => data.paymentUrl && (window.location.href = data.paymentUrl)} 
+                                <a
+                                  style={{ flex: 2, color: 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)', padding: '10px', borderRadius: '12px', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(249,115,22,0.3)', textDecoration: 'none' }}
+                                  onClick={() => data.paymentUrl && (window.location.href = data.paymentUrl)}
                                   className="action-btn-orange"
                                 >
                                   Complete Payment &rarr;
@@ -353,11 +353,11 @@ export default function CalendarPage() {
               <div style={{ marginTop: '32px' }}>
                 {selectedEventModal.type === 'booking' && (
                   selectedEventModal.data.status === 'PENDING' ? (
-                    <Button 
-                      type="primary" 
-                      block 
-                      size="large" 
-                      style={{ borderRadius: '12px', height: '50px', fontWeight: 700, background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)', border: 'none' }} 
+                    <Button
+                      type="primary"
+                      block
+                      size="large"
+                      style={{ borderRadius: '12px', height: '50px', fontWeight: 700, background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)', border: 'none' }}
                       onClick={() => selectedEventModal.data.paymentUrl && (window.location.href = selectedEventModal.data.paymentUrl)}
                     >
                       Complete Payment

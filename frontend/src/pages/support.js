@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { GET_MY_SUPPORT_TICKETS, GET_MY_EVENTS, GET_MY_BOOKINGS } from '@/features/events/graphql/queries';
 import { CREATE_SUPPORT_TICKET, REPLY_TO_TICKET, RESOLVE_TICKET, REOPEN_TICKET } from '@/features/events/graphql/mutations';
@@ -107,24 +107,28 @@ export default function SupportPage() {
   const [replyToTicket, { loading: replying }] = useMutation(REPLY_TO_TICKET);
   const [resolveTicket, { loading: resolving }] = useMutation(RESOLVE_TICKET);
   const [reopenTicket, { loading: reopening }] = useMutation(REOPEN_TICKET);
-  
-  const tickets = (ticketsData?.mySupportTickets || []).filter(t => {
-    const matchesSearch = t.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         t.user.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+  const tickets = useMemo(() => {
+    if (!user) return [];
     
-    const matchesStatus = statusFilter === 'ALL' || t.status === statusFilter;
-    const matchesEvent = eventFilter === 'ALL' || t.event?.id === eventFilter;
+    return (ticketsData?.mySupportTickets || []).filter(t => {
+      const matchesSearch = t.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.user?.name?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    if (user.role === 'ORGANIZER') {
-      if (orgFilter === 'INCOMING') {
-        return matchesSearch && matchesStatus && matchesEvent && t.type === 'USER_TO_ORGANIZER';
-      } else {
-        return matchesSearch && matchesStatus && t.type === 'ORGANIZER_TO_ADMIN';
+      const matchesStatus = statusFilter === 'ALL' || t.status === statusFilter;
+      const matchesEvent = eventFilter === 'ALL' || t.event?.id === eventFilter;
+
+      if (user.role === 'ORGANIZER') {
+        if (orgFilter === 'INCOMING') {
+          return matchesSearch && matchesStatus && matchesEvent && t.type === 'USER_TO_ORGANIZER';
+        } else {
+          return matchesSearch && matchesStatus && t.type === 'ORGANIZER_TO_ADMIN';
+        }
       }
-    }
 
-    return matchesSearch && matchesStatus && matchesEvent;
-  });
+      return matchesSearch && matchesStatus && matchesEvent;
+    });
+  }, [ticketsData, searchQuery, statusFilter, eventFilter, orgFilter, user]);
 
   useEffect(() => {
     if (selectedTicket && tickets.length > 0) {
@@ -143,13 +147,13 @@ export default function SupportPage() {
         updateQuery: (prev, { subscriptionData }) => {
           if (!subscriptionData.data) return prev;
           const updatedTicket = subscriptionData.data.ticketUpdated;
-          
+
           // Sync selected ticket immediately
           setSelectedTicket(updatedTicket);
 
           return {
             ...prev,
-            mySupportTickets: prev.mySupportTickets.map(t => 
+            mySupportTickets: prev.mySupportTickets.map(t =>
               t.id === updatedTicket.id ? updatedTicket : t
             )
           };
@@ -225,16 +229,34 @@ export default function SupportPage() {
     <div style={{ minHeight: '100vh', padding: '40px 20px', background: '#F8FAFC' }}>
       <Head><title>Support Center | EventHub</title></Head>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <motion.div 
-          initial="initial" 
-          animate="animate" 
-          variants={fadeInUp} 
-          style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-        >
-          <div>
-            <Title level={2} style={{ margin: 0, fontWeight: 900, color: '#1E293B', letterSpacing: '-0.5px' }}>Support Center</Title>
-            <Text type="secondary" style={{ fontSize: '16px' }}>Manage your inquiries and support requests</Text>
+      <div style={{ maxWidth: '1500px' }}>
+        <div className="header-responsive" style={{
+          background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)',
+          borderRadius: '24px',
+          boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)',
+          color: 'white',
+          marginBottom: '32px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '24px 32px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <div style={{
+              width: '56px', height: '56px',
+              background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
+              borderRadius: '16px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '24px',
+              border: '1.5px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+            }}>
+              🎧
+            </div>
+            <div>
+              <h2 style={{ margin: 0, fontWeight: 900, color: 'white', fontSize: '1.8rem', letterSpacing: '-0.5px' }}>Support Center</h2>
+              <p style={{ margin: '4px 0 0 0', color: 'rgba(255,255,255,0.7)', fontSize: '1rem' }}>Manage your inquiries and support requests</p>
+            </div>
           </div>
           {user.role !== 'SUPER_ADMIN' && (
             <Button
@@ -242,37 +264,44 @@ export default function SupportPage() {
               icon={<PlusOutlined />}
               size="large"
               onClick={() => setIsModalOpen(true)}
-              style={{ 
-                borderRadius: '14px', 
-                height: '52px', 
+              style={{
+                borderRadius: '14px',
+                height: '48px',
                 padding: '0 24px',
-                fontWeight: 700, 
-                background: 'linear-gradient(135deg, #4F46E5 0%, #3730A3 100%)', 
-                border: 'none', 
-                boxShadow: '0 10px 20px rgba(79, 70, 229, 0.2)',
+                fontWeight: 700,
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: 'white',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                boxShadow: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
               }}
             >
               New Ticket
             </Button>
           )}
-        </motion.div>
+        </div>
 
         {!selectedTicket && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             style={{ marginBottom: '32px' }}
           >
             {/* Integrated Filter & Tab Bar */}
-            <div style={{ 
-              background: 'white', 
-              padding: '8px', 
-              borderRadius: '24px', 
-              boxShadow: '0 4px 30px rgba(0,0,0,0.03)', 
-              display: 'flex', 
+            <div style={{
+              background: 'white',
+              padding: '8px',
+              borderRadius: '24px',
+              boxShadow: '0 4px 30px rgba(0,0,0,0.03)',
+              display: 'flex',
               flexDirection: 'column',
               gap: '12px'
             }}>
@@ -302,7 +331,7 @@ export default function SupportPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{ flex: 2, minWidth: '250px', height: '48px', borderRadius: '14px', background: '#F8FAFC', border: '1px solid #F1F5F9' }}
                 />
-                
+
                 <Select
                   value={statusFilter}
                   onChange={setStatusFilter}
@@ -327,7 +356,7 @@ export default function SupportPage() {
                     {(bookingsData?.myBookings || []).map(b => <Option key={b.event.id} value={b.event.id}>{b.event.title}</Option>)}
                   </Select>
                 )}
-                
+
                 <div style={{ color: '#64748B', fontWeight: 600, padding: '0 8px' }}>
                   {tickets.length} Results
                 </div>
@@ -350,10 +379,10 @@ export default function SupportPage() {
                   >
                     <Card
                       onClick={() => setSelectedTicket(ticket)}
-                      style={{ 
-                        borderRadius: '28px', 
-                        cursor: 'pointer', 
-                        border: '1px solid #F1F5F9', 
+                      style={{
+                        borderRadius: '28px',
+                        cursor: 'pointer',
+                        border: '1px solid #F1F5F9',
                         boxShadow: '0 10px 30px rgba(0,0,0,0.02)',
                         overflow: 'hidden',
                         height: '100%'
@@ -368,7 +397,7 @@ export default function SupportPage() {
                       </div>
 
                       <Title level={4} style={{ margin: '0 0 12px 0', fontWeight: 800, color: '#1E293B', fontSize: '18px', lineHeight: 1.4 }}>{ticket.subject}</Title>
-                      
+
                       <div style={{ marginBottom: '20px', padding: '12px', background: '#F8FAFC', borderRadius: '14px' }}>
                         <Text type="secondary" style={{ fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <ClockCircleOutlined style={{ fontSize: '12px' }} />
@@ -395,7 +424,7 @@ export default function SupportPage() {
                 ))
               ) : (
                 <div style={{ gridColumn: '1/-1', padding: '80px 0', textAlign: 'center' }}>
-                  <Empty 
+                  <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                     description={<Text type="secondary" style={{ fontSize: '16px' }}>No support tickets found</Text>}
                   />
@@ -429,7 +458,7 @@ export default function SupportPage() {
                         (selectedTicket.type === 'USER_TO_ORGANIZER' && user.id === selectedTicket.organizer?.id) ||
                         (selectedTicket.type === 'ORGANIZER_TO_ADMIN' && user.role === 'SUPER_ADMIN')
                       );
-                      
+
                       return canResolve && (
                         <Button
                           type="primary"
@@ -507,9 +536,9 @@ export default function SupportPage() {
                       </Form>
                     </div>
                   )}
-                  </Card>
-                </motion.div>
-              )}
+                </Card>
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </div>

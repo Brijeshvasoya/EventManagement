@@ -12,7 +12,7 @@ export const GET_ME = gql`
 export const GET_EVENTS = gql`
   query GetEvents($limit: Int, $offset: Int) {
     events(limit: $limit, offset: $offset) {
-      id title description date location capacity imageUrl eventType bookedCount
+      id title description date location capacity imageUrl eventType bookedCount checkedInCount
       ticketTypes { name price capacity }
       organizer { id name email totalWithdrawn }
       isBooked
@@ -25,7 +25,7 @@ export const GET_EVENTS = gql`
 
 export const GET_MY_ANALYTICS = gql`
   query GetMyAnalytics {
-    myAnalytics { totalRevenue ticketsSold cancelledTickets confirmedBookingsCount monthlyData { n c p t } }
+    myAnalytics { totalRevenue ticketsSold cancelledTickets confirmedBookingsCount totalCheckedIn monthlyData { n c p t } }
   }
 `;
 
@@ -34,7 +34,7 @@ export const GET_MY_BOOKINGS = gql`
     myBookings {
       id status qrCode ticketType amountPaid quantity createdAt paymentUrl
       event { 
-        id title date location capacity imageUrl description eventType status bookedCount
+        id title date location capacity imageUrl description eventType status bookedCount checkedInCount
         organizer { id name email }
         ticketTypes { name price capacity }
       }
@@ -55,7 +55,7 @@ export const GET_BOOKING = gql`
 export const GET_EVENT_DETAILS = gql`
   query GetEventDetails($id: ID!) {
     event(id: $id) {
-      id title description date location capacity imageUrl eventType status bookedCount isOnWaitlist waitlistCount
+      id title description date location capacity imageUrl eventType status bookedCount checkedInCount isOnWaitlist waitlistCount
       organizer { id name email averageRating }
       ticketTypes { name price capacity }
       attendees { id user { id name email } quantity checkedInCount amountPaid ticketType status createdAt }
@@ -78,7 +78,7 @@ export const GET_MY_VENDORS = gql`
 export const GET_MY_EVENTS = gql`
   query GetMyEvents {
     myEvents {
-      id title date location capacity imageUrl description eventType status bookedCount
+      id title date location capacity imageUrl description eventType status bookedCount checkedInCount
       ticketTypes { name price capacity }
       attendees { 
         id 
@@ -115,6 +115,16 @@ export const NOTIFICATION_SUBSCRIPTION = gql`
     notificationAdded {
       id message type read createdAt
       booking { id ticketType quantity }
+      event { id title }
+    }
+  }
+`;
+
+export const CHECK_IN_SUBSCRIPTION = gql`
+  subscription OnCheckInUpdated($eventId: ID!) {
+    checkInUpdated(eventId: $eventId) {
+      id quantity checkedInCount status ticketType
+      user { id name email }
       event { id title }
     }
   }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_EVENT_DETAILS, GET_MY_BOOKINGS, VALIDATE_PROMO_CODE } from '@/features/events/graphql/queries';
+import { useQuery, useMutation, useSubscription } from '@apollo/client/react';
+import { GET_EVENT_DETAILS, GET_MY_BOOKINGS, VALIDATE_PROMO_CODE, CHECK_IN_SUBSCRIPTION } from '@/features/events/graphql/queries';
 import { CANCEL_BOOKING, CREATE_CHECKOUT_SESSION, JOIN_WAITLIST, DELETE_EVENT, CONFIRM_PAYMENT } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
@@ -71,6 +71,23 @@ export default function EventDetailsPage() {
     skip: !id || authLoading
   });
 
+  const isOwner = user?.id === data?.event?.organizer?.id || user?.role === 'ADMIN';
+
+  // Real-time Check-in Updates
+  useSubscription(CHECK_IN_SUBSCRIPTION, {
+    variables: { eventId: id },
+    skip: !id || authLoading || loading || !isOwner,
+    onData: ({ data: subData }) => {
+      if (subData.data?.checkInUpdated) {
+        refetchEvent();
+        toast.success(`Live Update: ${subData.data.checkInUpdated.user.name} checked in! ⚡`, {
+          icon: '🎫',
+          duration: 3000
+        });
+      }
+    }
+  });
+
   const { data: bookingData, refetch: refetchBookings } = useQuery(GET_MY_BOOKINGS, {
     fetchPolicy: 'network-only',
     skip: !user
@@ -130,7 +147,6 @@ export default function EventDetailsPage() {
   const event = data?.event;
   if (!event) return <div style={{ padding: '2rem' }}><Empty description="Event not found" /></div>;
 
-  const isOwner = user?.id === event.organizer?.id || user?.role === 'ADMIN';
   const myBookings = bookingData?.myBookings || [];
   const myBookedEventIds = myBookings.map(b => b.event.id);
   const isBooked = myBookedEventIds.includes(event.id);
@@ -304,7 +320,7 @@ export default function EventDetailsPage() {
       key: 'status',
       width: '25%',
       align: 'center',
-      render: (status) => {
+      render: (status, record) => {
         const statusConfigs = {
           'CONFIRMED': { bg: '#f0fdf4', dot: '#10b981', text: '#166534' },
           'PENDING': { bg: '#fffbeb', dot: '#f59e0b', text: '#92400e' },
@@ -313,11 +329,20 @@ export default function EventDetailsPage() {
           'default': { bg: '#f8fafc', dot: '#64748b', text: '#1e1b4b' }
         };
         const config = statusConfigs[status] || statusConfigs.default;
+        
+        // Dynamic label for group check-ins
+        let label = status;
+        if (status === 'CHECKED_IN' && record.quantity > 1) {
+          label = `IN (${record.checkedInCount}/${record.quantity})`;
+        } else if (status === 'CONFIRMED' && record.quantity > 1 && record.checkedInCount > 0) {
+          label = `PARTIAL (${record.checkedInCount}/${record.quantity})`;
+        }
+
         return (
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '100px', background: config.bg }}>
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: config.dot, flexShrink: 0 }} />
             <AntText style={{ fontWeight: 800, color: config.text, textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.5px' }}>
-              {status}
+              {label}
             </AntText>
           </div>
         );
@@ -367,12 +392,53 @@ export default function EventDetailsPage() {
           return <AntText style={{ color: '#ef4444', fontSize: '10px', fontWeight: 800, paddingRight: '12px' }}>CANCELLED</AntText>;
         }
         if (record.status === 'CHECKED_IN') {
-          return <AntText style={{ color: '#6366f1', fontSize: '10px', fontWeight: 800, paddingRight: '12px' }}>CHECKED IN</AntText>;
+          const countText = record.quantity > 1 ? ` (${record.checkedInCount}/${record.quantity})` : '';
+          return <AntText style={{ color: '#6366f1', fontSize: '10px', fontWeight: 800, paddingRight: '12px' }}>CHECKED IN{countText}</AntText>;
         }
+        
+        // Partial check-in but status still CONFIRMED
+        if (record.status === 'CONFIRMED' && record.checkedInCount > 0 && record.quantity > 1) {
+          return <AntText style={{ color: '#f59e0b', fontSize: '10px', fontWeight: 800, paddingRight: '12px' }}>PARTIAL IN ({record.checkedInCount}/{record.quantity})</AntText>;
+        }
+
         return <AntText style={{ color: '#10b981', fontSize: '10px', fontWeight: 800, paddingRight: '12px' }}>PAID</AntText>;
       }
     }
   ];
+
+  const attendanceStats = isOwner ? (
+    <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+      <Card style={{ flex: '1 1 250px', borderRadius: '20px', background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)', border: 'none', boxShadow: '0 4px 15px rgba(99, 102, 241, 0.1)' }}>
+        <Statistic
+          title={<span style={{ color: '#4338ca', fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Live Attendance</span>}
+          value={event.checkedInCount || 0}
+          suffix={<span style={{ fontSize: '0.9rem', color: '#6366f1', opacity: 0.8 }}>/ {event.bookedCount || 0}</span>}
+          prefix={<TeamOutlined style={{ color: '#6366f1' }} />}
+          valueStyle={{ color: '#1e1b4b', fontWeight: 800, fontSize: '1.8rem' }}
+        />
+        <Progress 
+          percent={Math.round(((event.checkedInCount || 0) / (event.bookedCount || 1)) * 100)} 
+          size="small" 
+          status="active" 
+          strokeColor="#6366f1"
+          style={{ marginTop: '8px' }}
+        />
+      </Card>
+      <Card style={{ flex: '1 1 250px', borderRadius: '20px', background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', border: 'none', boxShadow: '0 4px 15px rgba(34, 197, 94, 0.1)' }}>
+        <Statistic
+          title={<span style={{ color: '#166534', fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Revenue Realized</span>}
+          value={totalRevenue}
+          prefix={<IndianRupeeIcon size={20} style={{ color: '#22c55e', marginRight: '8px' }} />}
+          valueStyle={{ color: '#064e3b', fontWeight: 800, fontSize: '1.8rem' }}
+          formatter={val => `₹${val.toLocaleString()}`}
+        />
+        <div style={{ marginTop: '12px', color: '#166534', fontSize: '0.75rem', fontWeight: 600 }}>
+          From {event.bookedCount || 0} confirmed tickets
+        </div>
+      </Card>
+    </div>
+  ) : null;
+
 
   const exportToExcel = async () => {
     const workbook = new ExcelJS.Workbook();
@@ -610,6 +676,7 @@ export default function EventDetailsPage() {
                         label: <Space><Users size={18} /> Attendees ({event.attendees?.length || 0})</Space>,
                         children: (
                           <div style={{ padding: '24px' }}>
+                            {attendanceStats}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                               <Input
                                 placeholder="Search by name or email..."

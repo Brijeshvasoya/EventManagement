@@ -109,8 +109,12 @@ export default function MyEvents() {
 
                   <div style={{ display: 'flex', gap: '20px', borderTop: '1px solid #F3F4F6', paddingTop: '16px', alignItems: 'center' }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '0.75rem', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 800 }}>Attendees</div>
+                      <div style={{ fontSize: '0.75rem', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 800 }}>Capacity</div>
                       <div style={{ fontWeight: 800, color: '#1B2A4E', fontSize: '1.1rem' }}>{event.bookedCount || 0} <span style={{ color: '#9CA3AF', fontSize: '0.9rem', fontWeight: 500 }}>/ {event.capacity}</span></div>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '0.75rem', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 800 }}>Checked In</div>
+                      <div style={{ fontWeight: 800, color: '#6366f1', fontSize: '1.1rem' }}>{event.checkedInCount || 0} <span style={{ color: '#9CA3AF', fontSize: '0.9rem', fontWeight: 500 }}>/ {event.bookedCount || 0}</span></div>
                     </div>
                     <Space size="small" onClick={e => e.stopPropagation()}>
                       <Tooltip title="View Details">

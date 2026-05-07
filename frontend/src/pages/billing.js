@@ -74,7 +74,7 @@ export default function BillingPage() {
       <Head><title>Billing | EventHub</title></Head>
 
       {/* Header */}
-      <div className="billing-header">
+      <div className="header-responsive" style={{ background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)', borderRadius: '24px', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)', color: 'white', marginBottom: '32px' }}>
         <div className="billing-header-left">
           <div className="header-icon">
             <CreditCardOutlined style={{ fontSize: '1.5rem', color: 'white' }} />
@@ -270,30 +270,32 @@ export default function BillingPage() {
           padding: 24px 28px;
           margin-bottom: 24px;
           box-shadow: var(--shadow-card);
+          color: white;
         }
         .billing-header-left {
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 32px;
         }
         .header-icon {
           width: 52px; height: 52px;
           border-radius: 14px;
-          background: var(--gradient-main);
+          background: linear-gradient(135deg, #6366F1 0%, #4338CA 100%);
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
-          box-shadow: 0 8px 20px rgba(67,56,202,0.25);
+          border: 1.5px solid rgba(255,255,255,0.2);
+          box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         }
         .header-title {
           margin: 0;
           font-size: 1.5rem;
           font-weight: 900;
-          color: var(--text-primary);
+          color: #ffffff;
           letter-spacing: -0.5px;
         }
         .header-sub {
           margin: 2px 0 0;
-          color: var(--text-secondary);
+          color: rgba(255,255,255,0.7);
           font-size: 0.88rem;
         }
         :global(.header-btn) {

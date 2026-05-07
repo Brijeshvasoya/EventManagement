@@ -175,47 +175,66 @@ const bookingService = {
 
   cancelBooking: async (bookingId, user) => {
     requireAuth(user);
-    const booking = await Booking.findById(bookingId);
+    const booking = await Booking.findById(bookingId).populate('event');
     if (!booking) throw new Error('Booking not found');
     if (booking.user.toString() !== user.id) throw new Error('Unauthorized');
     if (booking.status === 'CANCELLED') throw new Error('Already cancelled');
 
+    const event = booking.event;
+    if (!event) throw new Error('Event information not found');
+
+    // DYNAMIC REFUND CALCULATION (IRCTC / GSRTC Style)
+    const eventDate = new Date(parseInt(event.date) || event.date);
+    const now = new Date();
+    const hoursRemaining = (eventDate - now) / (1000 * 60 * 60);
+
+    let refundPercent = 0;
+    let cancellationReason = "";
+
+    if (hoursRemaining > 72) {
+      refundPercent = 0.90; // 10% Cancellation Charge
+      cancellationReason = "Cancelled more than 72 hours before event (10% charge)";
+    } else if (hoursRemaining > 48) {
+      refundPercent = 0.75; // 25% Cancellation Charge
+      cancellationReason = "Cancelled between 48-72 hours before event (25% charge)";
+    } else if (hoursRemaining > 24) {
+      refundPercent = 0.50; // 50% Cancellation Charge
+      cancellationReason = "Cancelled between 24-48 hours before event (50% charge)";
+    } else {
+      refundPercent = 0; // No Refund
+      cancellationReason = "Cancelled less than 24 hours before event (No refund)";
+    }
+
     // AUTO STRIPE REFUND
     let refundSucceeded = false;
-    if (booking.stripePaymentId) {
+    if (booking.stripePaymentId && refundPercent > 0) {
       try {
         let paymentIntentId = booking.stripePaymentId;
 
-        // If it's a Checkout Session ID (starts with cs_), retrieve the session to get the Payment Intent ID
         if (paymentIntentId.startsWith('cs_')) {
           const session = await stripe.checkout.sessions.retrieve(paymentIntentId);
           paymentIntentId = session.payment_intent;
         }
 
         if (paymentIntentId) {
-          // Calculate refund amount (75% of amountPaid)
-          // Stripe uses cents for amounts, so if amountPaid is in USD, we multiply by 100
-          const refundAmount = Math.round(booking.amountPaid * 0.75 * 100);
+          const refundAmount = Math.round(booking.amountPaid * refundPercent * 100);
 
           if (refundAmount > 0) {
             await stripe.refunds.create({
               payment_intent: paymentIntentId,
               amount: refundAmount,
-              reason: 'requested_by_customer'
+              reason: 'requested_by_customer',
+              metadata: { cancellationReason }
             });
-            // ✅ Only mark REFUNDED if Stripe call succeeded
             booking.paymentStatus = 'REFUNDED';
             refundSucceeded = true;
-          } else {
-            console.log(`ℹ️ No refund processed for booking ID: ${bookingId} (Amount was $0)`);
           }
-        } else {
-          console.warn(`⚠️ No payment intent found for booking ID: ${bookingId}`);
         }
       } catch (err) {
-        console.error('❌ Refund Failed (might be already processed):', err.message);
-        // paymentStatus stays as PAID — don't incorrectly mark as REFUNDED
+        console.error('❌ Refund Failed:', err.message);
       }
+    } else if (refundPercent === 0 && booking.amountPaid > 0) {
+      booking.paymentStatus = 'PAID'; // No refund processed
     }
 
     booking.status = 'CANCELLED';
@@ -304,9 +323,10 @@ const bookingService = {
         { $unwind: { path: '$organizer', preserveNullAndEmptyArrays: true } }
       ]);
       const cancelledEvent = cancelledEvents[0];
-      const refundNote = refundSucceeded && booking.amountPaid > 0
-        ? ` A 75% refund of $${(booking.amountPaid * 0.75).toFixed(2)} has been initiated.`
-        : '';
+      const actualRefundAmount = refundSucceeded ? (booking.amountPaid * refundPercent) : 0;
+      const refundNote = refundSucceeded && actualRefundAmount > 0
+        ? ` A refund of $${actualRefundAmount.toFixed(2)} (${(refundPercent * 100).toFixed(0)}%) has been initiated.`
+        : (booking.amountPaid > 0 ? ` Note: No refund is applicable for this cancellation based on the time remaining.` : '');
 
       // Notify Attendee
       await notificationService.createNotification({
@@ -315,7 +335,7 @@ const bookingService = {
         message: `<b>❌ Booking Cancelled</b>: Your booking for "${cancelledEvent?.title || 'the event'}" has been cancelled.${refundNote}`,
         type: 'EVENT_CANCELLED',
         bookingId: booking._id,
-        eventId: booking.event
+        eventId: booking.event._id
       });
 
       // Notify Organizer
@@ -454,8 +474,12 @@ const bookingService = {
           await sendCheckInFeedbackEmail(booking.user, booking, booking.event);
           await Booking.findByIdAndUpdate(booking._id, { feedbackEmailSent: true });
         }
+
+        // 3. Publish PubSub event for live updates
+        const { pubsub } = require('../../utils/pubsub');
+        pubsub.publish('CHECK_IN_UPDATED', { checkInUpdated: booking });
       } catch (e) {
-        console.error('❌ Check-in emails failed but check-in successful:', e.message);
+        console.error('❌ Check-in emails/PubSub failed but check-in successful:', e.message);
       }
     })();
 

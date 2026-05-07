@@ -3,13 +3,13 @@ const typeDefs = `#graphql
   type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int averageRating: Float numReviews: Int redeemedRewards: [String] isPlanPurchased: Boolean planId: String scheduledPlanId: String scheduledDowngradeAt: String totalWithdrawn: Float availablePayout: Float bankDetails: BankDetails }
   type TicketType { name: String! price: Float! capacity: Int! }
   type Feedback { id: ID! booking: Booking! event: Event! organizer: User! user: User! rating: Int! comment: String createdAt: String! }
-  type Event { id: ID! title: String! description: String! date: String! location: String! capacity: Int! imageUrl: String organizer: User! isBooked: Boolean isOnWaitlist: Boolean waitlistCount: Int eventType: String status: String ticketTypes: [TicketType] bookedCount: Int attendees: [Booking!] vendors: [Vendor!] feedbacks: [Feedback!] features: [String] }
+  type Event { id: ID! title: String! description: String! date: String! location: String! capacity: Int! imageUrl: String organizer: User! isBooked: Boolean isOnWaitlist: Boolean waitlistCount: Int eventType: String status: String ticketTypes: [TicketType] bookedCount: Int checkedInCount: Int attendees: [Booking!] vendors: [Vendor!] feedbacks: [Feedback!] features: [String] }
   type Booking { id: ID! event: Event! user: User! status: String! createdAt: String! qrCode: String ticketType: String amountPaid: Float quantity: Int checkedInCount: Int paymentStatus: String paymentUrl: String }
   type Vendor { id: ID! name: String! category: String! rating: Float cost: Float contactInfo: String availableDates: [String] organizer: User! events: [Event!] }
   type Notification { id: ID! recipient: User! title: String message: String! type: String! read: Boolean! booking: Booking event: Event createdAt: String! }
   type AuthPayload { token: String! user: User! }
   type MonthlyData { n: String! c: Float! p: Float! t: Int! }
-  type AnalyticsStats { totalRevenue: Float! ticketsSold: Int! cancelledTickets: Int! confirmedBookingsCount: Int! monthlyData: [MonthlyData!]! }
+  type AnalyticsStats { totalRevenue: Float! ticketsSold: Int! cancelledTickets: Int! confirmedBookingsCount: Int! totalCheckedIn: Int! monthlyData: [MonthlyData!]! }
   type PublicBookingFeedback { id: ID! eventTitle: String! organizerName: String! status: String! existingRating: Int existingComment: String }
   type Payout { id: ID! organizer: User! amount: Float! status: String! createdAt: String! }
   type PlanInvoice { id: ID! planId: String! amount: Float! currency: String! status: String! stripeSessionId: String planStartDate: String! planEndDate: String! createdAt: String! }
@@ -90,6 +90,7 @@ const typeDefs = `#graphql
   type Subscription {
     notificationAdded: Notification!
     ticketUpdated(ticketId: ID!): SupportTicket!
+    checkInUpdated(eventId: ID!): Booking!
   }
 `;
 module.exports = typeDefs;

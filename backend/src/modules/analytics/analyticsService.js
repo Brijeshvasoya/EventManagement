@@ -12,6 +12,7 @@ exports.getOrganizerAnalytics = async (user) => {
   let ticketsSold = 0;
   let cancelledTickets = 0;
   let confirmedBookingsCount = 0;
+  let totalCheckedIn = 0;
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const monthlyStats = months.reduce((acc, m) => {
@@ -26,10 +27,11 @@ exports.getOrganizerAnalytics = async (user) => {
 
     if ((b.status === 'CONFIRMED' || b.status === 'CHECKED_IN') && b.paymentStatus === 'PAID') {
       ticketsSold += qty;
+      totalCheckedIn += (b.checkedInCount || 0);
       const revenue = b.amountPaid || 0;
       totalRevenue += revenue;
       confirmedBookingsCount += 1;
-
+      
       // Update monthly breakdown
       if (monthlyStats[monthName]) {
         monthlyStats[monthName].c += revenue;
@@ -43,5 +45,5 @@ exports.getOrganizerAnalytics = async (user) => {
 
   const monthlyData = months.map(m => monthlyStats[m]);
 
-  return { totalRevenue, ticketsSold, cancelledTickets, confirmedBookingsCount, monthlyData };
+  return { totalRevenue, ticketsSold, cancelledTickets, confirmedBookingsCount, totalCheckedIn, monthlyData };
 };

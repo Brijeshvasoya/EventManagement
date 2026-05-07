@@ -544,9 +544,21 @@ const resolvers = {
     },
     bookedCount: async (parent) => {
       const Booking = require('../models/Booking');
+      const mongoose = require('mongoose');
+      const eventId = new mongoose.Types.ObjectId(parent._id || parent.id);
       const stats = await Booking.aggregate([
-        { $match: { event: parent._id || parent.id, status: { $in: ['CONFIRMED', 'CHECKED_IN'] } } },
+        { $match: { event: eventId, status: { $in: ['CONFIRMED', 'CHECKED_IN'] } } },
         { $group: { _id: null, total: { $sum: "$quantity" } } }
+      ]);
+      return stats.length > 0 ? stats[0].total : 0;
+    },
+    checkedInCount: async (parent) => {
+      const Booking = require('../models/Booking');
+      const mongoose = require('mongoose');
+      const eventId = new mongoose.Types.ObjectId(parent._id || parent.id);
+      const stats = await Booking.aggregate([
+        { $match: { event: eventId, status: { $in: ['CONFIRMED', 'CHECKED_IN'] } } },
+        { $group: { _id: null, total: { $sum: "$checkedInCount" } } }
       ]);
       return stats.length > 0 ? stats[0].total : 0;
     },
@@ -677,38 +689,15 @@ const resolvers = {
   Subscription: {
     notificationAdded: {
       subscribe: withFilter(
-        () => {
-          console.log('📡 New Subscription request for NOTIFICATION_ADDED');
-          return pubsub.asyncIterableIterator([EVENTS.NOTIFICATION_ADDED]);
-        },
+        () => pubsub.asyncIterableIterator([EVENTS.NOTIFICATION_ADDED]),
         (payload, variables, { user }) => {
-          if (!user) {
-            console.log('Subscription filter failed: No user in context');
-            return false;
-          }
-
-          if (!payload || !payload.notificationAdded) {
-            console.log('Subscription filter failed: No payload');
-            return false;
-          }
-
-          // Convert everything to string for safe comparison (handling both .id and ._id)
+          if (!user || !payload?.notificationAdded) return false;
           const recipientId = (payload.notificationAdded.recipient?._id || payload.notificationAdded.recipient || '').toString();
           const userId = (user.id || user._id || '').toString();
-
-          if (!recipientId || !userId) {
-            console.log(`Subscription filter: Missing IDs (recipient=${recipientId}, user=${userId})`);
-            return false;
-          }
-
-          const isMatch = recipientId === userId;
-          console.log(`Subscription filter: recipient=${recipientId}, user=${userId}, match=${isMatch}`);
-          return isMatch;
+          return recipientId === userId;
         }
       ),
-      resolve: (payload) => {
-        return payload.notificationAdded;
-      }
+      resolve: (payload) => payload.notificationAdded
     },
     ticketUpdated: {
       subscribe: withFilter(
@@ -717,9 +706,16 @@ const resolvers = {
           return payload.ticketUpdated.id.toString() === variables.ticketId.toString();
         }
       ),
-      resolve: (payload) => {
-        return payload.ticketUpdated;
-      }
+      resolve: (payload) => payload.ticketUpdated
+    },
+    checkInUpdated: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterableIterator([EVENTS.CHECK_IN_UPDATED]),
+        (payload, variables) => {
+          return payload.checkInUpdated.event.toString() === variables.eventId;
+        }
+      ),
+      resolve: (payload) => payload.checkInUpdated
     }
   },
   SupportTicket: {

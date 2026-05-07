@@ -265,27 +265,17 @@ export default function CreateEvent() {
         </div>
       )}
 
-      <div style={{ opacity: isLimitReached ? 0.5 : 1, pointerEvents: isLimitReached ? 'none' : 'auto' }}>
+      <div style={{ opacity: isLimitReached ? 0.5 : 1, pointerEvents: isLimitReached ? 'none' : 'auto', display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
         {/* Top Header Card (Matching Profile - Compact) */}
-        <div className="header-responsive" style={{
-          background: 'white',
-          borderRadius: '24px',
-          marginBottom: '24px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '16px',
-          border: '1px solid rgba(67, 56, 202, 0.08)'
-        }}>
+        <div className="header-responsive" style={{ background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)', borderRadius: '24px', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)', color: 'white' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div style={{ position: 'relative' }}>
               <Avatar size={70} icon={<RocketOutlined />} style={{
-                background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 100%)',
+                background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
                 fontSize: '28px',
-                boxShadow: '0 8px 16px rgba(27, 42, 78, 0.15)'
+                border: '4px solid rgba(255, 255, 255, 0.15)',
+                boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)'
               }} />
               <div style={{
                 position: 'absolute', bottom: 2, right: 2,
@@ -294,12 +284,12 @@ export default function CreateEvent() {
               }}></div>
             </div>
             <div>
-              <Title level={3} style={{ margin: 0, fontWeight: 900, color: '#1B2A4E', letterSpacing: '-0.5px' }}>
+              <Title level={3} style={{ margin: 0, fontWeight: 900, color: 'white', letterSpacing: '-0.5px' }}>
                 {isEdit ? 'Edit Your Event' : 'Design Your Event'}
               </Title>
               <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
-                <span style={{ color: '#64748B', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
-                  <ThunderboltOutlined style={{ color: 'rgb(67, 56, 202)' }} /> Organizer Tools
+                <span style={{ color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+                  <ThunderboltOutlined style={{ color: '#FBBF24' }} /> Organizer Tools
                 </span>
               </div>
             </div>
@@ -424,12 +414,12 @@ export default function CreateEvent() {
                 }}>
                   {previewImage ? (
                     <div style={{ position: 'relative', width: '100%', height: '140px' }}>
-                      <Image 
-                        src={previewImage} 
-                        alt="Event Poster" 
+                      <Image
+                        src={previewImage}
+                        alt="Event Poster"
                         fill
                         unoptimized
-                        style={{ objectFit: 'cover', borderRadius: '12px' }} 
+                        style={{ objectFit: 'cover', borderRadius: '12px' }}
                       />
                       <Button
                         type="primary" danger size="small"

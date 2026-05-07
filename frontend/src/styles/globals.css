@@ -1522,7 +1522,7 @@ textarea.ant-input {
 
 /* Ant Typography */
 .ant-typography {
-  color: var(--text-primary) !important;
+  color: var(--text-primary);
 }
 
 .ant-typography.ant-typography-secondary {

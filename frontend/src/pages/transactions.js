@@ -223,18 +223,30 @@ function TransactionsContent() {
 
       <div className="header-responsive" style={{
         background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)',
-        borderRadius: '32px',
-        color: 'white',
+        borderRadius: '24px',
         boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)',
-        padding: '40px',
-        position: 'relative',
-        overflow: 'hidden'
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        padding: '32px'
       }}>
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{ margin: '0 0 8px 0', fontWeight: 900, fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', letterSpacing: '-0.5px', color: 'white' }}>Sales & Payouts</h2>
-          <p style={{ margin: 0, color: 'rgba(255,255,255,0.8)', fontSize: '1.1rem', maxWidth: '600px' }}>Monitor your event revenue, track ticket sales, and manage automated RazorpayX payouts from a single dashboard.</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <div style={{
+            width: '64px', height: '64px',
+            background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
+            borderRadius: '18px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '28px',
+            border: '1.5px solid rgba(255,255,255,0.2)',
+            boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+          }}>
+            💰
+          </div>
+          <div>
+            <h1 style={{ margin: 0, fontWeight: 900, color: 'white', fontSize: '2.2rem', letterSpacing: '-0.8px' }}>Sales & Payouts</h1>
+            <p style={{ margin: '4px 0 0 0', color: 'rgba(255,255,255,0.7)', fontSize: '1.1rem' }}>Monitor your event revenue, track ticket sales, and manage payouts.</p>
+          </div>
         </div>
-        <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '40%', height: '140%', background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)', transform: 'rotate(-15deg)' }} />
       </div>
 
       <Row gutter={[24, 24]}>

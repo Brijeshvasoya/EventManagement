@@ -81,26 +81,28 @@ export default function Profile() {
     >
       <Head><title>Profile Settings | EventHub</title></Head>
 
-      <div style={{ padding: '20px 0' }}>
-        {/* Top Header Card */}
+      <div style={{ padding: '0px' }}>
+        {/* Top Header Card (Matching Profile - Compact) */}
         <div className="header-responsive" style={{
-          background: 'white',
+          background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)',
           borderRadius: '32px',
           marginBottom: '32px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+          boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '24px',
-          border: '1px solid rgba(67, 56, 202, 0.08)'
+          padding: '32px 40px',
+          color: 'white'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
             <div style={{ position: 'relative' }}>
               <Avatar size={100} icon={<UserOutlined />} style={{
-                background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 100%)',
+                background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
                 fontSize: '40px',
-                boxShadow: '0 10px 20px rgba(27, 42, 78, 0.2)'
+                border: '4px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2)'
               }} />
               <div style={{
                 position: 'absolute', bottom: 5, right: 5,
@@ -109,31 +111,47 @@ export default function Profile() {
               }}></div>
             </div>
             <div>
-              <Title level={2} style={{ margin: 0, fontWeight: 900, color: '#1B2A4E', letterSpacing: '-1px' }}>{user?.name}</Title>
+              <Title level={2} style={{ margin: 0, fontWeight: 900, color: 'white', letterSpacing: '-1px' }}>{user?.name}</Title>
               <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
-                <span style={{ color: '#64748B', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
-                  <ThunderboltOutlined style={{ color: 'rgb(67, 56, 202)' }} /> {user?.role}
+                <span style={{ color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
+                  <ThunderboltOutlined style={{ color: '#FBBF24' }} /> {user?.role}
                 </span>
-                <span style={{ color: '#64748B', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
-                  <CalendarOutlined style={{ color: 'rgb(67, 56, 202)' }} /> Member since {user?.createdAt?.slice(0, 4) || '2024'}
+                <span style={{ color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}>
+                  <CalendarOutlined style={{ color: '#FBBF24' }} /> Member since {user?.createdAt?.slice(0, 4) || '2024'}
                 </span>
               </div>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <div style={{ textAlign: 'center', padding: '12px 24px', background: 'rgba(67, 56, 202, 0.05)', borderRadius: '16px', minWidth: '100px' }}>
-              <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#312E81' }}>
+            <div style={{ 
+              textAlign: 'center', 
+              padding: '16px 24px', 
+              background: 'rgba(255, 255, 255, 0.1)', 
+              borderRadius: '20px', 
+              minWidth: '110px',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              boxShadow: '0 8px 16px rgba(0,0,0,0.05)'
+            }}>
+              <div style={{ fontWeight: 900, fontSize: '1.5rem', color: 'white', lineHeight: 1 }}>
                 {eventsLoading ? '...' : statsCount}
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', fontWeight: 800, letterSpacing: '0.5px', marginTop: '4px' }}>
                 {user.role === 'ORGANIZER' ? 'EVENTS' : 'BOOKINGS'}
               </div>
             </div>
-            <div style={{ textAlign: 'center', padding: '12px 24px', background: 'rgba(67, 56, 202, 0.05)', borderRadius: '16px', minWidth: '100px' }}>
-              <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#312E81' }}>
+            <div style={{ 
+              textAlign: 'center', 
+              padding: '16px 24px', 
+              background: 'rgba(255, 255, 255, 0.1)', 
+              borderRadius: '20px', 
+              minWidth: '110px',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              boxShadow: '0 8px 16px rgba(0,0,0,0.05)'
+            }}>
+              <div style={{ fontWeight: 900, fontSize: '1.5rem', color: 'white', lineHeight: 1 }}>
                 {meLoading ? '...' : (user.role === 'ORGANIZER' ? rating.toFixed(1) : points)}
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', fontWeight: 800, letterSpacing: '0.5px', marginTop: '4px' }}>
                 {user.role === 'ORGANIZER' ? 'RATING' : 'POINTS'}
               </div>
             </div>

@@ -50,7 +50,7 @@ export default function VendorManagement() {
   );
 
   const vendors = (data?.myVendors || []).filter(v => {
-    const matchesSearch = v.name.toLowerCase().includes(searchText.toLowerCase()) || 
+    const matchesSearch = v.name.toLowerCase().includes(searchText.toLowerCase()) ||
       v.contactInfo?.toLowerCase().includes(searchText.toLowerCase());
     const matchesCategory = categoryFilter === 'ALL' || v.category === categoryFilter;
     return matchesSearch && matchesCategory;
@@ -151,10 +151,10 @@ export default function VendorManagement() {
   ];
 
   return (
-    <div className="mobile-pad-reduce" style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div className="mobile-pad-reduce" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <Head><title>Vendor Management | EventHub</title></Head>
 
-      <div className="header-responsive" style={{ marginBottom: '2rem' }}>
+      <div className="header-responsive" style={{ background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)', borderRadius: '24px', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)', color: 'white' }}>
         <div>
           <div style={{
             display: 'inline-block',
@@ -171,24 +171,33 @@ export default function VendorManagement() {
           }}>
             🏪 Vendor Hub
           </div>
-          <h1 style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.5px' }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: '800', color: '#ffffff', margin: 0, letterSpacing: '-0.5px' }}>
             Vendor Management
           </h1>
-          <p style={{ color: 'var(--text-muted)', margin: '4px 0 0 0', fontSize: '0.9rem' }}>
+          <p style={{ color: 'rgba(255,255,255,0.7)', margin: '4px 0 0 0', fontSize: '0.9rem' }}>
             Manage your event vendors and service providers
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
           <Input
             placeholder="Search vendors..."
-            prefix={<SearchOutlined style={{ color: '#94A3B8' }} />}
+            prefix={<SearchOutlined style={{ color: 'rgba(255,255,255,0.5)' }} />}
             onChange={e => setSearchText(e.target.value)}
-            style={{ width: '220px', borderRadius: '12px', height: '44px' }}
+            style={{
+              width: '240px',
+              borderRadius: '12px',
+              height: '44px',
+              background: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              color: 'white'
+            }}
+            variant="borderless"
+            className="premium-input"
             allowClear
           />
           <Select
             defaultValue="ALL"
-            style={{ width: '160px', height: '44px' }}
+            style={{ width: '160px', height: '44px', background: 'transparent', borderColor: 'var(--glass-border)', color: 'white' }}
             onChange={setCategoryFilter}
             options={[
               { value: 'ALL', label: 'All Categories' },
@@ -283,6 +292,27 @@ export default function VendorManagement() {
           </Button>
         </Form>
       </Modal>
+
+      <style jsx global>{`
+        .premium-input input {
+          color: white !important;
+        }
+        .premium-input input::placeholder {
+          color: rgba(255,255,255,0.5) !important;
+        }
+        .premium-select-dark .ant-select-selector {
+          background: rgba(255,255,255,0.1) !important;
+          border: 1px solid rgba(255,255,255,0.2) !important;
+          color: white !important;
+          border-radius: 12px !important;
+        }
+        .premium-select-dark .ant-select-selection-item {
+          color: white !important;
+        }
+        .premium-select-dark .ant-select-arrow {
+          color: rgba(255,255,255,0.7) !important;
+        }
+      `}</style>
     </div>
   );
 }
