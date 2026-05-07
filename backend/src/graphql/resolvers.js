@@ -167,7 +167,7 @@ const resolvers = {
           const t = ticket.toObject();
           // Ensure Ticket ID is mapped
           t.id = ticket._id.toString();
-          
+
           try {
             if (t.user && typeof t.user === 'string' && !t.user.startsWith('{')) {
               t.user = await loaders.userLoader.load(t.user);
@@ -209,8 +209,8 @@ const resolvers = {
     bookEvent: (_, args, { user }) => bookingService.bookEvent(args, user),
     cancelBooking: (_, { bookingId }, { user }) => bookingService.cancelBooking(bookingId, user),
     createCheckoutSession: (_, { eventId, ticketType, quantity, promoCode }, { user }) => stripeService.createCheckoutSession(eventId, ticketType, quantity, user, promoCode),
-    createPlanCheckoutSession: (_, { planId }, { user }) => stripeService.createPlanCheckoutSession(planId, user),
-    confirmPlanPurchase: (_, { sessionId, planId, proratedCredit }, { user }) => stripeService.confirmPlanPurchase(sessionId, planId, user, proratedCredit || 0),
+    createPlanCheckoutSession: (_, { planId, interval }, { user }) => stripeService.createPlanCheckoutSession(planId, user, interval || 'MONTH'),
+    confirmPlanPurchase: (_, { sessionId, planId, proratedCredit, interval }, { user }) => stripeService.confirmPlanPurchase(sessionId, planId, user, proratedCredit || 0, interval || 'MONTH'),
     scheduleDowngrade: (_, { targetPlanId }, { user }) => stripeService.scheduleDowngrade(targetPlanId, user),
     cancelScheduledDowngrade: (_, __, { user }) => stripeService.cancelScheduledDowngrade(user),
     updateEvent: (_, { id, input }, { user }) => eventService.updateEvent(id, input, user),
@@ -409,7 +409,7 @@ const resolvers = {
     createSupportTicket: async (_, { eventId, type, subject, description }, { user }) => {
       if (!user) throw new GraphQLError('Unauthorized');
       if (user.role === 'SUPER_ADMIN') throw new GraphQLError('Super Admins cannot create support tickets');
-      
+
       let organizerId = null;
       if (type === 'USER_TO_ORGANIZER' && eventId) {
         const Event = require('../models/Event');
@@ -615,6 +615,8 @@ const resolvers = {
   },
   User: {
     createdAt: (parent) => parent.createdAt ? (typeof parent.createdAt === 'string' ? parent.createdAt : parent.createdAt.toISOString()) : null,
+    planExpiresAt: (parent) => parent.planExpiresAt ? (typeof parent.planExpiresAt === 'string' ? parent.planExpiresAt : parent.planExpiresAt.toISOString()) : null,
+    scheduledDowngradeAt: (parent) => parent.scheduledDowngradeAt ? (typeof parent.scheduledDowngradeAt === 'string' ? parent.scheduledDowngradeAt : parent.scheduledDowngradeAt.toISOString()) : null,
     loyaltyPoints: async (parent) => {
       try {
         const Booking = require('../models/Booking');

@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
   numReviews: { type: Number, default: 0 },
   isPlanPurchased: { type: Boolean, default: false },
   planId: { type: String },
+  planInterval: { type: String, enum: ['MONTH', 'YEAR'], default: 'MONTH' },
   planExpiresAt: { type: Date },
   scheduledPlanId: { type: String, default: null },   // plan to switch at cycle end (for downgrade)
   scheduledDowngradeAt: { type: Date, default: null }, // when to apply the scheduled plan switch

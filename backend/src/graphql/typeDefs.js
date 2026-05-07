@@ -1,6 +1,6 @@
 const typeDefs = `#graphql
   type BankDetails { accountHolderName: String accountNumber: String bankName: String ifscCode: String }
-  type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int averageRating: Float numReviews: Int redeemedRewards: [String] isPlanPurchased: Boolean planId: String scheduledPlanId: String scheduledDowngradeAt: String totalWithdrawn: Float availablePayout: Float bankDetails: BankDetails }
+  type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int averageRating: Float numReviews: Int redeemedRewards: [String] isPlanPurchased: Boolean planId: String planInterval: String planExpiresAt: String scheduledPlanId: String scheduledDowngradeAt: String totalWithdrawn: Float availablePayout: Float bankDetails: BankDetails }
   type TicketType { name: String! price: Float! capacity: Int! }
   type Feedback { id: ID! booking: Booking! event: Event! organizer: User! user: User! rating: Int! comment: String createdAt: String! }
   type Event { id: ID! title: String! description: String! date: String! location: String! capacity: Int! imageUrl: String organizer: User! isBooked: Boolean isOnWaitlist: Boolean waitlistCount: Int eventType: String status: String ticketTypes: [TicketType] bookedCount: Int checkedInCount: Int attendees: [Booking!] vendors: [Vendor!] feedbacks: [Feedback!] features: [String] }
@@ -54,8 +54,8 @@ const typeDefs = `#graphql
     bookEvent(eventId: ID!, ticketType: String, amountPaid: Float, stripePaymentId: String, quantity: Int): Booking!
     cancelBooking(bookingId: ID!): Boolean!
     createCheckoutSession(eventId: ID!, ticketType: String!, quantity: Int!, promoCode: String): String!
-    createPlanCheckoutSession(planId: String!): String!
-    confirmPlanPurchase(sessionId: String!, planId: String!, proratedCredit: Int): AuthPayload!
+    createPlanCheckoutSession(planId: String!, interval: String): String!
+    confirmPlanPurchase(sessionId: String!, planId: String!, proratedCredit: Int, interval: String): AuthPayload!
     scheduleDowngrade(targetPlanId: String!): AuthPayload!
     cancelScheduledDowngrade: AuthPayload!
     updateEvent(id: ID!, input: CreateEventInput!): Event!

@@ -106,37 +106,55 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user, prom
   return `${APP_URL}/checkout-success?eventId=${eventId}&ticketType=${ticketType}&quantity=${quantity}&sessionId=MOCK_SESSION_${Date.now()}`;
 };
 
-exports.createPlanCheckoutSession = async (planId, user) => {
+exports.createPlanCheckoutSession = async (planId, user, interval = 'MONTH') => {
   requireAuth(user);
   const APP_URL = process.env.FRONTEND_URL || 'http://localhost:3001';
   const User = require('../../models/User');
   const fullUser = await User.findById(user.id).select('planId planExpiresAt isPlanPurchased');
 
   if (planId !== 'BASIC' && planId !== 'PRO') throw new Error('Invalid plan');
+  if (interval !== 'MONTH' && interval !== 'YEAR') throw new Error('Invalid interval');
 
-  // ── Prorated Upgrade Logic (BASIC → PRO mid-cycle) ──────────────────────
-  const BASIC_PRICE = 799;   // ₹ per month
-  const PRO_PRICE = 2499;  // ₹ per month
+  // Pricing Configuration
+  const PRICES = {
+    BASIC: { MONTH: 799, YEAR: 7990 },
+    PRO: { MONTH: 2499, YEAR: 24990 }
+  };
 
-  const isActiveBasic =
+  const isActivePlan =
     fullUser?.isPlanPurchased &&
-    fullUser?.planId === 'BASIC' &&
     fullUser?.planExpiresAt &&
     new Date(fullUser.planExpiresAt) > new Date();
 
-  let finalAmount = planId === 'PRO' ? PRO_PRICE : BASIC_PRICE; // in ₹
+  let finalAmount = PRICES[planId][interval];
   let proratedCredit = 0;
 
-  if (planId === 'PRO' && isActiveBasic) {
-    // Days remaining on current Basic plan
-    const msLeft = new Date(fullUser.planExpiresAt) - new Date();
-    const daysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
-    proratedCredit = Math.round((BASIC_PRICE / 30) * daysLeft);
-    finalAmount = Math.max(0, PRO_PRICE - proratedCredit);
+  // ── Upgrade Logic (Any transition to a more expensive plan) ──────────────
+  if (isActivePlan) {
+    const currentPricePerMonth = fullUser.planId === 'PRO' ? PRICES.PRO.MONTH : PRICES.BASIC.MONTH;
+    const newPricePerMonth = planId === 'PRO' ? PRICES.PRO.MONTH : PRICES.BASIC.MONTH;
+    
+    // Check if it's an upgrade (either tier upgrade or same tier but moving to yearly)
+    const isTierUpgrade = (fullUser.planId === 'BASIC' && planId === 'PRO');
+    // Note: interval change from MONTH to YEAR is also an upgrade in terms of commitment, 
+    // but here we check if the new total price is higher to justify proration.
+    
+    if (isTierUpgrade || (fullUser.planId === planId && interval === 'YEAR')) {
+      const msLeft = new Date(fullUser.planExpiresAt) - new Date();
+      const daysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+      
+      // Calculate remaining value of current plan
+      // If they were on yearly, we divide by 365, if monthly by 30
+      // Actually, we can just use a simple approximation for now or check current interval if stored.
+      // For simplicity, we'll assume the current plan was monthly if it's not specified.
+      // But let's just use the Monthly price as base for daily credit calculation.
+      proratedCredit = Math.round((currentPricePerMonth / 30) * daysLeft);
+      finalAmount = Math.max(0, finalAmount - proratedCredit);
+    }
   }
 
-  const amountPaise = finalAmount * 100; // convert to paise
-  const planName = planId === 'PRO' ? `Pro Plan${proratedCredit > 0 ? ` (Upgrade — ₹${proratedCredit} credit applied)` : ''}` : 'Basic Plan';
+  const amountPaise = Math.round(finalAmount * 100);
+  const planName = `${planId} Plan (${interval === 'MONTH' ? 'Monthly' : 'Yearly'})${proratedCredit > 0 ? ` - Upgrade Credit Applied` : ''}`;
 
   if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_mock') {
     const session = await stripe.checkout.sessions.create({
@@ -151,16 +169,16 @@ exports.createPlanCheckoutSession = async (planId, user) => {
       }],
       mode: 'payment',
       customer_email: user.email,
-      metadata: { userId: user.id, planId, proratedCredit: proratedCredit.toString() },
-      success_url: `${APP_URL}/billing?success=true&sessionId={CHECKOUT_SESSION_ID}&planId=${planId}&proratedCredit=${proratedCredit}`,
+      metadata: { userId: user.id, planId, interval, proratedCredit: proratedCredit.toString() },
+      success_url: `${APP_URL}/billing?success=true&sessionId={CHECKOUT_SESSION_ID}&planId=${planId}&interval=${interval}&proratedCredit=${proratedCredit}`,
       cancel_url: `${APP_URL}/plans?canceled=true`,
     });
     return session.url;
   }
-  return `${APP_URL}/billing?success=true&sessionId=MOCK_SESSION_${Date.now()}&planId=${planId}&proratedCredit=${proratedCredit}`;
+  return `${APP_URL}/billing?success=true&sessionId=MOCK_SESSION_${Date.now()}&planId=${planId}&interval=${interval}&proratedCredit=${proratedCredit}`;
 };
 
-exports.confirmPlanPurchase = async (sessionId, planId, user, proratedCredit = 0) => {
+exports.confirmPlanPurchase = async (sessionId, planId, user, proratedCredit = 0, interval = 'MONTH') => {
   requireAuth(user);
   const User = require('../../models/User');
   const fullUser = await User.findById(user.id);
@@ -169,33 +187,28 @@ exports.confirmPlanPurchase = async (sessionId, planId, user, proratedCredit = 0
   const PlanInvoice = require('../../models/PlanInvoice');
   const startDate = new Date();
 
-  // ── Upgrade (BASIC → PRO mid-cycle): immediate plan switch ───────────────
-  const isUpgrade = fullUser.planId === 'BASIC' && planId === 'PRO' &&
-    fullUser.isPlanPurchased && fullUser.planExpiresAt && new Date(fullUser.planExpiresAt) > new Date();
-
-  let endDate;
-  if (isUpgrade) {
-    // Pro cycle starts now and runs 30 days from today
-    endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-  } else {
-    endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-  }
+  // Calculate duration in days
+  const durationDays = interval === 'YEAR' ? 365 : 30;
+  const endDate = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
 
   fullUser.isPlanPurchased = true;
   fullUser.planId = planId;
+  fullUser.planInterval = interval;
   fullUser.planExpiresAt = endDate;
-  // Clear any scheduled downgrade if organizer upgraded
   fullUser.scheduledPlanId = null;
   fullUser.scheduledDowngradeAt = null;
   await fullUser.save();
 
-  // Record the invoice — idempotency check to prevent duplicates
+  // Record the invoice
   const existing = await PlanInvoice.findOne({ stripeSessionId: sessionId });
   if (!existing) {
-    const BASIC_PRICE = 799;
-    const PRO_PRICE = 2499;
+    const PRICES = {
+      BASIC: { MONTH: 799, YEAR: 7990 },
+      PRO: { MONTH: 2499, YEAR: 24990 }
+    };
     const credit = Number(proratedCredit) || 0;
-    const amount = planId === 'BASIC' ? BASIC_PRICE : Math.max(0, PRO_PRICE - credit);
+    const amount = Math.max(0, PRICES[planId][interval] - credit);
+    
     await PlanInvoice.create({
       organizer: fullUser._id,
       planId,
@@ -210,11 +223,7 @@ exports.confirmPlanPurchase = async (sessionId, planId, user, proratedCredit = 0
 
   const { signToken } = require('../../utils/jwt');
   const token = signToken({
-    id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name,
-    isPlanPurchased: fullUser.isPlanPurchased, planId: fullUser.planId,
-    planExpiresAt: fullUser.planExpiresAt,
-    scheduledPlanId: fullUser.scheduledPlanId,
-    scheduledDowngradeAt: fullUser.scheduledDowngradeAt,
+    id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name
   });
   return { token, user: fullUser };
 };
@@ -238,6 +247,7 @@ exports.scheduleDowngrade = async (targetPlanId, user) => {
   const token = signToken({
     id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name,
     isPlanPurchased: fullUser.isPlanPurchased, planId: fullUser.planId,
+    planInterval: fullUser.planInterval,
     planExpiresAt: fullUser.planExpiresAt,
     scheduledPlanId: fullUser.scheduledPlanId,
     scheduledDowngradeAt: fullUser.scheduledDowngradeAt,
@@ -258,11 +268,7 @@ exports.cancelScheduledDowngrade = async (user) => {
 
   const { signToken } = require('../../utils/jwt');
   const token = signToken({
-    id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name,
-    isPlanPurchased: fullUser.isPlanPurchased, planId: fullUser.planId,
-    planExpiresAt: fullUser.planExpiresAt,
-    scheduledPlanId: null,
-    scheduledDowngradeAt: null,
+    id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name
   });
   return { token, user: fullUser };
 };

@@ -13,6 +13,7 @@ import { CREATE_PLAN_CHECKOUT_SESSION, SCHEDULE_DOWNGRADE, CANCEL_SCHEDULED_DOWN
 export default function PlansPage() {
   const { user, login } = useAuth();
   const router = useRouter();
+  const [billingInterval, setBillingInterval] = useState('MONTH'); // 'MONTH' or 'YEAR'
   const [createSession, { loading: creating }] = useMutation(CREATE_PLAN_CHECKOUT_SESSION);
   const [scheduleDowngrade, { loading: scheduling }] = useMutation(SCHEDULE_DOWNGRADE);
   const [cancelDowngrade, { loading: cancelling }] = useMutation(CANCEL_SCHEDULED_DOWNGRADE);
@@ -32,7 +33,7 @@ export default function PlansPage() {
   const currentPlanId = user?.planId;
   const scheduledPlanId = billing?.scheduledPlanId;
   const scheduledDowngradeAt = billing?.scheduledDowngradeAt;
-  const proratedUpgradeAmount = billing?.proratedUpgradeAmount ?? 2499;
+  const proratedUpgradeAmount = billing?.proratedUpgradeAmount ?? (billingInterval === 'MONTH' ? 2499 : 24990);
 
   useEffect(() => {
     if (!user) { router.replace('/login'); return; }
@@ -42,7 +43,12 @@ export default function PlansPage() {
 
   const handleSubscribe = async (planId) => {
     try {
-      const { data } = await createSession({ variables: { planId } });
+      const { data } = await createSession({
+        variables: {
+          planId,
+          interval: billingInterval
+        }
+      });
       if (data?.createPlanCheckoutSession) window.location.href = data.createPlanCheckoutSession;
     } catch (err) { toast.error(err.message); }
   };
@@ -52,7 +58,7 @@ export default function PlansPage() {
       const { data } = await scheduleDowngrade({ variables: { targetPlanId: 'BASIC' } });
       login(data.scheduleDowngrade.token);
       await refetchBilling();
-      toast.success('Downgrade scheduled! Basic plan will activate after your Pro cycle ends.');
+      toast.success('Downgrade scheduled! Basic plan will activate after your current cycle ends.');
     } catch (err) { toast.error(err.message); }
     setConfirmModal(null);
   };
@@ -62,7 +68,7 @@ export default function PlansPage() {
       const { data } = await cancelDowngrade();
       login(data.cancelScheduledDowngrade.token);
       await refetchBilling();
-      toast.success('Scheduled downgrade cancelled. You will stay on Pro plan.');
+      toast.success(`Scheduled downgrade cancelled. You will stay on ${currentPlanId} plan.`);
     } catch (err) { toast.error(err.message); }
     setConfirmModal(null);
   };
@@ -86,6 +92,11 @@ export default function PlansPage() {
     'white-labeling'
   ];
 
+  const prices = {
+    BASIC: { MONTH: '799', YEAR: '7,990' },
+    PRO: { MONTH: '2,499', YEAR: '24,990' }
+  };
+
   return (
     <ConfigProvider theme={{ algorithm: theme.defaultAlgorithm, token: { colorPrimary: 'rgb(67, 56, 202)', fontFamily: "'Inter', sans-serif" } }}>
       <Head><title>Subscription Plans | EventHub</title></Head>
@@ -104,10 +115,10 @@ export default function PlansPage() {
               <ExclamationCircleOutlined className="confirm-icon confirm-icon-warning" />
               <div className="confirm-title">Switch to Basic Plan?</div>
               <div className="confirm-text">
-                Your Pro plan stays active until <strong>{billingData?.myBilling?.planExpiresAt ? new Date(billingData.myBilling.planExpiresAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '...'}</strong>. After that, Basic plan (5 events limit) will activate automatically. No refund is issued.
+                Your current plan stays active until <strong>{billingData?.myBilling?.planExpiresAt ? new Date(billingData.myBilling.planExpiresAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '...'}</strong>. After that, Basic plan will activate automatically. No refund is issued.
               </div>
               <div className="confirm-actions">
-                <Button onClick={() => setConfirmModal(null)}>Keep Pro</Button>
+                <Button onClick={() => setConfirmModal(null)}>Keep {currentPlanId}</Button>
                 <Button type="primary" danger loading={scheduling} onClick={handleScheduleDowngrade}>Yes, Schedule Downgrade</Button>
               </div>
             </div>
@@ -117,11 +128,11 @@ export default function PlansPage() {
               <ExclamationCircleOutlined className="confirm-icon confirm-icon-primary" />
               <div className="confirm-title">Cancel Scheduled Downgrade?</div>
               <div className="confirm-text">
-                Your Pro plan will continue to renew at full price after the current cycle.
+                Your {currentPlanId} plan will continue to renew after the current cycle.
               </div>
               <div className="confirm-actions">
                 <Button onClick={() => setConfirmModal(null)}>Close</Button>
-                <Button type="primary" loading={cancelling} onClick={handleCancelDowngrade}>Yes, Stay on Pro</Button>
+                <Button type="primary" loading={cancelling} onClick={handleCancelDowngrade}>Yes, Stay on {currentPlanId}</Button>
               </div>
             </div>
           )}
@@ -134,7 +145,7 @@ export default function PlansPage() {
               <span className="status-banner-icon">⏰</span>
               <div>
                 <div className="status-banner-title">
-                  Your {user?.planId === 'PRO' ? 'Pro' : 'Basic'} Plan has expired
+                  Your Plan has expired
                 </div>
                 <div className="status-banner-text">
                   Your existing events and all purchased tickets remain intact. Renew your plan to create new events.
@@ -151,7 +162,7 @@ export default function PlansPage() {
                 <div>
                   <div className="status-banner-title">Downgrade Scheduled</div>
                   <div className="status-banner-text">
-                    Your plan will switch to <strong>Basic</strong> on {new Date(scheduledDowngradeAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}. Pro features remain active until then.
+                    Your plan will switch to <strong>Basic</strong> on {new Date(scheduledDowngradeAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}. Current features remain active until then.
                   </div>
                 </div>
               </div>
@@ -189,6 +200,76 @@ export default function PlansPage() {
               </div>
             </div>
           </div>
+
+          {/* Interval Toggle */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '48px', alignItems: 'center', gap: '16px' }}>
+            <div className="interval-toggle-container" style={{
+              background: '#F1F5F9',
+              padding: '6px',
+              borderRadius: '100px',
+              display: 'flex',
+              gap: '4px',
+              border: '1px solid #E2E8F0',
+              position: 'relative'
+            }}>
+              <div
+                onClick={() => setBillingInterval('MONTH')}
+                style={{
+                  padding: '8px 24px',
+                  borderRadius: '100px',
+                  cursor: 'pointer',
+                  zIndex: 2,
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  color: billingInterval === 'MONTH' ? 'white' : '#64748B',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                Monthly
+              </div>
+              <div
+                onClick={() => setBillingInterval('YEAR')}
+                style={{
+                  padding: '8px 24px',
+                  borderRadius: '100px',
+                  cursor: 'pointer',
+                  zIndex: 2,
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  color: billingInterval === 'YEAR' ? 'white' : '#64748B',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                Yearly
+                <span style={{
+                  background: billingInterval === 'YEAR' ? 'rgba(255,255,255,0.2)' : '#DCFCE7',
+                  color: billingInterval === 'YEAR' ? 'white' : '#15803D',
+                  fontSize: '0.65rem',
+                  padding: '2px 8px',
+                  borderRadius: '100px',
+                  fontWeight: 800
+                }}>
+                  SAVE 20%
+                </span>
+              </div>
+              <div style={{
+                position: 'absolute',
+                top: '6px',
+                left: billingInterval === 'MONTH' ? '6px' : '108px',
+                width: billingInterval === 'MONTH' ? '96px' : '175px',
+                height: 'calc(100% - 12px)',
+                background: 'var(--primary-color)',
+                borderRadius: '100px',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                zIndex: 1,
+                boxShadow: '0 4px 12px rgba(67, 56, 202, 0.25)'
+              }} />
+            </div>
+          </div>
+
           {/* Active Pro plan — locked notice (no upgrade needed) */}
           {isActivePlan && currentPlanId === 'PRO' && !scheduledPlanId && (
             <div className="status-banner status-banner-info">
@@ -204,16 +285,16 @@ export default function PlansPage() {
           <div className="plans-grid">
 
             {/* Basic */}
-            <div className={`plan-card ${isActivePlan && currentPlanId === 'BASIC' ? 'plan-card-current' : ''}`}>
+            <div className={`plan-card ${isActivePlan && currentPlanId === 'BASIC' && user?.planInterval === billingInterval ? 'plan-card-current' : ''}`}>
               <div className="card-top-bar basic-bar" />
-              {isActivePlan && currentPlanId === 'BASIC' && (
+              {isActivePlan && currentPlanId === 'BASIC' && user?.planInterval === billingInterval && (
                 <div className="current-badge">✓ Current Plan</div>
               )}
               <div className="plan-label">Basic</div>
               <div className="plan-price-row">
                 <span className="currency">₹</span>
-                <span className="price-amount">799</span>
-                <span className="price-period">/month</span>
+                <span className="price-amount">{prices.BASIC[billingInterval]}</span>
+                <span className="price-period">/{billingInterval === 'MONTH' ? 'month' : 'year'}</span>
               </div>
               <p className="plan-desc">Perfect for getting started with event management.</p>
               <div className="divider" />
@@ -227,10 +308,10 @@ export default function PlansPage() {
               </ul>
 
               {/* Basic card CTA logic */}
-              {!isActivePlan && (
+              {(!isActivePlan || (currentPlanId === 'BASIC' && user?.planInterval !== billingInterval)) && (
                 <Button size="large" block loading={creating} onClick={() => handleSubscribe('BASIC')} className="btn-basic-action">Get Started</Button>
               )}
-              {isActivePlan && currentPlanId === 'BASIC' && (
+              {isActivePlan && currentPlanId === 'BASIC' && user?.planInterval === billingInterval && (
                 <Button size="large" block disabled className="btn-basic-action">✓ Current Plan</Button>
               )}
               {isActivePlan && currentPlanId === 'PRO' && !scheduledPlanId && (
@@ -244,9 +325,9 @@ export default function PlansPage() {
             </div>
 
             {/* Pro */}
-            <div className={`plan-card plan-card-pro ${isActivePlan && currentPlanId === 'PRO' ? 'plan-card-current' : ''}`}>
+            <div className={`plan-card plan-card-pro ${isActivePlan && currentPlanId === 'PRO' && user?.planInterval === billingInterval ? 'plan-card-current' : ''}`}>
               <div className="card-top-bar pro-bar" />
-              {isActivePlan && currentPlanId === 'PRO' ? (
+              {isActivePlan && currentPlanId === 'PRO' && user?.planInterval === billingInterval ? (
                 <div className="current-badge current-badge-pro">✓ Current Plan</div>
               ) : (
                 <div className="pro-badge">
@@ -256,14 +337,16 @@ export default function PlansPage() {
               <div className="plan-label pro-label">Pro</div>
               <div className="plan-price-row">
                 <span className="currency">₹</span>
-                <span className="price-amount">{isActivePlan && currentPlanId === 'BASIC' ? proratedUpgradeAmount.toLocaleString('en-IN') : '2,499'}</span>
-                <span className="price-period">/month</span>
+                <span className="price-amount">
+                  {isActivePlan && currentPlanId === 'BASIC' ? proratedUpgradeAmount.toLocaleString('en-IN') : prices.PRO[billingInterval]}
+                </span>
+                <span className="price-period">/{billingInterval === 'MONTH' ? 'month' : 'year'}</span>
               </div>
               {/* Prorated notice for BASIC → PRO upgrade */}
-              {isActivePlan && currentPlanId === 'BASIC' && proratedUpgradeAmount < 2499 && (
+              {isActivePlan && currentPlanId === 'BASIC' && proratedUpgradeAmount < (billingInterval === 'MONTH' ? 2499 : 24990) && (
                 <div className="prorated-note">
                   <span>✂️</span>
-                  <span>₹{(2499 - proratedUpgradeAmount).toLocaleString('en-IN')} credit applied (unused Basic days)</span>
+                  <span>Credit applied for remaining Basic days</span>
                 </div>
               )}
               <p className="plan-desc">Everything you need to run events like a professional.</p>
@@ -283,10 +366,10 @@ export default function PlansPage() {
               </ul>
 
               {/* Pro card CTA logic */}
-              {!isActivePlan && (
+              {(!isActivePlan || (currentPlanId === 'PRO' && user?.planInterval !== billingInterval)) && (
                 <Button type="primary" size="large" block style={{ color: '#ffff' }} loading={creating} onClick={() => handleSubscribe('PRO')} icon={<RocketOutlined />} className="btn-pro-action">Upgrade to Pro</Button>
               )}
-              {isActivePlan && currentPlanId === 'PRO' && (
+              {isActivePlan && currentPlanId === 'PRO' && user?.planInterval === billingInterval && (
                 <Button type="primary" size="large" block style={{ color: '#ffff' }} disabled className="btn-pro-action">✓ Active Plan</Button>
               )}
               {isActivePlan && currentPlanId === 'BASIC' && (

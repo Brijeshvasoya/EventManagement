@@ -93,10 +93,7 @@ export default function AppLayout({ children }) {
     ];
   }
 
-  if (user?.role === 'ORGANIZER' && !user?.isPlanPurchased) {
-    menuItems.length = 0; // Clear all menus — no plan yet
-    menuItems.push({ key: '/plans', icon: <AppstoreOutlined />, label: 'Choose Plan' });
-  }
+  const isBlocked = user?.role === 'ORGANIZER' && (!user?.isPlanPurchased || isPlanExpired);
 
   const selectedKey = router.pathname === '/' ? '/dashboard' : router.pathname;
 

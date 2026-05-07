@@ -3,7 +3,9 @@ import { gql } from '@apollo/client';
 export const GET_ME = gql`
   query GetMe {
     me {
-      id name email role createdAt loyaltyPoints averageRating redeemedRewards isPlanPurchased planId totalWithdrawn availablePayout
+      id name email role createdAt loyaltyPoints averageRating redeemedRewards 
+      isPlanPurchased planId planInterval planExpiresAt scheduledPlanId scheduledDowngradeAt
+      totalWithdrawn availablePayout
       bankDetails { accountHolderName accountNumber bankName ifscCode }
     }
   }

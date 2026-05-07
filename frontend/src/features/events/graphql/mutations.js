@@ -172,15 +172,15 @@ export const CONFIRM_PAYMENT = gql`
   }
 `;
 
-export const CONFIRM_PLAN_PURCHASE = gql`
-  mutation ConfirmPlanPurchase($sessionId: String!, $planId: String!, $proratedCredit: Int) {
-    confirmPlanPurchase(sessionId: $sessionId, planId: $planId, proratedCredit: $proratedCredit) { token }
+export const CREATE_PLAN_CHECKOUT_SESSION = gql`
+  mutation CreatePlanCheckoutSession($planId: String!, $interval: String) {
+    createPlanCheckoutSession(planId: $planId, interval: $interval)
   }
 `;
 
-export const CREATE_PLAN_CHECKOUT_SESSION = gql`
-  mutation CreatePlanCheckoutSession($planId: String!) {
-    createPlanCheckoutSession(planId: $planId)
+export const CONFIRM_PLAN_PURCHASE = gql`
+  mutation ConfirmPlanPurchase($sessionId: String!, $planId: String!, $proratedCredit: Int, $interval: String) {
+    confirmPlanPurchase(sessionId: $sessionId, planId: $planId, proratedCredit: $proratedCredit, interval: $interval) { token }
   }
 `;
 
