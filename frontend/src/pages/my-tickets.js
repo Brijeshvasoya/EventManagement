@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import { Table, Tag, Button, Space, Card, Typography, Spin, Empty, Popconfirm } from 'antd';
-import { EyeOutlined, CalendarOutlined, AuditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { EyeOutlined, CalendarOutlined, AuditOutlined, DeleteOutlined, EnvironmentOutlined, UserOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import DigitalTicketModal from '@/features/events/components/DigitalTicketModal';
 
@@ -23,6 +23,7 @@ export default function MyTickets() {
 
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pageSize, setPageSize] = useState(5);
   const [cancelBooking] = useMutation(CANCEL_BOOKING);
 
   const bookings = useMemo(() =>
@@ -80,17 +81,55 @@ export default function MyTickets() {
       dataIndex: ['event', 'title'],
       key: 'eventTitle',
       render: (text, record) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', padding: '4px 0' }}>
           <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '8px',
+            width: '64px',
+            height: '64px',
+            borderRadius: '12px',
             overflow: 'hidden',
-            flexShrink: 0
+            flexShrink: 0,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+            position: 'relative'
           }}>
-            <Image src={record?.event?.imageUrl || '/event-placeholder.jpg'} alt={text || 'Event'} fill unoptimized style={{ objectFit: 'cover' }} />
+            <Image
+              src={record?.event?.imageUrl || '/event-placeholder.jpg'}
+              alt={text || 'Event'}
+              fill
+              unoptimized
+              style={{ objectFit: 'cover' }}
+            />
           </div>
-          <Text strong>{text}</Text>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <Text strong style={{ fontSize: '1rem', lineHeight: 1.2, display: 'block' }}>{text}</Text>
+            <Space size={4} style={{ color: '#64748B', fontSize: '0.8rem' }}>
+              <EnvironmentOutlined style={{ color: 'var(--primary-color)', fontSize: '0.85rem' }} />
+              {record?.event?.location || 'Venue TBD'}
+            </Space>
+            {record?.event?.organizer?.name && (
+              <div style={{ color: '#94A3B8', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <UserOutlined style={{ fontSize: '0.7rem' }} />
+                  <span>By <span style={{ color: '#64748B', fontWeight: 500 }}>{record?.event?.organizer?.name}</span></span>
+                </div>
+                {record?.event?.eventType && (
+                  <>
+                    <span style={{ color: '#E2E8F0' }}>•</span>
+                    <span style={{
+                      background: 'rgba(99, 102, 241, 0.1)',
+                      color: 'var(--primary-color)',
+                      padding: '0px 6px',
+                      borderRadius: '4px',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      textTransform: 'uppercase'
+                    }}>
+                      {record?.event?.eventType}
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )
     },
@@ -263,7 +302,14 @@ export default function MyTickets() {
             columns={columns}
             dataSource={bookings}
             rowKey="id"
-            pagination={{ pageSize: 10 }}
+            pagination={{
+              pageSize: pageSize,
+              showSizeChanger: true,
+              pageSizeOptions: ['5', '10', '20', '50'],
+              onShowSizeChange: (current, size) => setPageSize(size),
+              hideOnSinglePage: false,
+              style: { marginTop: '24px', marginRight: '16px' }
+            }}
             locale={{
               emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="You haven't booked any tickets yet." />
             }}

@@ -28,6 +28,8 @@ function TransactionsContent() {
   const [payoutStatusFilter, setPayoutStatusFilter] = useState('ALL');
   const [payoutForm] = Form.useForm();
   const [bankForm] = Form.useForm();
+  const [transactionPageSize, setTransactionPageSize] = useState(5);
+  const [payoutPageSize, setPayoutPageSize] = useState(3);
 
   const { data: userData, refetch: refetchUser } = useQuery(GET_ME, {
     skip: !user || user.role !== 'ORGANIZER'
@@ -368,7 +370,13 @@ function TransactionsContent() {
               dataSource={allTransactions}
               rowKey="id"
               scroll={{ x: 800 }}
-              pagination={{ pageSize: 10, showSizeChanger: true }}
+              pagination={{
+                pageSize: transactionPageSize,
+                showSizeChanger: true,
+                pageSizeOptions: ['5', '10', '20', '50'],
+                onShowSizeChange: (current, size) => setTransactionPageSize(size),
+                hideOnSinglePage: false
+              }}
               className="premium-table"
             />
           </div>
@@ -452,7 +460,13 @@ function TransactionsContent() {
               columns={payoutColumns}
               dataSource={filteredPayouts}
               rowKey="id"
-              pagination={{ pageSize: 8 }}
+              pagination={{
+                pageSize: payoutPageSize,
+                showSizeChanger: true,
+                pageSizeOptions: ['5', '8', '15', '30'],
+                onShowSizeChange: (current, size) => setPayoutPageSize(size),
+                hideOnSinglePage: false
+              }}
               size="small"
               className="premium-table"
             />
