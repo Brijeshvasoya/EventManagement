@@ -6,11 +6,14 @@ const bookingSchema = new mongoose.Schema({
   status: { type: String, enum: ['PENDING', 'CONFIRMED', 'CANCELLED', 'CHECKED_IN'], default: 'PENDING' },
   ticketType: { type: String, default: 'REGULAR' },
   quantity: { type: Number, default: 1 },
+  checkedInCount: { type: Number, default: 0 },
   amountPaid: { type: Number, default: 0 },
   paymentStatus: { type: String, enum: ['PENDING', 'PAID', 'FAILED', 'REFUNDED'], default: 'PENDING' },
   stripePaymentId: { type: String, index: { unique: true, sparse: true } },
   paymentIntentId: { type: String, index: { unique: true, sparse: true } },
-  abandonedEmailSent: { type: Boolean, default: false }
+  abandonedEmailSent: { type: Boolean, default: false },
+  welcomeEmailSent: { type: Boolean, default: false },
+  feedbackEmailSent: { type: Boolean, default: false }
 }, { timestamps: true });
 
 // Uniqueness is primarily managed by stripePaymentId to allow multiple bookings per user/event

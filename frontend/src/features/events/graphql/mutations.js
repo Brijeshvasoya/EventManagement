@@ -73,10 +73,12 @@ export const DELETE_VENDOR = gql`
 `;
 
 export const VERIFY_TICKET = gql`
-  mutation VerifyTicket($bookingId: ID!) {
-    verifyTicket(bookingId: $bookingId) {
+  mutation VerifyTicket($bookingId: ID!, $count: Int) {
+    verifyTicket(bookingId: $bookingId, count: $count) {
       id
       status
+      quantity
+      checkedInCount
       user { name }
       event { title }
     }

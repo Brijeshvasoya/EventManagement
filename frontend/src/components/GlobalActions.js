@@ -28,11 +28,6 @@ export function GlobalActionsProvider({ children }) {
   });
   const { refetch: refetchBookings } = useQuery(GET_MY_BOOKINGS, { skip: !user });
 
-  // Real-time Notification Subscription
-  useEffect(() => {
-    if (user) console.log('📡 Initializing PubSub Subscription link...');
-  }, [user]);
-
   useSubscription(NOTIFICATION_SUBSCRIPTION, {
     skip: !user,
     onData: (result) => {
@@ -57,7 +52,6 @@ export function GlobalActionsProvider({ children }) {
   });
 
   const unreadCount = countData?.unreadNotificationCount || 0;
-  if (unreadCount > 0) console.log('Current Badge Count:', unreadCount);
 
   const { data: meData } = useQuery(GET_ME, {
     skip: !user,

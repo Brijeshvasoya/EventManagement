@@ -4,7 +4,7 @@ const typeDefs = `#graphql
   type TicketType { name: String! price: Float! capacity: Int! }
   type Feedback { id: ID! booking: Booking! event: Event! organizer: User! user: User! rating: Int! comment: String createdAt: String! }
   type Event { id: ID! title: String! description: String! date: String! location: String! capacity: Int! imageUrl: String organizer: User! isBooked: Boolean isOnWaitlist: Boolean waitlistCount: Int eventType: String status: String ticketTypes: [TicketType] bookedCount: Int attendees: [Booking!] vendors: [Vendor!] feedbacks: [Feedback!] features: [String] }
-  type Booking { id: ID! event: Event! user: User! status: String! createdAt: String! qrCode: String ticketType: String amountPaid: Float quantity: Int paymentStatus: String paymentUrl: String }
+  type Booking { id: ID! event: Event! user: User! status: String! createdAt: String! qrCode: String ticketType: String amountPaid: Float quantity: Int checkedInCount: Int paymentStatus: String paymentUrl: String }
   type Vendor { id: ID! name: String! category: String! rating: Float cost: Float contactInfo: String availableDates: [String] organizer: User! events: [Event!] }
   type Notification { id: ID! recipient: User! title: String message: String! type: String! read: Boolean! booking: Booking event: Event createdAt: String! }
   type AuthPayload { token: String! user: User! }
@@ -30,6 +30,7 @@ const typeDefs = `#graphql
     event(id: ID!): Event
     myEvents: [Event!]!
     myBookings: [Booking!]!
+    booking(id: ID!): Booking!
     vendors: [Vendor!]!
     vendor(id: ID!): Vendor
     myVendors: [Vendor!]!
@@ -63,7 +64,7 @@ const typeDefs = `#graphql
     createVendor(input: VendorInput!): Vendor!
     updateVendor(id: ID!, input: VendorInput!): Vendor!
     deleteVendor(id: ID!): Boolean!
-    verifyTicket(bookingId: ID!): Booking!
+    verifyTicket(bookingId: ID!, count: Int): Booking!
     markNotificationAsRead(id: ID!): Notification!
     markAllNotificationsAsRead: Boolean!
     redeemReward(rewardId: String!, points: Int!): User!

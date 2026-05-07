@@ -16,7 +16,7 @@ export const GET_EVENTS = gql`
       ticketTypes { name price capacity }
       organizer { id name email totalWithdrawn }
       isBooked
-      attendees { id user { id name email } quantity amountPaid ticketType status createdAt }
+      attendees { id user { id name email } quantity checkedInCount amountPaid ticketType status createdAt }
       vendors { id name category cost contactInfo }
       features
     }
@@ -42,13 +42,23 @@ export const GET_MY_BOOKINGS = gql`
   }
 `;
 
+export const GET_BOOKING = gql`
+  query GetBooking($id: ID!) {
+    booking(id: $id) {
+      id status quantity checkedInCount ticketType createdAt
+      event { id title date location capacity }
+      user { id name email }
+    }
+  }
+`;
+
 export const GET_EVENT_DETAILS = gql`
   query GetEventDetails($id: ID!) {
     event(id: $id) {
       id title description date location capacity imageUrl eventType status bookedCount isOnWaitlist waitlistCount
       organizer { id name email averageRating }
       ticketTypes { name price capacity }
-      attendees { id user { id name email } quantity amountPaid ticketType status createdAt }
+      attendees { id user { id name email } quantity checkedInCount amountPaid ticketType status createdAt }
       vendors { id name category cost contactInfo }
       feedbacks { id rating comment user { name } createdAt }
       features
@@ -74,6 +84,7 @@ export const GET_MY_EVENTS = gql`
         id 
         user { name email } 
         quantity 
+        checkedInCount
         amountPaid 
         ticketType 
         status 

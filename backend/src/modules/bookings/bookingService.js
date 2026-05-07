@@ -376,15 +376,22 @@ const bookingService = {
     return Booking.find({ event: eventId }).sort({ createdAt: -1 });
   },
 
-  verifyTicket: async (bookingId) => {
+  verifyTicket: async (bookingId, count = 1) => {
     const booking = await Booking.findById(bookingId).populate('user event');
     if (!booking) throw new Error('Invalid ticket: Booking not found.');
 
-    if (booking.status === 'CHECKED_IN') {
-      throw new Error(`Already checked in: Ticket was scanned on ${new Date(booking.updatedAt).toLocaleTimeString()}.`);
+    const currentCheckedIn = booking.checkedInCount || 0;
+    const remaining = booking.quantity - currentCheckedIn;
+
+    if (currentCheckedIn >= booking.quantity && booking.quantity > 0) {
+      throw new Error(`Already checked in: All ${booking.quantity} tickets for this booking have been scanned.`);
     }
 
-    if (booking.status !== 'CONFIRMED') {
+    if (count > remaining) {
+      throw new Error(`Invalid count: Only ${remaining} ticket(s) remaining for this booking.`);
+    }
+
+    if (booking.status !== 'CONFIRMED' && booking.status !== 'CHECKED_IN') {
       if (booking.status === 'PENDING') {
         throw new Error('Access Denied: Payment Pending. Please complete payment to verify this ticket.');
       }
@@ -408,7 +415,13 @@ const bookingService = {
       throw new Error(`Access Denied: This ticket is valid for ${eventDate.toLocaleDateString()}. Verification is only permitted on the scheduled day of the event.`);
     }
 
+    // Increment checked in count
+    booking.checkedInCount = currentCheckedIn + count;
+    
+    // Always set status to CHECKED_IN once at least one person is in, 
+    // but the guard at the top and the logic here manage the count.
     booking.status = 'CHECKED_IN';
+    
     await booking.save();
 
     // Notify Attendee about successful check-in
@@ -425,13 +438,24 @@ const bookingService = {
       console.error('Failed to create check-in notification:', err.message);
     }
 
-    // ASYNC EMAIL DISPATCH: Send feedback request email
+    // ASYNC EMAIL DISPATCH: Send Welcome and Feedback request emails
     (async () => {
       try {
-        const { sendCheckInFeedbackEmail } = require('../../utils/email');
-        await sendCheckInFeedbackEmail(booking.user, booking, booking.event);
+        const { sendWelcomeEmail, sendCheckInFeedbackEmail } = require('../../utils/email');
+        
+        // 1. Send Welcome Mail if not already sent
+        if (!booking.welcomeEmailSent) {
+          await sendWelcomeEmail(booking.user, booking, booking.event);
+          await Booking.findByIdAndUpdate(booking._id, { welcomeEmailSent: true });
+        }
+
+        // 2. Send Feedback Mail if not already sent
+        if (!booking.feedbackEmailSent) {
+          await sendCheckInFeedbackEmail(booking.user, booking, booking.event);
+          await Booking.findByIdAndUpdate(booking._id, { feedbackEmailSent: true });
+        }
       } catch (e) {
-        console.error('❌ Feedback email failed but check-in successful:', e.message);
+        console.error('❌ Check-in emails failed but check-in successful:', e.message);
       }
     })();
 

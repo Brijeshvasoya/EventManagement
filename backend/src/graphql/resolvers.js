@@ -11,6 +11,9 @@ const notificationService = require('../modules/notifications/notificationServic
 const stripeService = require('../modules/payments/stripeService');
 const razorpayService = require('../modules/payments/razorpayService');
 const analyticsService = require('../modules/analytics/analyticsService');
+const Booking = require('../models/Booking');
+const User = require('../models/User');
+const Event = require('../models/Event');
 const SupportTicket = require('../models/SupportTicket');
 const { pubsub, EVENTS } = require('../utils/pubsub');
 
@@ -29,6 +32,15 @@ const resolvers = {
       return await Event.find({ organizer: user.id }).sort({ date: -1 });
     },
     myBookings: (_, __, { user }) => bookingService.getMyBookings(user),
+    booking: async (_, { id }, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new Error('Invalid Booking ID format. Please use the full 24-character ID.');
+      }
+      const booking = await Booking.findById(id).populate('user event');
+      if (!booking) throw new Error('Booking not found');
+      return booking;
+    },
     vendors: async () => await Vendor.find({}),
     myVendors: async (_, __, { user }) => {
       if (!user) throw new GraphQLError('Unauthorized');
@@ -250,9 +262,9 @@ const resolvers = {
       await Vendor.findByIdAndDelete(id);
       return true;
     },
-    verifyTicket: (_, { bookingId }, { user }) => {
+    verifyTicket: (_, { bookingId, count }, { user }) => {
       if (!user) throw new GraphQLError('Unauthorized');
-      return bookingService.verifyTicket(bookingId);
+      return bookingService.verifyTicket(bookingId, count);
     },
     markNotificationAsRead: (_, { id }, { user }) => notificationService.markAsRead(id, user),
     markAllNotificationsAsRead: (_, __, { user }) => notificationService.markAllAsRead(user),

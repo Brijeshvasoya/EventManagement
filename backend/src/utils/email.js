@@ -249,6 +249,48 @@ exports.sendCancellationEmail = async (user, booking, event, pdfBuffer = null) =
   }
 };
 
+exports.sendWelcomeEmail = async (user, booking, event) => {
+  const recipient = (process.env.RESEND_TEST_RECIPIENT || user.email).trim();
+  const FROM_EMAIL = (process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev').trim();
+
+  try {
+    const emailOptions = {
+      from: FROM_EMAIL,
+      to: recipient,
+      subject: `Welcome to "${event.title}"! 🎊`,
+      text: `Hi ${user.name},\n\nWelcome to "${event.title}"! We're thrilled to have you here. Your check-in was successful. Enjoy the event!\n\nLocation: ${event.location}\nBooking ID: #${(booking.id || booking._id).toString().slice(-8).toUpperCase()}`,
+      html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px; color: white; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px;">🎊 Welcome to the Event!</h1>
+            <p style="opacity: 0.85;">We're thrilled to have you at "${event.title}"</p>
+          </div>
+          <div style="padding: 30px; background: white; text-align: center;">
+            <p>Hi <strong>${user.name}</strong>,</p>
+            <p>Your check-in was successful! You are all set to enjoy the experience.</p>
+            
+            <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin: 20px 0; text-align: left;">
+              <h3 style="color: #1e1b4b; margin: 0;">${event.title}</h3>
+              <p style="margin: 5px 0; color: #64748b;">${event.location}</p>
+            </div>
+
+            <p style="color: #64748b; font-size: 14px;">If you need any assistance, please find our staff at the help desk.</p>
+            
+            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
+          </div>
+          <div style="padding: 20px; background: #f1f5f9; text-align: center; font-size: 12px; color: #94a3b8;">
+            © 2026 EventHub SaaS. All rights reserved.
+          </div>
+        </div>
+      `,
+    };
+
+    await resend.emails.send(emailOptions);
+  } catch (error) {
+    console.error(`❌ WELCOME EMAIL ERROR: Failed to send to ${recipient}`, error);
+  }
+};
+
 exports.sendCheckInFeedbackEmail = async (user, booking, event) => {
   const recipient = (process.env.RESEND_TEST_RECIPIENT || user.email).trim();
   const FROM_EMAIL = (process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev').trim();
