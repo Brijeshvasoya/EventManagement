@@ -42,13 +42,18 @@ export default function LandingPage() {
   };
 
   useEffect(() => {
+    // If running inside Capacitor (Mobile App), redirect away from Landing Page to Login
+    if (typeof window !== 'undefined' && (window).Capacitor?.isNativePlatform()) {
+      router.replace('/login');
+    }
+    
     setTimeout(() => setMounted(true), 0);
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (!loading && user) {
