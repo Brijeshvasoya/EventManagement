@@ -1011,8 +1011,8 @@ export default function Dashboard() {
                               <Tag style={{
                                 borderRadius: '100px',
                                 border: 'none',
-                                background: b.status === 'CANCELLED' ? '#FEF2F2' : b.status === 'PENDING' ? '#FFF7ED' : '#F0FDF4',
-                                color: b.status === 'CANCELLED' ? '#EF4444' : b.status === 'PENDING' ? '#F97316' : '#10B981',
+                                background: b.status === 'CANCELLED' ? '#FEF2F2' : b.status === 'PENDING' ? '#FFF7ED' : (b.status === 'CHECKED_IN' ? '#E0E7FF' : '#F0FDF4'),
+                                color: b.status === 'CANCELLED' ? '#EF4444' : b.status === 'PENDING' ? '#F97316' : (b.status === 'CHECKED_IN' ? '#4338CA' : '#10B981'),
                                 fontWeight: 700,
                                 margin: 0,
                                 fontSize: '0.7rem'
@@ -1224,7 +1224,18 @@ export default function Dashboard() {
                             <h3 style={{ margin: '0 0 4px 0', color: '#1B2A4E', fontSize: '1.4rem', fontWeight: 800 }}>{displayEvent.title}</h3>
                             <div style={{ color: '#94A3B8', fontSize: '0.9rem', fontWeight: 500 }}>{displayEvent.location}</div>
                           </div>
-                          {isBooked && <Tag style={{ borderRadius: '100px', border: 'none', background: '#F0FDF4', color: '#10B981', fontWeight: 700, margin: 0 }}>Confirmed</Tag>}
+                          {isBooked && (
+                            <Tag style={{
+                              borderRadius: '100px',
+                              border: 'none',
+                              background: b.status === 'PENDING' ? '#FFF7ED' : (b.status === 'CHECKED_IN' ? '#E0E7FF' : '#F0FDF4'),
+                              color: b.status === 'PENDING' ? '#F97316' : (b.status === 'CHECKED_IN' ? '#4338CA' : '#10B981'),
+                              fontWeight: 700,
+                              margin: 0
+                            }}>
+                              {b.status === 'PENDING' ? 'PAYMENT PENDING' : (b.status === 'CHECKED_IN' ? 'CHECKED IN' : (b.status || 'Confirmed'))}
+                            </Tag>
+                          )}
                         </div>
 
                         {isBooked ? (
