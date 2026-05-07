@@ -364,8 +364,8 @@ export default function Browse() {
     });
 
     const vendors = (vendorData?.myVendors || []).filter(v => {
-        const matchesSearch = v?.name?.toLowerCase().includes(searchText?.toLowerCase()) || 
-          v?.contactInfo?.toLowerCase().includes(searchText?.toLowerCase());
+        const matchesSearch = v?.name?.toLowerCase().includes(searchText?.toLowerCase()) ||
+            v?.contactInfo?.toLowerCase().includes(searchText?.toLowerCase());
         const matchesCategory = categoryFilter === 'ALL' || v?.category === categoryFilter;
         return matchesSearch && matchesCategory;
     });
@@ -391,7 +391,7 @@ export default function Browse() {
             <Head><title>Browse Events | EventHub</title></Head>
             <div style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
                 {/* Premium Hero */}
-                <div style={{ padding: '60px 40px', background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)', borderRadius: '32px', marginBottom: '40px', color: 'white', textAlign: 'center', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)' }}>
+                <div className="browse-hero" style={{ padding: '60px 40px', background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)', borderRadius: '32px', marginBottom: '40px', color: 'white', textAlign: 'center', boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)' }}>
                     <h1 style={{ margin: '0 0 16px 0', fontSize: '3.5rem', fontWeight: 900, letterSpacing: '-1px', color: 'white' }}>Explore Extraordinary Experiences</h1>
                     <p style={{ margin: '0 auto', fontSize: '1.2rem', color: 'rgba(255,255,255,0.8)', maxWidth: '600px' }}>Find and join top-rated upcoming events curated exclusively for you.</p>
                 </div>
@@ -539,6 +539,23 @@ export default function Browse() {
                 </Modal>
             </div>
             <style jsx global>{`
+                @media (max-width: 768px) {
+                    .browse-hero {
+                        padding: 40px 20px !important;
+                        border-radius: 20px !important;
+                    }
+                    .browse-hero h1 {
+                        font-size: 2.2rem !important;
+                    }
+                    .browse-hero p {
+                        font-size: 1rem !important;
+                    }
+                    .ant-segmented-item-label {
+                        padding: 8px 12px !important;
+                        font-size: 0.85rem !important;
+                    }
+                }
+
                 .premium-select-compact :global(.ant-select-selector) {
                     background: rgba(255, 255, 255, 0.03) !important;
                     border-color: rgba(255, 255, 255, 0.08) !important;
