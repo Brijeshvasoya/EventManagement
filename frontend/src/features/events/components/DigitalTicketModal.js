@@ -84,8 +84,8 @@ export default function DigitalTicketModal({ open, onCancel, booking, onCancelTi
             </div>
             <div>
               <Title level={4} style={{ margin: 0, color: '#1B2A4E', fontWeight: 800 }}>{booking.event?.title}</Title>
-              <Tag color="success" style={{ borderRadius: '100px', border: 'none', background: '#DCFCE7', color: '#166534', fontWeight: 700, marginTop: '4px' }}>
-                {booking.status}
+              <Tag color={booking.status === 'CHECKED_IN' ? 'blue' : (booking.status === 'CONFIRMED' ? 'success' : 'default')} style={{ borderRadius: '100px', border: 'none', background: booking.status === 'CHECKED_IN' ? '#E0E7FF' : (booking.status === 'CONFIRMED' ? '#DCFCE7' : '#F3F4F6'), color: booking.status === 'CHECKED_IN' ? '#4338CA' : (booking.status === 'CONFIRMED' ? '#166534' : '#6B7280'), fontWeight: 700, marginTop: '4px' }}>
+                {booking.status === 'CHECKED_IN' ? 'CHECKED IN' : booking.status}
               </Tag>
             </div>
           </div>

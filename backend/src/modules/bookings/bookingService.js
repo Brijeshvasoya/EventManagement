@@ -377,14 +377,7 @@ const bookingService = {
   },
 
   verifyTicket: async (bookingId) => {
-    const bookings = await Booking.aggregate([
-      { $match: { _id: new mongoose.Types.ObjectId(bookingId) } },
-      { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'user' } },
-      { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
-      { $lookup: { from: 'events', localField: 'event', foreignField: '_id', as: 'event' } },
-      { $unwind: { path: '$event', preserveNullAndEmptyArrays: true } }
-    ]);
-    const booking = bookings[0];
+    const booking = await Booking.findById(bookingId).populate('user event');
     if (!booking) throw new Error('Invalid ticket: Booking not found.');
 
     if (booking.status === 'CHECKED_IN') {
@@ -416,7 +409,7 @@ const bookingService = {
     }
 
     booking.status = 'CHECKED_IN';
-    await Booking.updateOne({ _id: booking._id }, { $set: { status: 'CHECKED_IN' } });
+    await booking.save();
 
     // Notify Attendee about successful check-in
     try {

@@ -57,7 +57,7 @@ export default function MyTickets() {
     );
   }
 
-  const bookings = (data?.myBookings || []).filter(b => b?.status === 'CONFIRMED' || b?.status === 'PENDING');
+  const bookings = (data?.myBookings || []).filter(b => b?.status === 'CONFIRMED' || b?.status === 'PENDING' || b?.status === 'CHECKED_IN');
 
   const handleViewTicket = (booking) => {
     setSelectedBooking(booking);

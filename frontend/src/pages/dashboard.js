@@ -840,12 +840,12 @@ export default function Dashboard() {
             </div>
           );
         })() : (() => {
-          const activeBookings = bookings.filter(b => b.status === 'CONFIRMED' || b.status === 'PENDING');
+          const activeBookings = bookings.filter(b => b.status === 'CONFIRMED' || b.status === 'PENDING' || b.status === 'CHECKED_IN');
           const upcomingBookings = activeBookings
             .filter(b => b.event && new Date(isNaN(Number(b.event.date)) ? b.event.date : Number(b.event.date)) >= now)
             .sort((a, b) => new Date(isNaN(Number(a.event.date)) ? a.event.date : Number(a.event.date)) - new Date(isNaN(Number(b.event.date)) ? b.event.date : Number(b.event.date)));
           const featuredBooking = upcomingBookings[0];
-          const totalSpent = activeBookings.filter(b => b.status === 'CONFIRMED').reduce((acc, b) => acc + (b.amountPaid || 0), 0);
+          const totalSpent = activeBookings.filter(b => b.status === 'CONFIRMED' || b.status === 'CHECKED_IN').reduce((acc, b) => acc + (b.amountPaid || 0), 0);
 
           // Calculate category preference for doughnut chart
           const catCount = {};
@@ -1017,7 +1017,7 @@ export default function Dashboard() {
                                 margin: 0,
                                 fontSize: '0.7rem'
                               }}>
-                                {b.status === 'PENDING' ? 'PAYMENT PENDING' : (b.status || 'Confirmed')}
+                                {b.status === 'PENDING' ? 'PAYMENT PENDING' : (b.status === 'CHECKED_IN' ? 'CHECKED IN' : (b.status || 'Confirmed'))}
                               </Tag>
                             </div>
                           </div>
