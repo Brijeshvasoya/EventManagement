@@ -329,7 +329,7 @@ export default function EventDetailsPage() {
           'default': { bg: '#f8fafc', dot: '#64748b', text: '#1e1b4b' }
         };
         const config = statusConfigs[status] || statusConfigs.default;
-        
+
         // Dynamic label for group check-ins
         let label = status;
         if (status === 'CHECKED_IN' && record.quantity > 1) {
@@ -395,7 +395,7 @@ export default function EventDetailsPage() {
           const countText = record.quantity > 1 ? ` (${record.checkedInCount}/${record.quantity})` : '';
           return <AntText style={{ color: '#6366f1', fontSize: '10px', fontWeight: 800, paddingRight: '12px' }}>CHECKED IN{countText}</AntText>;
         }
-        
+
         // Partial check-in but status still CONFIRMED
         if (record.status === 'CONFIRMED' && record.checkedInCount > 0 && record.quantity > 1) {
           return <AntText style={{ color: '#f59e0b', fontSize: '10px', fontWeight: 800, paddingRight: '12px' }}>PARTIAL IN ({record.checkedInCount}/{record.quantity})</AntText>;
@@ -416,10 +416,10 @@ export default function EventDetailsPage() {
           prefix={<TeamOutlined style={{ color: '#6366f1' }} />}
           valueStyle={{ color: '#1e1b4b', fontWeight: 800, fontSize: '1.8rem' }}
         />
-        <Progress 
-          percent={Math.round(((event.checkedInCount || 0) / (event.bookedCount || 1)) * 100)} 
-          size="small" 
-          status="active" 
+        <Progress
+          percent={Math.round(((event.checkedInCount || 0) / (event.bookedCount || 1)) * 100)}
+          size="small"
+          status="active"
           strokeColor="#6366f1"
           style={{ marginTop: '8px' }}
         />
@@ -715,11 +715,11 @@ export default function EventDetailsPage() {
                                         <AntText type="secondary" style={{ fontSize: '9px', display: 'block', textTransform: 'uppercase', fontWeight: 800, marginBottom: '8px' }}>Booking Info</AntText>
                                         <AntText style={{ fontSize: '11px', color: '#64748b', lineHeight: '1.5' }}>
                                           ID: <strong style={{ color: '#0f172a' }}>#{record.id.slice(-8).toUpperCase()}</strong><br />
-                                          Status: <strong style={{ 
-                                            color: record.status === 'CONFIRMED' ? '#10b981' : 
-                                                   record.status === 'PENDING' ? '#f59e0b' : 
-                                                   record.status === 'CANCELLED' ? '#ef4444' : 
-                                                   record.status === 'CHECKED_IN' ? '#6366f1' : '#64748b' 
+                                          Status: <strong style={{
+                                            color: record.status === 'CONFIRMED' ? '#10b981' :
+                                              record.status === 'PENDING' ? '#f59e0b' :
+                                                record.status === 'CANCELLED' ? '#ef4444' :
+                                                  record.status === 'CHECKED_IN' ? '#6366f1' : '#64748b'
                                           }}>{record.status}</strong>. {
                                             record.status === 'PENDING' ? 'Awaiting offline payment. Please verify and confirm above.' :
                                               record.status === 'CONFIRMED' ? 'Payment verified. Guest is ready for check-in.' :

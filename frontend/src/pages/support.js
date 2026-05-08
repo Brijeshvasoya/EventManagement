@@ -110,7 +110,7 @@ export default function SupportPage() {
 
   const tickets = useMemo(() => {
     if (!user) return [];
-    
+
     return (ticketsData?.mySupportTickets || []).filter(t => {
       const matchesSearch = t.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
         t.user?.name?.toLowerCase().includes(searchQuery.toLowerCase());

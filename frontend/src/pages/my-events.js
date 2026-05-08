@@ -192,12 +192,12 @@ export default function MyEvents() {
             ))}
           </Row>
 
-          <div 
-            ref={observerTarget} 
-            style={{ 
-              height: '100px', 
-              display: 'flex', 
-              justifyContent: 'center', 
+          <div
+            ref={observerTarget}
+            style={{
+              height: '100px',
+              display: 'flex',
+              justifyContent: 'center',
               alignItems: 'center',
               marginTop: '24px'
             }}

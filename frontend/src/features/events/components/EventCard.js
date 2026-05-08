@@ -224,12 +224,12 @@ const EventCard = memo(({ event, onBook, onDelete, onUpdate }) => {
             >
               {imageUrl ? (
                 <div style={{ position: 'relative', width: '100%', height: '150px' }}>
-                  <Image 
-                    src={imageUrl} 
-                    alt="Event" 
-                    fill 
-                    unoptimized 
-                    style={{ objectFit: 'cover', borderRadius: '4px' }} 
+                  <Image
+                    src={imageUrl}
+                    alt="Event"
+                    fill
+                    unoptimized
+                    style={{ objectFit: 'cover', borderRadius: '4px' }}
                   />
                 </div>
               ) : (
