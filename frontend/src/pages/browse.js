@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
+import LoadingScreen from '@/components/LoadingScreen';
 
 // Animation Variants
 const fadeInUp = {
@@ -80,18 +81,7 @@ export default function Browse() {
         }
     };
 
-    if (eventLoading) return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '100px', flexDirection: 'column', gap: '16px' }}>
-            <div style={{
-                width: '48px', height: '48px',
-                borderRadius: '12px',
-                background: 'var(--gradient-main)',
-                animation: 'pulse-glow 2s ease-in-out infinite',
-                boxShadow: 'var(--shadow-glow)'
-            }} />
-            <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Discovering Events...</span>
-        </div>
-    );
+    if (eventLoading) return <LoadingScreen message="Discovering Events..." />;
 
     const allEvents = eventData?.events || [];
     const myBookings = bookingData?.myBookings || [];

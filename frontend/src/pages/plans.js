@@ -9,9 +9,10 @@ import { RocketOutlined, CheckCircleFilled, CrownOutlined, ThunderboltOutlined, 
 
 import { GET_MY_BILLING } from '@/features/events/graphql/queries';
 import { CREATE_PLAN_CHECKOUT_SESSION, SCHEDULE_DOWNGRADE, CANCEL_SCHEDULED_DOWNGRADE } from '@/features/events/graphql/mutations';
+import LoadingScreen from '@/components/LoadingScreen';
 
 export default function PlansPage() {
-  const { user, login } = useAuth();
+  const { user, loading: authLoading, login } = useAuth();
   const router = useRouter();
   const [billingInterval, setBillingInterval] = useState('MONTH'); // 'MONTH' or 'YEAR'
   const [createSession, { loading: creating }] = useMutation(CREATE_PLAN_CHECKOUT_SESSION);
@@ -72,6 +73,8 @@ export default function PlansPage() {
     } catch (err) { toast.error(err.message); }
     setConfirmModal(null);
   };
+
+  if (authLoading || (user?.role === 'ORGANIZER' && !billingData)) return <LoadingScreen message="Loading premium plans..." />;
 
   if (!user || user.role !== 'ORGANIZER') return null;
 

@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import { IndianRupee } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
+import LoadingScreen from '@/components/LoadingScreen';
 
 export default function Transactions() {
   return (
@@ -81,14 +82,7 @@ function TransactionsContent() {
     }
   }, [userData, bankForm]);
 
-  if (authLoading || loading || loadingAllEvents) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-      <div style={{
-        width: '48px', height: '48px', borderRadius: '12px',
-        background: 'var(--gradient-main)', animation: 'pulse-glow 2s ease-in-out infinite',
-      }} />
-    </div>
-  );
+  if (authLoading || loading || loadingAllEvents) return <LoadingScreen message="Syncing financial data..." />;
 
   let stats = analyticsData?.myAnalytics || { totalRevenue: 0, ticketsSold: 0 };
   const availablePayout = userData?.me?.availablePayout || 0;

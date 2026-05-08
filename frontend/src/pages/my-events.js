@@ -9,6 +9,7 @@ import { useRouter } from 'next/router';
 import dayjs from 'dayjs';
 import toast from 'react-hot-toast';
 import { useState, useEffect, useRef } from 'react';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const LIMIT = 6;
 
@@ -79,14 +80,7 @@ export default function MyEvents() {
     };
   }, [observerTarget, hasMore, loading, events.length]);
 
-  if (authLoading || (loading && events.length === 0)) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-      <div style={{
-        width: '48px', height: '48px', borderRadius: '12px',
-        background: 'var(--gradient-main)', animation: 'pulse-glow 2s ease-in-out infinite',
-      }} />
-    </div>
-  );
+  if (authLoading || (loading && events.length === 0)) return <LoadingScreen message="Loading your event portfolio..." />;
 
   const handleDelete = async (id, e) => {
     e.stopPropagation();

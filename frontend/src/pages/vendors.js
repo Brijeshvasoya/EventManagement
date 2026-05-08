@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { GET_MY_VENDORS, GET_MY_EVENTS } from '@/features/events/graphql/queries';
 import { CREATE_VENDOR, UPDATE_VENDOR, DELETE_VENDOR } from '@/features/events/graphql/mutations';
@@ -30,18 +31,7 @@ export default function VendorManagement() {
   const [updateVendor] = useMutation(UPDATE_VENDOR);
   const [deleteVendor] = useMutation(DELETE_VENDOR);
 
-  if (authLoading || loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '16px' }}>
-      <div style={{
-        width: '48px', height: '48px',
-        borderRadius: '12px',
-        background: 'var(--gradient-main)',
-        animation: 'pulse-glow 2s ease-in-out infinite',
-        boxShadow: 'var(--shadow-glow)'
-      }} />
-      <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Loading...</span>
-    </div>
-  );
+  if (authLoading || loading) return <LoadingScreen message="Syncing vendor network..." />;
   if (!user || (user.role !== 'ORGANIZER' && user.role !== 'ADMIN')) return (
     <div style={{ textAlign: 'center', marginTop: '100px', color: 'var(--text-muted)' }}>
       <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔒</div>

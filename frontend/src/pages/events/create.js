@@ -10,6 +10,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
+import LoadingScreen from '@/components/LoadingScreen';
 import {
   PlusOutlined, DeleteOutlined, CalendarOutlined, EnvironmentOutlined,
   FileTextOutlined, PictureOutlined, RocketOutlined, DollarOutlined,
@@ -29,7 +30,7 @@ const GET_MY_EVENTS_COUNT = gql`
 `;
 
 export default function CreateEvent() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { id } = router.query;
   const [form] = Form.useForm();
@@ -81,6 +82,8 @@ export default function CreateEvent() {
 
   const eventCount = myEventsData?.myEvents?.length ?? 0;
   const isLimitReached = isBasicPlan && eventCount >= BASIC_PLAN_LIMIT && !isEdit;
+
+  if (authLoading || (isEdit && eventLoading)) return <LoadingScreen message={isEdit ? "Loading Event Details..." : "Preparing Creator..."} />;
 
   if (!user || user.role === 'USER') {
     return (

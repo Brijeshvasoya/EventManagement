@@ -1879,3 +1879,31 @@ textarea.ant-input {
     padding: 16px !important;
   }
 }
+
+/* ===== GLOBAL COMPONENT OVERRIDES ===== */
+.ant-input:focus, .ant-input-focused, .ant-input-number:focus, .ant-input-affix-wrapper:focus, .ant-input-affix-wrapper-focused {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 4px var(--primary-glow) !important;
+  outline: none !important;
+}
+
+.ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 4px var(--primary-glow) !important;
+  outline: none !important;
+}
+
+.ant-btn-primary {
+  box-shadow: 0 4px 12px var(--primary-glow) !important;
+}
+
+@keyframes pulse-glow {
+  0% { transform: scale(1); opacity: 0.1; }
+  50% { transform: scale(1.15); opacity: 0.15; }
+  100% { transform: scale(1); opacity: 0.1; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

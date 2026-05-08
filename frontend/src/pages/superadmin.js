@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { Table, Tag, Card, Row, Col, Statistic, ConfigProvider, Input, Select, Space, Typography } from 'antd';
 import { UserOutlined, CrownOutlined, SafetyCertificateOutlined, CheckCircleOutlined, CloseCircleOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const { Title } = Typography;
 
@@ -24,7 +25,7 @@ const GET_ALL_USERS = gql`
 `;
 
 export default function SuperAdmin() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
@@ -38,6 +39,8 @@ export default function SuperAdmin() {
   const { data, loading, error } = useQuery(GET_ALL_USERS, {
     skip: !user || user.role !== 'SUPER_ADMIN'
   });
+
+  if (authLoading || (loading && !data)) return <LoadingScreen message="Accessing global systems..." />;
 
   if (!user || user.role !== 'SUPER_ADMIN') return null;
 
@@ -116,11 +119,33 @@ export default function SuperAdmin() {
     >
       <Head><title>Super Admin Dashboard | EventHub</title></Head>
       <div style={{ padding: 'max(16px, 2vw)', margin: '0 auto', boxSizing: 'border-box', width: '100%' }}>
-        <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, rgb(67, 56, 202) 0%, rgb(139, 92, 246) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(67, 56, 202, 0.2)' }}>
-            <CrownOutlined style={{ color: 'white', fontSize: '24px' }} />
+        <div className="header-responsive" style={{
+          background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)',
+          borderRadius: '24px',
+          boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)',
+          color: 'white',
+          marginBottom: '32px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '32px 40px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+            <div style={{
+              width: '64px', height: '64px',
+              background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
+              borderRadius: '16px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '1.5px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+            }}>
+              <CrownOutlined style={{ color: 'white', fontSize: '32px' }} />
+            </div>
+            <div>
+              <h2 style={{ margin: '0 0 4px 0', fontWeight: 900, fontSize: '2rem', color: 'white', letterSpacing: '-0.5px' }}>Global Monitor</h2>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,0.7)', fontSize: '1rem', fontWeight: 500 }}>System-wide user management & analytics</p>
+            </div>
           </div>
-          <Title level={2} style={{ margin: 0, fontWeight: 800 }}>Super Admin Monitor</Title>
         </div>
 
         <Row gutter={[24, 24]} style={{ marginBottom: '32px' }}>

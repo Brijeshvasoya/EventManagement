@@ -7,6 +7,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { Table, Typography, Card, ConfigProvider, Button, Tag, App, Space, Divider, Empty, Popover, Input, Tabs, Badge, Select } from 'antd';
 import { DollarCircleOutlined, CheckCircleOutlined, ClockCircleOutlined, BankOutlined, InfoCircleOutlined, CreditCardOutlined, SearchOutlined, WalletOutlined, HourglassOutlined, HistoryOutlined, FilterOutlined } from '@ant-design/icons';
+import LoadingScreen from '@/components/LoadingScreen';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -46,7 +47,7 @@ export default function SuperAdminPayments() {
     onError: (error) => message.error(error.message)
   });
 
-  if (authLoading) return null;
+  if (authLoading || (loading && !data)) return <LoadingScreen message="Syncing global ledgers..." />;
   if (!user || user.role !== 'SUPER_ADMIN') return null;
 
   const events = data?.events || [];
@@ -218,23 +219,66 @@ export default function SuperAdminPayments() {
       <App>
         <Head><title>Payment Tracking | EventHub Super Admin</title></Head>
         <div style={{ padding: 'max(16px, 2vw)', margin: '0 auto', width: '100%' }}>
-          <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, rgb(67, 56, 202) 0%, rgb(139, 92, 246) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(67, 56, 202, 0.2)' }}>
-              <DollarCircleOutlined style={{ color: 'white', fontSize: '24px' }} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <Title level={2} style={{ margin: 0, fontWeight: 800 }}>Organizer Financial Oversight</Title>
+          <div className="header-responsive" style={{
+            background: 'linear-gradient(135deg, #1B2A4E 0%, #312E81 50%, #4338CA 100%)',
+            borderRadius: '24px',
+            boxShadow: '0 20px 40px rgba(49, 46, 129, 0.2)',
+            color: 'white',
+            marginBottom: '32px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '32px 40px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+              <div style={{
+                width: '64px', height: '64px',
+                background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
+                borderRadius: '16px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '1.5px solid rgba(255,255,255,0.2)',
+                boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+              }}>
+                <DollarCircleOutlined style={{ color: 'white', fontSize: '32px' }} />
+              </div>
+              <div>
+                <h2 style={{ margin: '0 0 4px 0', fontWeight: 900, fontSize: '2rem', color: 'white', letterSpacing: '-0.5px' }}>Financial Center</h2>
+                <p style={{ margin: 0, color: 'rgba(255,255,255,0.7)', fontSize: '1rem', fontWeight: 500 }}>System-wide revenue and payout management</p>
+              </div>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               <Input
                 placeholder="Search organizers..."
-                prefix={<SearchOutlined style={{ color: '#94A3B8' }} />}
+                prefix={<SearchOutlined style={{ color: 'rgba(255,255,255,0.7)' }} />}
                 onChange={e => setSearchText(e.target.value)}
-                style={{ width: '280px', borderRadius: '12px', height: '45px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}
+                style={{
+                  width: '280px',
+                  borderRadius: '14px',
+                  height: '44px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  color: '#ffffff'
+                }}
+                className="hero-input"
                 allowClear
               />
             </div>
           </div>
+
+          <style jsx global>{`
+            .hero-input::placeholder {
+              color: rgba(255, 255, 255, 0.6) !important;
+            }
+            .hero-input .ant-input {
+              background: transparent !important;
+              color: white !important;
+            }
+            .hero-input.ant-input-affix-wrapper:focus, 
+            .hero-input.ant-input-affix-wrapper-focused {
+              border-color: rgba(255, 255, 255, 0.8) !important;
+              box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1) !important;
+            }
+          `}</style>
 
           <div style={{ background: 'white', padding: '24px', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
             <Tabs

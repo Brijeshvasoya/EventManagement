@@ -13,11 +13,12 @@ import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Spin, Card, Empty, Button, Tag, Divider, Modal, Popconfirm, Form, Input, Typography, Avatar, Drawer, Badge, List, Progress, Space, Select } from 'antd';
+import { Spin, Card, Empty, Button, Tag, Divider, Modal, Popconfirm, Form, Input, Typography, Avatar, Drawer, Badge, List, Progress, Space, Select, DatePicker } from 'antd';
 import { EnvironmentOutlined, CalendarOutlined, DownloadOutlined, QrcodeOutlined, CrownOutlined, CheckCircleFilled, UserOutlined, MailOutlined, SettingOutlined, AppstoreOutlined, ArrowRightOutlined, EyeOutlined, BellOutlined, CheckOutlined, RocketOutlined, PlusCircleOutlined, CloseCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import DigitalTicketModal from '@/features/events/components/DigitalTicketModal';
 import dayjs from 'dayjs';
 import { CreditCard, Sparkles } from 'lucide-react';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const { Title, Text: AntText } = Typography;
 
@@ -57,6 +58,7 @@ export default function Dashboard() {
   const [categoryFilter, setCategoryFilter] = useState('Hosted');
   const [chartVersion, setChartVersion] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     const timer = setTimeout(() => setIsMounted(true), 0);
@@ -121,18 +123,7 @@ export default function Dashboard() {
     }
   };
 
-  if (authLoading || bookingLoading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '20px' }}>
-      <div style={{
-        width: '56px', height: '56px',
-        borderRadius: '14px',
-        background: 'var(--gradient-main)',
-        animation: 'pulse-glow 2s ease-in-out infinite',
-        boxShadow: 'var(--shadow-glow)'
-      }} />
-      <span style={{ color: 'var(--text-muted)', fontWeight: 500, fontSize: '0.95rem' }}>Entering Dashboard...</span>
-    </div>
-  );
+  if (authLoading || bookingLoading) return <LoadingScreen message="Entering Dashboard..." />;
   if (!user) { router.push('/login'); return null; }
 
   const handleCancel = async (id) => {
@@ -197,21 +188,24 @@ export default function Dashboard() {
     let organizerRevenue = 0;
     let totalTicketsSold = 0;
 
+    const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const monthlyMap = {};
+    monthOrder.forEach(m => { monthlyMap[m] = 0; });
 
     const eventsWithRev = events.map(e => {
       let eventRev = 0;
       let eventTickets = 0;
       e.attendees?.forEach(att => {
         if (att.status !== 'CANCELLED') {
-          const amt = (att.amountPaid || 0);
-          eventRev += amt;
-          eventTickets += (att.quantity || 1);
-
           const date = new Date(isNaN(Number(att.createdAt)) ? att.createdAt : Number(att.createdAt));
-          const monthKey = date.toLocaleString('default', { month: 'short' });
-          if (!monthlyMap[monthKey]) monthlyMap[monthKey] = 0;
-          monthlyMap[monthKey] += amt;
+          if (date.getFullYear() === selectedYear) {
+            const amt = (att.amountPaid || 0);
+            eventRev += amt;
+            eventTickets += (att.quantity || 1);
+
+            const monthKey = date.toLocaleString('default', { month: 'short' });
+            monthlyMap[monthKey] += amt;
+          }
         }
       });
       return { title: e.title, revenue: eventRev, tickets: eventTickets };
@@ -228,7 +222,7 @@ export default function Dashboard() {
       }
     });
 
-    const monthlyDataArray = Object.keys(monthlyMap).map(k => ({ name: k, Revenue: monthlyMap[k] }));
+    const monthlyDataArray = monthOrder.map(m => ({ name: m, Revenue: monthlyMap[m] }));
     const topEvents = (eventsWithRev || []).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
 
     const totalUsers = (users || []).filter(u => u.role === 'USER').length;
@@ -283,7 +277,30 @@ export default function Dashboard() {
             variants={fadeInUp}
             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}
           >
-            <Card title={<span style={{ fontWeight: 800, fontSize: '1.2rem', color: '#1B2A4E' }}>Revenue Growth</span>} bordered={false} style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+            <Card
+              title={<span style={{ fontWeight: 800, fontSize: '1.2rem', color: '#1B2A4E' }}>Revenue Growth</span>}
+              extra={
+                <DatePicker
+                  picker="year"
+                  value={dayjs().year(selectedYear)}
+                  onChange={(date) => date && setSelectedYear(date.year())}
+                  allowClear={false}
+                  style={{
+                    width: 100,
+                    background: '#FFFFFF',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    color: '#1B2A4E',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                  }}
+                  size="small"
+                  suffixIcon={<CalendarOutlined style={{ color: '#4338CA' }} />}
+                />
+              }
+              bordered={false}
+              style={{ borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}
+            >
               <div style={{ width: '100%', height: 300, minWidth: 0, overflow: 'hidden', position: 'relative' }}>
                 {monthlyDataArray.length > 0 && isMounted ? (
                   <ResponsiveContainer width="100%" height={300}>
@@ -576,10 +593,30 @@ export default function Dashboard() {
                     </div>
                   </Card>
 
-                  <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                      <h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Sales Revenue</h3>
-                    </div>
+                  <Card
+                    styles={{ body: { padding: '24px' } }}
+                    style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}
+                    title={<h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Sales Revenue</h3>}
+                    extra={
+                      <DatePicker
+                        picker="year"
+                        value={dayjs().year(selectedYear)}
+                        onChange={(date) => date && setSelectedYear(date.year())}
+                        allowClear={false}
+                        style={{
+                          width: 100,
+                          background: '#FFFFFF',
+                          border: '1px solid #E2E8F0',
+                          borderRadius: '10px',
+                          fontWeight: 700,
+                          color: '#1B2A4E',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                        }}
+                        size="small"
+                        suffixIcon={<CalendarOutlined style={{ color: '#4338CA' }} />}
+                      />
+                    }
+                  >
                     <div style={{ marginBottom: '24px' }}>
                       <div style={{ color: '#6B7280', fontSize: '0.85rem', fontWeight: 600 }}>Total Revenue</div>
                       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '16px' }}>
@@ -590,7 +627,27 @@ export default function Dashboard() {
                     <div style={{ width: '100%', height: 220, minWidth: 0, overflow: 'hidden', position: 'relative' }}>
                       {isMounted && (
                         <ResponsiveContainer width="100%" height={220} debounce={100}>
-                          <BarChart key={chartVersion} data={analyticsData?.myAnalytics?.monthlyData || []}>
+                          <BarChart key={`${chartVersion}-${selectedYear}`} data={
+                            (() => {
+                              const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                              const yearlyMap = {};
+                              monthOrder.forEach(m => yearlyMap[m] = 0);
+
+                              myEventsData?.myEvents?.forEach(ev => {
+                                ev.attendees?.forEach(att => {
+                                  if (att.status !== 'CANCELLED') {
+                                    const date = new Date(isNaN(Number(att.createdAt)) ? att.createdAt : Number(att.createdAt));
+                                    if (date.getFullYear() === selectedYear) {
+                                      const monthKey = date.toLocaleString('default', { month: 'short' });
+                                      yearlyMap[monthKey] += (att.amountPaid || 0);
+                                    }
+                                  }
+                                });
+                              });
+
+                              return monthOrder.map(m => ({ n: m, c: yearlyMap[m] }));
+                            })()
+                          }>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                             <XAxis dataKey="n" stroke="#9CA3AF" axisLine={false} tickLine={false} fontSize={12} dy={10} />
                             <YAxis stroke="#9CA3AF" axisLine={false} tickLine={false} fontSize={12} tickFormatter={(v) => `${(v / 1000)}k`} />
@@ -888,18 +945,15 @@ export default function Dashboard() {
           const topCat = sortedCats[0] || ['Start Exploring', 0];
           const topCatPercent = totalBookingsCount > 0 ? Math.round((topCat[1] / totalBookingsCount) * 100) : 0;
 
-          // DYNAMIC BOOKING TRENDS (Last 6 months)
-          const last6Months = [];
-          for (let i = 5; i >= 0; i--) {
-            const d = new Date();
-            d.setMonth(d.getMonth() - i);
-            const monthName = d.toLocaleString('default', { month: 'short' });
+          // DYNAMIC BOOKING TRENDS (Full Year)
+          const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const yearlyBookings = monthOrder.map(m => {
             const count = activeBookings.filter(b => {
-              const bDate = new Date(isNaN(Number(b.event?.date)) ? b.event?.date : Number(b.event?.date));
-              return bDate.getMonth() === d.getMonth() && bDate.getFullYear() === d.getFullYear();
+              const bDate = new Date(isNaN(Number(b.createdAt)) ? b.createdAt : Number(b.createdAt));
+              return bDate.toLocaleString('default', { month: 'short' }) === m && bDate.getFullYear() === selectedYear;
             }).length;
-            last6Months.push({ name: monthName, "Total Tickets": count });
-          }
+            return { name: m, "Total Tickets": count };
+          });
 
           return (
             <div className="grid-cols-main" style={{ gap: '24px' }}>
@@ -984,12 +1038,34 @@ export default function Dashboard() {
                     </div>
                   </Card>
 
-                  <Card styles={{ body: { padding: '24px' } }} style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}>
-                    <h3 style={{ margin: '0 0 20px 0', color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Booking Trends</h3>
+                  <Card
+                    styles={{ body: { padding: '24px' } }}
+                    style={{ borderRadius: '24px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}
+                    title={<h3 style={{ margin: 0, color: '#1B2A4E', fontWeight: 800, fontSize: '1.1rem' }}>Booking Trends</h3>}
+                    extra={
+                      <DatePicker
+                        picker="year"
+                        value={dayjs().year(selectedYear)}
+                        onChange={(date) => date && setSelectedYear(date.year())}
+                        allowClear={false}
+                        style={{
+                          width: 100,
+                          background: '#FFFFFF',
+                          border: '1px solid #E2E8F0',
+                          borderRadius: '10px',
+                          fontWeight: 700,
+                          color: '#1B2A4E',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                        }}
+                        size="small"
+                        suffixIcon={<CalendarOutlined style={{ color: '#4338CA' }} />}
+                      />
+                    }
+                  >
                     <div style={{ width: '100%', height: 220, minWidth: 0, overflow: 'hidden', position: 'relative' }}>
                       {isMounted && (
                         <ResponsiveContainer width="100%" height={220} debounce={100}>
-                          <BarChart data={last6Months}>
+                          <BarChart data={yearlyBookings}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                             <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 12 }} />
                             <YAxis hide domain={[0, 'dataMax + 2']} />
@@ -1358,7 +1434,6 @@ export default function Dashboard() {
             </div>
           );
         })()}
-
       </motion.div>
     </>
   );

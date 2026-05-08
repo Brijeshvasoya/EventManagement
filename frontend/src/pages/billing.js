@@ -13,6 +13,7 @@ import {
 
 import { GET_MY_BILLING } from '@/features/events/graphql/queries';
 import { CONFIRM_PLAN_PURCHASE } from '@/features/events/graphql/mutations';
+import LoadingScreen from '@/components/LoadingScreen';
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -25,7 +26,7 @@ function daysLeft(iso) {
 }
 
 export default function BillingPage() {
-  const { user, login } = useAuth();
+  const { user, loading: authLoading, login } = useAuth();
   const router = useRouter();
   const confirmCalledRef = useRef(false);
   const [confirmPurchase] = useMutation(CONFIRM_PLAN_PURCHASE);
@@ -59,6 +60,8 @@ export default function BillingPage() {
     };
     if (router.isReady) confirm();
   }, [router, confirmPurchase, login, refetch]);
+
+  if (authLoading || (user?.role === 'ORGANIZER' && loading)) return <LoadingScreen message="Syncing billing profile..." />;
 
   if (!user || user.role !== 'ORGANIZER') return null;
 

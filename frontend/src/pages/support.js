@@ -19,6 +19,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
+import LoadingScreen from '@/components/LoadingScreen';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -76,7 +77,7 @@ const ReplyAction = () => {
 };
 
 export default function SupportPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [form] = Form.useForm();
   const [replyForm] = Form.useForm();
@@ -162,6 +163,8 @@ export default function SupportPage() {
       return () => unsubscribe();
     }
   }, [selectedTicket, subscribeToMore]);
+
+  if (authLoading || ticketsLoading) return <LoadingScreen message="Loading support tickets..." />;
 
   if (!user) {
     if (typeof window !== 'undefined') router.push('/login');

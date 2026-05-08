@@ -34,6 +34,7 @@ import {
 import dayjs from 'dayjs';
 import { IndianRupeeIcon, MapPin, Calendar, Users, Briefcase, Star, Info, CreditCard, Ticket } from 'lucide-react';
 import { motion } from 'framer-motion';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const { Title: AntTitle, Text: AntText, Paragraph } = Typography;
 
@@ -121,27 +122,7 @@ export default function EventDetailsPage() {
     skip: true
   });
 
-  if (authLoading || loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '20px' }}>
-      <motion.div
-        animate={{
-          scale: [1, 1.1, 1],
-          opacity: [0.8, 1, 0.8]
-        }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        style={{
-          width: '64px', height: '64px',
-          borderRadius: '16px',
-          background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-          boxShadow: '0 0 30px rgba(99, 102, 241, 0.4)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}
-      >
-        <ThunderboltOutlined style={{ fontSize: '32px', color: 'white' }} />
-      </motion.div>
-      <span style={{ color: '#6366f1', fontWeight: 600, fontSize: '1.1rem', letterSpacing: '0.5px' }}>Crafting Event Experience...</span>
-    </div>
-  );
+  if (authLoading || loading) return <LoadingScreen message="Crafting Event Experience..." />;
   if (error) return <div style={{ padding: '2rem' }}><Empty description="Error loading event details" /></div>;
 
   const event = data?.event;

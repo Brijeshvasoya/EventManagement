@@ -8,6 +8,7 @@ import { Layout, Result, Button, Spin, Typography, Card, Space, Tag, InputNumber
 import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, LoginOutlined, DashboardOutlined, UserOutlined, TeamOutlined, CheckOutlined } from '@ant-design/icons';
 import Head from 'next/head';
 import toast from 'react-hot-toast';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -60,12 +61,7 @@ export default function AutoVerify() {
 
   const renderContent = () => {
     if (authLoading || (queryLoading && !booking)) {
-      return (
-        <div style={{ textAlign: 'center', padding: '100px 0' }}>
-          <Spin indicator={<LoadingOutlined style={{ fontSize: 64, color: '#4338CA' }} spin />} />
-          <Title level={3} style={{ color: '#1B2A4E', marginTop: '30px', fontWeight: 800 }}>Loading Ticket Details...</Title>
-        </div>
-      );
+      return <LoadingScreen message="Loading Ticket Details..." />;
     }
 
     if (!user) {

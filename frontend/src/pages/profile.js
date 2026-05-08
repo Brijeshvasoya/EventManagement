@@ -8,11 +8,12 @@ import Link from 'next/link';
 import { Form, Input, Button, Typography, ConfigProvider, Space, Divider, Avatar, Skeleton } from 'antd';
 import { UserOutlined, MailOutlined, LockOutlined, SafetyOutlined, CheckCircleOutlined, ThunderboltOutlined, CalendarOutlined, StarOutlined, GiftOutlined } from '@ant-design/icons';
 import { useMutation, useQuery } from '@apollo/client/react';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const { Title, Text: AntText } = Typography;
 
 export default function Profile() {
-  const { user, setUser } = useAuth();
+  const { user, loading: authLoading, setUser } = useAuth();
   const [updateProfile, { loading: updating }] = useMutation(UPDATE_PROFILE);
   const [form] = Form.useForm();
 
@@ -44,6 +45,8 @@ export default function Profile() {
       });
     }
   }, [user, form]);
+
+  if (authLoading || meLoading || eventsLoading) return <LoadingScreen message="Syncing profile data..." />;
 
   if (!user) return (
     <div style={{ textAlign: 'center', padding: '100px', background: 'white', borderRadius: '24px' }}>

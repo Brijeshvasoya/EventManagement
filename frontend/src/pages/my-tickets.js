@@ -11,6 +11,7 @@ import { Table, Tag, Button, Space, Card, Typography, Spin, Empty, Popconfirm } 
 import { EyeOutlined, CalendarOutlined, AuditOutlined, DeleteOutlined, EnvironmentOutlined, UserOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import DigitalTicketModal from '@/features/events/components/DigitalTicketModal';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const { Text } = Typography;
 
@@ -61,14 +62,7 @@ export default function MyTickets() {
     );
   }
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '16px' }}>
-        <Spin size="large" />
-        <Text>Fetching your digital tickets...</Text>
-      </div>
-    );
-  }
+  if (loading) return <LoadingScreen message="Fetching your digital tickets..." />;
 
   const handleViewTicket = (booking) => {
     setSelectedBooking(booking);
