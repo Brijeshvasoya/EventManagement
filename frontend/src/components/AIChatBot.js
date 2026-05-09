@@ -109,7 +109,18 @@ export default function AIChatBot() {
     } catch (err) {
       console.error('Chat Error:', err);
       setError(err.message);
-      setMessages(prev => [...prev, { id: 'error', role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
+      
+      let errorMessage = 'Sorry, I encountered an error. Please try again.';
+      
+      // Handle rate limit errors specifically
+      if (err.status === 429) {
+        const waitTime = err.retryAfter || 15;
+        errorMessage = `⏱️ Rate limit reached. Please wait ${waitTime} seconds before trying again.`;
+      } else if (err.message?.includes('rate limits')) {
+        errorMessage = '⏱️ AI service is busy right now due to high demand. Please wait a moment and try again.';
+      }
+      
+      setMessages(prev => [...prev, { id: 'error', role: 'assistant', content: errorMessage }]);
     } finally {
       setStatus('idle');
     }

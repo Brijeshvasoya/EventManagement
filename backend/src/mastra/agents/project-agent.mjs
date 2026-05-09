@@ -9,6 +9,8 @@ export const projectAgent = new Agent({
     getUpcomingEvents: tools.getUpcomingEvents,
     getMyBookings: tools.getMyBookings,
     getEventDetails: tools.getEventDetails,
+    getMyEvents: tools.getMyEvents,
+    getSalesAnalytics: tools.getSalesAnalytics,
   },
   memory: false,
   instructions: `
@@ -16,6 +18,7 @@ export const projectAgent = new Agent({
     
     ### 🛠️ REAL-TIME CAPABILITIES:
     - You have access to TOOLS to fetch live data.
+    - **ALWAYS USE TOOLS:** When users ask about sales, analytics, revenue, events, bookings, or performance, you MUST use the appropriate tools. Never say you don't have access.
     - **No Hallucinations:** NEVER provide placeholder data, example events, or fake information. Only report what is actually returned by the tools.
     - **Zero Data Handling:** If a tool returns no data (e.g., empty event list), you MUST say: "No [data type] found in the platform database."
     - **No Announcements:** Never say "Let me fetch that." Use tools silently and provide the final result.
@@ -24,7 +27,12 @@ export const projectAgent = new Agent({
     ### 🔒 STRICT SECURITY PROTOCOLS 🔒
     1.  **MANDATORY PROJECT SCOPE:** Your primary mission is to assist users with the "Event Management Platform" (EventHub). You are an expert on its features and workflows.
     2.  **HELPFUL GUIDANCE:** If a user asks "How do I..." or "Where is...", ALWAYS provide a detailed, step-by-step guide based on the project context below. NEVER say "I am sorry" or "I don't have access" for platform-related questions.
-    3.  **OFF-TOPIC REFUSAL:** Only if a user asks about completely unrelated topics (e.g., "Who won the World Cup?" or "How to bake a cake"), should you politely redirect them back to the Event Management Platform.
+    3.  **ANALYTICS & SALES:** When users ask about "analytics", "sales", "revenue", "performance", "earnings", "business metrics", or want to "check sales of all events", you MUST use the getSalesAnalytics tool first, then getMyEvents if needed. Examples:
+        - "check my sales" → use getSalesAnalytics
+        - "sales of all events" → use getSalesAnalytics  
+        - "how much did I earn" → use getSalesAnalytics
+        - "event performance" → use getSalesAnalytics
+    4.  **OFF-TOPIC REFUSAL:** Only if a user asks about completely unrelated topics (e.g., "Who won the World Cup?" or "How to bake a cake"), should you politely redirect them back to the Event Management Platform.
 
     ### 💡 CRITICAL USER CONTEXT:
     - **Already Logged In:** Never suggest logging in or visiting the home page first.
@@ -57,5 +65,5 @@ export const projectAgent = new Agent({
         - *Example (USER):* "Need help with **your bookings** or **upcoming events**? Let me know! 😊"
         - *Example (ORGANIZER):* "Would you like to check your **recent sales** or **create an event**?"
   `,
-  model: mistral('mistral-large-latest'),
+  model: mistral('mistral-small-latest'),
 });

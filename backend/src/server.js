@@ -46,6 +46,9 @@ const startServer = async () => {
 
   // AI & MEDIA ENDPOINTS (Module 11 & 14)
   let mastraInstance;
+  let lastRequestTime = 0;
+  const REQUEST_COOLDOWN = 15000; // 15 seconds between requests (4 requests per minute limit)
+  
   const loadMastra = async () => {
     try {
       const { mastra } = await import('./mastra/index.mjs');
@@ -57,7 +60,25 @@ const startServer = async () => {
   };
   loadMastra();
 
-  app.post('/api/chat', async (req, res) => {
+  // Rate limiting middleware for chat endpoint
+  const chatRateLimit = async (req, res, next) => {
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime;
+    
+    if (timeSinceLastRequest < REQUEST_COOLDOWN) {
+      const waitTime = Math.ceil((REQUEST_COOLDOWN - timeSinceLastRequest) / 1000);
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: `Please wait ${waitTime} seconds before making another request.`,
+        retryAfter: waitTime
+      });
+    }
+    
+    lastRequestTime = now;
+    next();
+  };
+
+  app.post('/api/chat', chatRateLimit, async (req, res) => {
     try {
       if (!mastraInstance) {
         await loadMastra();
@@ -83,7 +104,10 @@ const startServer = async () => {
         }))
       ];
 
-      const result = await agent.stream(sanitizedMessages);
+      console.log('🚀 Starting agent stream...');
+      const result = await agent.stream(sanitizedMessages, { 
+        context: { token } 
+      });
 
       // Set headers for streaming
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -101,8 +125,29 @@ const startServer = async () => {
       }
       res.end();
     } catch (error) {
-      console.error('Chat error:', error);
-      res.status(500).json({ error: 'Failed to process chat' });
+      console.error('❌ Chat error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      
+      // Handle rate limit errors specifically
+      if (error.message?.includes('Rate limit exceeded') || error.code === '1300') {
+        const fallbackResponse = {
+          error: 'AI service temporarily unavailable due to rate limits',
+          fallback: 'Please try again in a few moments. The AI service has usage limits per minute.',
+          retryAfter: 60
+        };
+        return res.status(429).json(fallbackResponse);
+      }
+      
+      // Send more detailed error info in development
+      const errorResponse = { 
+        error: 'Failed to process chat',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      };
+      
+      res.status(500).json(errorResponse);
     }
   });
 
