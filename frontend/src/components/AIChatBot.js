@@ -72,7 +72,7 @@ export default function AIChatBot() {
     setError(null);
 
     try {
-      const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000';
+      const BACKEND_URL = 'https://backend-production-2a4d2.up.railway.app';
       const response = await fetch(`${BACKEND_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
