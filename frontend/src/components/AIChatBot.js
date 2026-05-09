@@ -72,14 +72,17 @@ export default function AIChatBot() {
     setError(null);
 
     try {
-      const BACKEND_URL = 'https://backend-production-2a4d2.up.railway.app';
+      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      console.log('🔑 Chat token check:', { hasToken: !!token, tokenLength: token?.length, userRole: user?.role });
+      
       const response = await fetch(`${BACKEND_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: newMessages,
           role: user?.role || 'USER',
-          token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
+          token: token,
         }),
       });
 
@@ -181,6 +184,77 @@ export default function AIChatBot() {
           .chat-scroll-area {
             padding: 16px !important;
           }
+        }
+
+        /* Responsive Table Styling */
+        .analytics-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 12px;
+          overflow-x: auto;
+          display: block;
+          white-space: nowrap;
+        }
+
+        .analytics-table th,
+        .analytics-table td {
+          padding: 8px 6px;
+          text-align: left;
+          border-bottom: 1px solid #E2E8F0;
+          min-width: 80px;
+        }
+
+        .analytics-table th {
+          background: #F8FAFB;
+          font-weight: 600;
+          color: #475569;
+          font-size: 11px;
+        }
+
+        .analytics-table td {
+          color: #1E293B;
+        }
+
+        /* Mobile Responsive Table */
+        @media (max-width: 640px) {
+          .analytics-table {
+            font-size: 11px;
+            display: block;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+
+          .analytics-table th,
+          .analytics-table td {
+            padding: 6px 4px;
+            min-width: 70px;
+            font-size: 10px;
+          }
+
+          .analytics-table th {
+            font-size: 9px;
+          }
+        }
+
+        /* Revenue and Occupancy styling */
+        .revenue-cell {
+          font-weight: 600;
+          color: #059669;
+        }
+
+        .occupancy-high {
+          color: #059669;
+          font-weight: 600;
+        }
+
+        .occupancy-medium {
+          color: #D97706;
+          font-weight: 600;
+        }
+
+        .occupancy-low {
+          color: #DC2626;
+          font-weight: 600;
         }
 
         .suggestion-btn:hover {

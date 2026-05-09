@@ -1,7 +1,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 
-const BACKEND_URL = 'https://backend-production-2a4d2.up.railway.app';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://backend-production-2a4d2.up.railway.app';
 
 const fetchGraphQL = async (query, variables = {}, token = '') => {
   const response = await fetch(`${BACKEND_URL}/graphql`, {
@@ -97,12 +97,22 @@ export const getMyEvents = createTool({
   },
 });
 
+// Global variable to store current request token
+let currentRequestToken = null;
+
+// Function to set the current request token
+export const setCurrentToken = (token) => {
+  currentRequestToken = token;
+};
+
 export const getSalesAnalytics = createTool({
   id: 'getSalesAnalytics',
   description: 'Get comprehensive sales analytics, revenue data, booking statistics, and performance metrics for all organizer events. Use this when user asks about sales, revenue, analytics, performance, earnings, or business metrics.',
   inputSchema: z.object({}),
   execute: async ({ context }) => {
-    const token = context?.token;
+    // Try to get token from multiple sources
+    let token = context?.token || currentRequestToken;
+    
     if (!token) throw new Error('User not authenticated');
 
     const query = `

@@ -86,6 +86,11 @@ const startServer = async () => {
       if (!mastraInstance) return res.status(503).json({ error: 'AI not ready' });
 
       const { messages, role, token } = req.body;
+      
+      // Set global token for tools to access
+      const { setCurrentToken } = await import('./mastra/tools/index.mjs');
+      setCurrentToken(token);
+      
       const agent = mastraInstance.getAgent('projectAgent');
 
       const roleInstruction = `The user chatting with you has the role: ${role}. 
@@ -98,15 +103,16 @@ const startServer = async () => {
       // Inject system instruction at the beginning
       const sanitizedMessages = [
         { role: 'system', content: roleInstruction },
-        ...messages.map(m => ({
-          role: m.role,
+        ...messages.filter(m => m && m.content).map(m => ({
+          role: m.role || 'user',
           content: m.content,
         }))
       ];
 
-      console.log('🚀 Starting agent stream...');
-      const result = await agent.stream(sanitizedMessages, { 
-        context: { token } 
+      const result = await agent.stream(sanitizedMessages, {
+        agentOptions: {
+          context: { token }
+        }
       });
 
       // Set headers for streaming
