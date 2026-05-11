@@ -107,6 +107,10 @@ export default function Dashboard() {
     skip: !isSuperAdmin, fetchPolicy: 'network-only'
   });
 
+  const { data: promoCodesData, refetch: refetchPromoCodes } = useQuery(GET_MY_PROMO_CODES, {
+    skip: !user, fetchPolicy: 'cache-and-network'
+  });
+
   const [cancel] = useMutation(CANCEL_BOOKING);
   const [redeemReward, { loading: redeeming }] = useMutation(REDEEM_REWARD);
 
@@ -118,6 +122,7 @@ export default function Dashboard() {
       setUser({ ...user, loyaltyPoints: data?.redeemReward?.loyaltyPoints, redeemedRewards: data?.redeemReward?.redeemedRewards });
       toast.success(`Succesfully redeemed ${reward?.title}! 🎁`);
       refetchGlobalNotifications();
+      refetchPromoCodes();
     } catch (e) {
       toast.error(e.message);
     }
@@ -399,10 +404,10 @@ export default function Dashboard() {
           <h4 style={{ color: '#1B2A4E', fontWeight: 800, marginBottom: '16px', fontSize: '1.1rem' }}>Available Perks</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {[
-              { pts: 500, title: 'Event Discount', desc: 'Get 5% off on any ticket booking', icon: '🎫' },
-              { pts: 1000, title: 'Early Access', desc: 'Book tickets 24h before public sale', icon: '⏰' },
-              { pts: 2500, title: 'VIP Lounge', desc: 'Complementary access to event lounges', icon: '🍸' },
-              { pts: 5000, title: 'Platinum Pass', desc: 'One free ticket to any premium event', icon: '✨' }
+              { pts: 500, title: 'Bronze Discount', desc: 'Get a 5% off promo code for your next booking', icon: '🎫' },
+              { pts: 1000, title: 'Priority Support', desc: 'Get priority resolution on your support tickets', icon: '🎧' },
+              { pts: 2500, title: 'Silver Discount', desc: 'Get a 20% off promo code for your next booking', icon: '🌟' },
+              { pts: 5000, title: 'Free Ticket Pass', desc: 'Get a 100% off promo code for any event', icon: '✨' }
             ].map((reward, i) => {
               const isUnlocked = (user?.loyaltyPoints || 0) >= (reward?.pts || 0);
               const isRedeemed = user?.redeemedRewards?.includes(reward?.title);
@@ -456,6 +461,36 @@ export default function Dashboard() {
               );
             })}
           </div>
+          
+          {promoCodesData?.myPromoCodes?.filter(p => p.code.startsWith('REWARD')).length > 0 && (
+            <div style={{ marginTop: '24px' }}>
+              <h4 style={{ color: '#1B2A4E', fontWeight: 800, marginBottom: '16px', fontSize: '1.1rem' }}>My Unlocked Promo Codes</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {promoCodesData.myPromoCodes.filter(p => p.code.startsWith('REWARD')).map(promo => (
+                  <div key={promo.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFB', padding: '12px 16px', borderRadius: '12px', border: '1px dashed #CBD5E1' }}>
+                    <div>
+                      <div style={{ fontWeight: 800, color: '#4338CA', letterSpacing: '1px' }}>{promo.code}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#6B7280', fontWeight: 600 }}>
+                        {promo.discountType === 'PERCENTAGE' ? `${promo.discountValue}% OFF` : `₹${promo.discountValue} OFF`} • {promo.usageCount >= promo.usageLimit ? 'Used' : 'Available'}
+                      </div>
+                    </div>
+                    <Button 
+                      size="small" 
+                      type="text" 
+                      icon={<i className="lucide-copy" />} 
+                      onClick={() => {
+                        navigator.clipboard.writeText(promo.code);
+                        toast.success('Promo code copied!');
+                      }}
+                      style={{ fontWeight: 600, color: '#4338CA' }}
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <Button
             type="primary"

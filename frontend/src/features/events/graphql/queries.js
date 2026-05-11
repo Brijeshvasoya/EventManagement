@@ -61,7 +61,10 @@ export const GET_EVENT_DETAILS = gql`
       id title description date location capacity imageUrl eventType status bookedCount checkedInCount isOnWaitlist waitlistCount
       organizer { id name email averageRating }
       ticketTypes { name price capacity }
-      attendees { id user { id name email } quantity checkedInCount amountPaid ticketType status createdAt }
+      attendees { 
+        id user { id name email } quantity checkedInCount amountPaid ticketType status createdAt 
+        affiliatePartnership { promoter { name } promoCode }
+      }
       vendors { id name category cost contactInfo }
       feedbacks { id rating comment user { name } createdAt }
       features
@@ -103,6 +106,15 @@ export const GET_MY_COMMISSION_PAYOUTS = gql`
   query GetMyCommissionPayouts {
     getMyCommissionPayouts {
       id event { id title } amount status processedAt createdAt
+    }
+  }
+`;
+
+export const GET_MY_PROMOTER_ANALYTICS = gql`
+  query GetMyPromoterAnalytics($days: Int) {
+    myPromoterAnalytics(days: $days) {
+      totalEarnings totalSales
+      dailyData { date earnings sales }
     }
   }
 `;

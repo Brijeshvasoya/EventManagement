@@ -7,6 +7,8 @@ import { motion } from 'framer-motion';
 import { Calendar, Users, Shield, ArrowRight, Check, Play, Star, Sparkles } from 'lucide-react';
 import styles from '../styles/Landing.module.css';
 import { useAuth } from '@/context/AuthContext';
+import { Typography, Tag } from 'antd';
+const { Text: AntText } = Typography;
 
 // Animation Variants
 const fadeInUp = {
@@ -239,6 +241,87 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
+      {/* Affiliate / Promoter Network Section */}
+      <section id="affiliate" className={styles.affiliateSection}>
+        <div className={styles.affiliateGrid}>
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: false }}
+            transition={{ duration: 0.8 }}
+            className={styles.affiliateContent}
+          >
+            <div className={styles.affiliateBadge}>
+              <Sparkles size={16} /> Earn with Every Sale
+            </div>
+            <h2 className={styles.sectionTitle} style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
+              Become an <span style={{ color: 'var(--primary-color)' }}>Event Promoter</span>
+            </h2>
+            <p className={styles.sectionSubtitle} style={{ textAlign: 'left', marginLeft: 0, maxWidth: '100%' }}>
+              Turn your social network into a source of income. Promote your favorite events, offer exclusive discounts to your followers, and earn instant commissions on every ticket sold through your link.
+            </p>
+            
+            <div className={styles.affiliateFeatures}>
+              {[
+                { title: "High Commissions", desc: "Earn competitive commissions on every ticket sale you refer." },
+                { title: "Exclusive Discounts", desc: "Give your network special promo codes for instant savings." },
+                { title: "Real-time Tracking", desc: "Monitor your sales, clicks, and earnings through your personal dashboard." }
+              ].map((f, i) => (
+                <div key={i} className={styles.affiliateFeatureItem}>
+                  <div className={styles.checkItemCircle} style={{ background: '#eef2ff', color: '#6366f1' }}><Check size={14} /></div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#111827' }}>{f.title}</h4>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.95rem', color: '#64748b' }}>{f.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <Link href="/signup" className={styles.primaryBtn} style={{ marginTop: '2.5rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              Join Affiliate Network <ArrowRight size={18} />
+            </Link>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: false }}
+            transition={{ duration: 0.8 }}
+            className={styles.affiliateImageWrapper}
+          >
+            <div className={styles.statsCard}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <AntText strong style={{ fontSize: '1.1rem' }}>Earning Analytics</AntText>
+                <Tag color="green" style={{ borderRadius: '6px', fontWeight: 700 }}>LIVE</Tag>
+              </div>
+              <div style={{ display: 'flex', gap: '20px' }}>
+                <div style={{ flex: 1, padding: '20px', background: '#f8fafc', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
+                  <AntText type="secondary" style={{ fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Total Sales</AntText>
+                  <AntText strong style={{ fontSize: '1.6rem', color: '#0f172a' }}>124</AntText>
+                </div>
+                <div style={{ flex: 1, padding: '20px', background: '#f0fdf4', borderRadius: '16px', border: '1px solid #dcfce7' }}>
+                  <AntText type="secondary" style={{ fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>Total Earned</AntText>
+                  <AntText strong style={{ fontSize: '1.6rem', color: '#166534' }}>₹15,450</AntText>
+                </div>
+              </div>
+              <div style={{ marginTop: '2rem', height: '120px', background: 'linear-gradient(180deg, #eff6ff 0%, #ffffff 100%)', borderRadius: '16px', border: '1px dashed #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <AntText type="secondary" style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>Real-time performance graph</AntText>
+              </div>
+            </div>
+            
+            {/* Floating decoration badge */}
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              style={{ position: 'absolute', top: '-20px', right: '-20px', background: '#4338ca', color: 'white', padding: '12px 20px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(67, 56, 202, 0.3)', zIndex: 3 }}
+            >
+              <div style={{ fontSize: '0.75rem', opacity: 0.8, fontWeight: 600 }}>Highest Payout</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>₹2,400 / day</div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* How It Works */}
       <section id="how-it-works" className={styles.stepsSection}>
         <motion.div
@@ -299,7 +382,8 @@ export default function LandingPage() {
             { q: "Can I use EventHub for free?", a: "Yes, you can sign up for a free account. However, to create and host events, you will need to choose from our Basic or Pro plans." },
             { q: "How do I get paid for tickets?", a: "EventHub integrates with secure payment processors like Stripe and Razorpay. Payouts are transferred directly to your configured bank account." },
             { q: "Is there a limit to attendee capacity?", a: "Our Pro plan allows for unlimited attendees, ensuring your event can scale to any size without software limitations." },
-            { q: "Can I customize my event page?", a: "Absolutely. EventHub provides robust customization tools, allowing you to add banners, custom colors, and branding to your event portal." }
+            { q: "Can I customize my event page?", a: "Absolutely. EventHub provides robust customization tools, allowing you to add banners, custom colors, and branding to your event portal." },
+            { q: "How does the Affiliate Network work?", a: "Promoters can apply to partner with any event. Once approved, you get a unique promo code. When someone buys a ticket using your code, they get a discount and you earn a percentage-based commission!" }
           ].map((faq, index) => (
             <motion.div
               key={index}

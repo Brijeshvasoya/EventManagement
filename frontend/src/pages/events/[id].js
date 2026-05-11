@@ -471,15 +471,36 @@ export default function EventDetailsPage() {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Attendees');
     worksheet.columns = [
-      { header: 'Pass ID', key: 'id', width: 25 },
+      { header: 'Booking ID', key: 'id', width: 25 },
       { header: 'Guest Name', key: 'name', width: 25 },
       { header: 'Email Address', key: 'email', width: 30 },
       { header: 'Ticket Type', key: 'ticket', width: 15 },
-      { header: 'Status', key: 'status', width: 15 }
+      { header: 'Quantity', key: 'quantity', width: 10 },
+      { header: 'Amount Paid', key: 'amount', width: 15 },
+      { header: 'Status', key: 'status', width: 15 },
+      { header: 'Promoter Name', key: 'promoter', width: 25 },
+      { header: 'Promo Code', key: 'code', width: 15 },
+      { header: 'Booking Date', key: 'date', width: 20 }
     ];
+
     event.attendees?.forEach(a => {
-      worksheet.addRow({ id: a.id.toUpperCase(), name: a.user.name, email: a.user.email, ticket: a.ticketType, status: a.status });
+      worksheet.addRow({ 
+        id: a.id.toUpperCase(), 
+        name: a.user.name, 
+        email: a.user.email, 
+        ticket: a.ticketType, 
+        quantity: a.quantity,
+        amount: `₹${a.amountPaid}`,
+        status: a.status,
+        promoter: a.affiliatePartnership?.promoter?.name || 'DIRECT',
+        code: a.affiliatePartnership?.promoCode || 'N/A',
+        date: dayjs(isNaN(Number(a.createdAt)) ? a.createdAt : Number(a.createdAt)).format('DD MMM YYYY, hh:mm A')
+      });
     });
+
+    // Styling
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E7FF' } };
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), `${event.title.replace(/\s+/g, '_')}_Attendees.xlsx`);
   };
@@ -827,7 +848,7 @@ export default function EventDetailsPage() {
                                           </div>
                                         </div>
                                       </div>
-                                      <div style={{ flex: '1 1 250px', borderLeft: '1px dashed #e2e8f0', paddingLeft: '16px' }}>
+                                      <div style={{ flex: '1 1 200px', borderLeft: '1px dashed #e2e8f0', paddingLeft: '16px' }}>
                                         <AntText type="secondary" style={{ fontSize: '9px', display: 'block', textTransform: 'uppercase', fontWeight: 800, marginBottom: '8px' }}>Booking Info</AntText>
                                         <AntText style={{ fontSize: '11px', color: '#64748b', lineHeight: '1.5' }}>
                                           ID: <strong style={{ color: '#0f172a' }}>#{record.id.slice(-8).toUpperCase()}</strong><br />
@@ -845,6 +866,18 @@ export default function EventDetailsPage() {
                                           }
                                         </AntText>
                                       </div>
+                                      {record.affiliatePartnership && (
+                                        <div style={{ flex: '1 1 200px', borderLeft: '1px dashed #e2e8f0', paddingLeft: '16px' }}>
+                                          <AntText type="secondary" style={{ fontSize: '9px', display: 'block', textTransform: 'uppercase', fontWeight: 800, marginBottom: '8px' }}>Affiliate Source</AntText>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Avatar size="small" src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${record.affiliatePartnership.promoter.name}`} />
+                                            <div>
+                                              <AntText strong style={{ fontSize: '11px', color: '#0f172a', display: 'block' }}>{record.affiliatePartnership.promoter.name}</AntText>
+                                              <AntText style={{ fontSize: '10px', color: '#6366f1', fontWeight: 600 }}>Code: {record.affiliatePartnership.promoCode}</AntText>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                 ),

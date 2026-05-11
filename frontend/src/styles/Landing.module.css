@@ -718,3 +718,80 @@
     display: none;
   }
 }
+
+/* Affiliate Section */
+.affiliateSection {
+  padding: 8rem 5rem;
+  background: white;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.affiliateGrid {
+  display: flex;
+  align-items: center;
+  gap: 6rem;
+}
+
+.affiliateContent {
+  flex: 1.2;
+}
+
+.affiliateBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fdf2f8;
+  color: #db2777;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+}
+
+.affiliateFeatures {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 2.5rem;
+}
+
+.affiliateFeatureItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+}
+
+.affiliateImageWrapper {
+  flex: 1;
+  position: relative;
+}
+
+.statsCard {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 32px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 1024px) {
+  .affiliateSection {
+    padding: 4rem 2rem;
+  }
+  .affiliateGrid {
+    flex-direction: column;
+    text-align: center;
+    gap: 4rem;
+  }
+  .affiliateFeatureItem {
+    text-align: left;
+  }
+  .affiliateImageWrapper {
+    width: 100%;
+  }
+}

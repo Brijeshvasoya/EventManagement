@@ -71,6 +71,12 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user, prom
       });
 
       if (promo && promo.usageCount < promo.usageLimit && (!promo.eventId || promo.eventId.toString() === eventId)) {
+        if (promo.code.startsWith('REWARD')) {
+          const userIdStr = user.id._id ? user.id._id.toString() : user.id.toString();
+          if (promo.organizer.toString() !== userIdStr) {
+            throw new Error('This reward code is exclusive to another user.');
+          }
+        }
         if (promo.discountType === 'PERCENTAGE') {
           totalAmount = totalAmount * (1 - promo.discountValue / 100);
         } else {

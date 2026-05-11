@@ -127,7 +127,7 @@ const resolvers = {
       return promo;
     },
     myPromoCodes: async (_, __, { user }) => {
-      if (!user || user.role !== 'ORGANIZER') throw new Error('Unauthorized');
+      if (!user) throw new Error('Unauthorized');
       const PromoCode = require('../models/PromoCode');
       return await PromoCode.find({ organizer: user.id }).sort({ createdAt: -1 });
     },
@@ -228,38 +228,79 @@ const resolvers = {
       if (!user || user.role !== 'SUPER_ADMIN') throw new GraphQLError('Unauthorized');
       return AffiliatePartnership.find().sort({ createdAt: -1 });
     },
-    validateAffiliateCode: async (_, { code, eventId }) => {
+    validateAffiliateCode: async (_, { code, eventId }, { user }) => {
+      const event = await Event.findById(eventId);
+      if (!event) return { valid: false, message: 'Event not found' };
+      if (new Date(event.date) < new Date()) return { valid: false, message: 'Event has already passed' };
+      const originalPrice = event.ticketTypes.length > 0 ? event.ticketTypes[0].price : 0;
+
+      // 1. Check Affiliate Partnership
       const partnership = await AffiliatePartnership.findOne({
         promoCode: code.toUpperCase(),
         status: 'APPROVED'
       });
-      if (!partnership) return { valid: false, message: 'Invalid promo code' };
-      if (partnership.eventId.toString() !== eventId) return { valid: false, message: 'This code is not valid for this event' };
 
-      const event = await Event.findById(eventId);
-      if (!event) return { valid: false, message: 'Event not found' };
-      if (new Date(event.date) < new Date()) return { valid: false, message: 'Event has already passed' };
+      if (partnership) {
+        if (partnership.eventId.toString() !== eventId) return { valid: false, message: 'This code is not valid for this event' };
+        const discountAmount = (originalPrice * (partnership.customerDiscount || 0)) / 100;
+        const sellingPrice = originalPrice - discountAmount;
+        return {
+          valid: true,
+          sellingPrice,
+          originalPrice,
+          discountAmount,
+          discountPercentage: partnership.customerDiscount,
+          pricingModel: partnership.pricingModel,
+          message: partnership.customerDiscount > 0
+            ? `Special Discount Applied! You save ₹${discountAmount.toFixed(2)} (${partnership.customerDiscount}% off)`
+            : 'Promo code applied!'
+        };
+      }
 
-      const originalPrice = event.ticketTypes.length > 0 ? event.ticketTypes[0].price : 0;
-      const discountAmount = (originalPrice * (partnership.customerDiscount || 0)) / 100;
-      const sellingPrice = originalPrice - discountAmount;
+      // 2. Check Regular/Reward PromoCode
+      const PromoCode = require('../models/PromoCode');
+      const promo = await PromoCode.findOne({
+        code: code.toUpperCase(),
+        isActive: true,
+        expiresAt: { $gte: new Date() }
+      });
 
-      return {
-        valid: true,
-        sellingPrice,
-        originalPrice,
-        discountAmount,
-        discountPercentage: partnership.customerDiscount,
-        pricingModel: partnership.pricingModel,
-        message: partnership.customerDiscount > 0
-          ? `Special Discount Applied! You save ₹${discountAmount.toFixed(2)} (${partnership.customerDiscount}% off)`
-          : 'Promo code applied!'
-      };
+      if (promo && promo.usageCount < promo.usageLimit && (!promo.eventId || promo.eventId.toString() === eventId)) {
+        if (promo.code.startsWith('REWARD')) {
+          if (!user) return { valid: false, message: 'Please login to use this reward code' };
+          const userIdStr = user.id._id ? user.id._id.toString() : user.id.toString();
+          if (promo.organizer.toString() !== userIdStr) {
+            return { valid: false, message: 'This reward code is exclusive to another user.' };
+          }
+        }
+        
+        let discountAmount = 0;
+        if (promo.discountType === 'PERCENTAGE') {
+          discountAmount = (originalPrice * promo.discountValue) / 100;
+        } else {
+          discountAmount = promo.discountValue;
+        }
+        discountAmount = Math.min(originalPrice, discountAmount);
+        const sellingPrice = originalPrice - discountAmount;
+        
+        return {
+          valid: true,
+          sellingPrice,
+          originalPrice,
+          discountAmount,
+          discountPercentage: promo.discountType === 'PERCENTAGE' ? promo.discountValue : 0,
+          pricingModel: 'PROMO_CODE',
+          message: `Special Discount Applied! You save ₹${discountAmount.toFixed(2)}`
+        };
+      }
+
+      return { valid: false, message: 'Invalid or expired promo code' };
     },
     getAffiliateEvents: async (_, __, { user }) => {
       if (!user) return [];
       return Event.find({ isAffiliateEnabled: true, status: 'UPCOMING' }).sort({ date: 1 });
-    }
+    },
+    myPromoterAnalytics: (_, { days }, { user }) => analyticsService.getPromoterAnalytics(user, days)
   },
   Mutation: {
     register: (_, args) => authService.register(args),
@@ -342,11 +383,43 @@ const resolvers = {
       fullUser.redeemedRewards.push(rewardId);
       await fullUser.save();
 
+      let promoCodeText = '';
+      
+      // Generate Promo Code if applicable
+      if (rewardId.includes('Discount') || rewardId.includes('Free Ticket')) {
+        const PromoCode = require('../models/PromoCode');
+        const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
+        
+        let discountValue = 0;
+        let discountType = 'PERCENTAGE';
+        
+        if (rewardId.includes('Bronze')) discountValue = 5;
+        else if (rewardId.includes('Silver')) discountValue = 20;
+        else if (rewardId.includes('Free Ticket')) discountValue = 100;
+        
+        if (discountValue > 0) {
+          promoCodeText = `REWARD${discountValue}-${randomSuffix}`;
+          await PromoCode.create({
+            code: promoCodeText,
+            discountType,
+            discountValue,
+            expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year validity
+            organizer: user.id, // Bypass requirement by using user id
+            usageLimit: 1, // Single use
+            isActive: true
+          });
+        }
+      }
+
+      const message = promoCodeText 
+        ? `Congratulations! You have redeemed "${rewardId}". Your exclusive Promo Code is: ${promoCodeText} (valid for 1 use on any event).`
+        : `Congratulations! You have redeemed "${rewardId}". Our team has been notified.`;
+
       // Create a notification for the user
       await notificationService.createNotification({
         recipient: user.id,
-        title: 'Reward Redeemed',
-        message: `Congratulations! You have redeemed "${rewardId}". Check your email for details.`,
+        title: 'Reward Redeemed 🎁',
+        message,
         type: 'REWARD_REDEEMED'
       });
 
@@ -889,6 +962,11 @@ const resolvers = {
     paymentUrl: async (parent) => {
       if (parent.status !== 'PENDING') return null;
       return await stripeService.getCheckoutUrl(parent.stripePaymentId);
+    },
+    affiliatePartnership: async (parent) => {
+      if (!parent.affiliatePartnershipId) return null;
+      const AffiliatePartnership = require('../models/AffiliatePartnership');
+      return await AffiliatePartnership.findById(parent.affiliatePartnershipId);
     }
   },
   Notification: {

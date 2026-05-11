@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
-import { Typography, Card, Col, Row, Tag, Button, Modal, Form, InputNumber, notification, Spin, Empty, Statistic, Divider, Badge, Table } from 'antd';
+import { Typography, Card, Col, Row, Tag, Button, Modal, Form, InputNumber, notification, Spin, Empty, Statistic, Divider, Badge, Table, Segmented } from 'antd';
 import { DollarCircleOutlined, TeamOutlined, RiseOutlined, RocketOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { GET_MY_PROMOTIONS, GET_MY_COMMISSION_PAYOUTS, GET_ME } from '../features/events/graphql/queries';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip, ResponsiveContainer } from 'recharts';
+import dayjs from 'dayjs';
+import { GET_MY_PROMOTIONS, GET_MY_COMMISSION_PAYOUTS, GET_ME, GET_MY_PROMOTER_ANALYTICS } from '../features/events/graphql/queries';
 import { REQUEST_COMMISSION_PAYOUT } from '../features/events/graphql/mutations';
 
 const { Title, Text } = Typography;
@@ -26,6 +28,10 @@ export default function PromotionsPage() {
   const { data: meData } = useQuery(GET_ME);
   const { data: promoData, loading: promoLoading } = useQuery(GET_MY_PROMOTIONS);
   const { data: payoutData, loading: payoutLoading } = useQuery(GET_MY_COMMISSION_PAYOUTS);
+  const [timeRange, setTimeRange] = useState(30);
+  const { data: analyticsData } = useQuery(GET_MY_PROMOTER_ANALYTICS, {
+    variables: { days: timeRange }
+  });
 
   const [requestPayout] = useMutation(REQUEST_COMMISSION_PAYOUT, {
     refetchQueries: [{ query: GET_MY_PROMOTIONS }, { query: GET_MY_COMMISSION_PAYOUTS }, { query: GET_ME }]
@@ -38,6 +44,7 @@ export default function PromotionsPage() {
   const user = meData?.me;
   const partnerships = promoData?.getMyPromotions || [];
   const payouts = payoutData?.getMyCommissionPayouts || [];
+  const dailyData = analyticsData?.myPromoterAnalytics?.dailyData || [];
 
   if (promoLoading || payoutLoading) return <div style={{ textAlign: 'center', padding: '100px' }}><Spin size="large" tip="Loading Your Promotions..." /></div>;
 
@@ -112,6 +119,81 @@ export default function PromotionsPage() {
             </div>
           </Card>
         ))}
+      </motion.div>
+
+      {/* Performance Graph */}
+      <motion.div variants={fadeInUp}>
+        <Card style={{ borderRadius: '24px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.04)', padding: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+            <div>
+              <Title level={4} style={{ margin: 0, fontWeight: 900 }}>Earnings Performance</Title>
+              <Text type="secondary" style={{ fontSize: '0.9rem' }}>Commission trends over the last {timeRange} days</Text>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <Segmented
+                options={[
+                  { label: '7D', value: 7 },
+                  { label: '30D', value: 30 },
+                  { label: '90D', value: 90 },
+                  { label: '6M', value: 180 },
+                  { label: '1Y', value: 365 }
+                ]}
+                value={timeRange}
+                onChange={setTimeRange}
+                style={{ borderRadius: '10px', background: '#F1F5F9', padding: '2px' }}
+              />
+              <Tag color="blue" style={{ borderRadius: '6px', fontWeight: 700, padding: '4px 12px', margin: 0 }}>{timeRange}D REPORT</Tag>
+            </div>
+          </div>
+
+          <div style={{ height: '300px', width: '100%' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={dailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#4338CA" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="#4338CA" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                <XAxis
+                  dataKey="date"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 10, fill: '#94A3B8' }}
+                  tickFormatter={(str) => {
+                    if (timeRange === 1) return dayjs(str).format('HH:mm');
+                    return dayjs(str).format('DD MMM');
+                  }}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 10, fill: '#94A3B8' }}
+                  tickFormatter={(val) => `₹${val}`}
+                />
+                <ReTooltip
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', padding: '12px' }}
+                  itemStyle={{ fontWeight: 800, fontSize: '12px' }}
+                  labelStyle={{ marginBottom: '4px', fontSize: '10px', color: '#64748B' }}
+                  labelFormatter={(label) => {
+                    if (timeRange === 1) return dayjs(label).format('MMMM DD, YYYY - HH:mm');
+                    return dayjs(label).format('MMMM DD, YYYY');
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="earnings"
+                  stroke="#4338CA"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#colorEarnings)"
+                  animationDuration={2000}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
       </motion.div>
 
       <motion.div variants={fadeInUp}>

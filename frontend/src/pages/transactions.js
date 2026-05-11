@@ -302,27 +302,49 @@ function TransactionsContent() {
                   prefix={<IndianRupee size={20} style={{ marginRight: 4, color: '#10B981' }} />}
                   styles={{ content: { color: '#059669', fontWeight: 900, fontSize: '2.2rem' } }}
                 />
-                <div style={{ marginTop: '4px', fontSize: '0.8rem', color: '#059669', fontWeight: 600, opacity: 0.8 }}>
-                  Ready to withdraw
-                </div>
+                {hasBankDetails && (
+                  <div style={{ marginTop: '4px', fontSize: '0.8rem', color: '#059669', fontWeight: 600, opacity: 0.8 }}>
+                    Ready to withdraw
+                  </div>
+                )}
               </div>
-              <Button
-                type="primary"
-                shape="round"
-                size="large"
-                disabled={availablePayout <= 0 || !hasBankDetails}
-                onClick={() => setIsPayoutModalOpen(true)}
-                style={{
-                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                  border: 'none',
-                  fontWeight: 800,
-                  height: '50px',
-                  padding: '0 32px',
-                  boxShadow: '0 10px 20px rgba(16, 185, 129, 0.2)'
-                }}
-              >
-                Withdraw
-              </Button>
+              {hasBankDetails ? (
+                <Button
+                  type="primary"
+                  shape="round"
+                  size="large"
+                  disabled={availablePayout <= 0 || !hasBankDetails}
+                  onClick={() => setIsPayoutModalOpen(true)}
+                  style={{
+                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                    border: 'none',
+                    fontWeight: 800,
+                    height: '50px',
+                    padding: '0 32px',
+                    boxShadow: '0 10px 20px rgba(16, 185, 129, 0.2)'
+                  }}
+                >
+                  Withdraw
+                </Button>
+              ) : (
+                <Button
+                  type="primary"
+                  shape="round"
+                  size="large"
+                  onClick={() => setIsBankModalOpen(true)}
+                  style={{
+                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                    border: 'none',
+                    fontWeight: 800,
+                    height: '50px',
+                    padding: '0 32px',
+                    boxShadow: '0 10px 20px rgba(16, 185, 129, 0.2)',
+                    color: '#ffffff'
+                  }}
+                >
+                  Add Bank Details
+                </Button>
+              )}
             </div>
             {!hasBankDetails && (
               <div style={{ fontSize: '0.75rem', color: '#EF4444', marginTop: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(239, 68, 68, 0.05)', padding: '8px 12px', borderRadius: '10px' }}>
