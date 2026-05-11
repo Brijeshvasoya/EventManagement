@@ -11,7 +11,8 @@ const eventSchema = new mongoose.Schema({
   ticketTypes: [{ name: String, price: Number, capacity: Number }],
   organizer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   capacity: { type: Number, required: true, default: 100 },
-  features: [{ type: String }]
+  features: [{ type: String }],
+  isAffiliateEnabled: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Event', eventSchema);

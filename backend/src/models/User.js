@@ -27,6 +27,14 @@ const userSchema = new mongoose.Schema({
   },
   razorpayContactId: { type: String },
   razorpayFundAccountId: { type: String },
+  // Promoter fields
+  isPromoter: { type: Boolean, default: false },
+  stripeConnectOnboarded: { type: Boolean, default: false },
+  pendingCommission: { type: Number, default: 0 },
+  withdrawableCommission: { type: Number, default: 0 },
+  totalCommissionEarned: { type: Number, default: 0 },
+  totalTicketsSold: { type: Number, default: 0 },
+  commissionDebt: { type: Number, default: 0 },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

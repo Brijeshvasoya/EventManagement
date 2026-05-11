@@ -2,13 +2,13 @@ import { gql } from '@apollo/client';
 
 export const UPDATE_EVENT = gql`
   mutation UpdateEvent($id: ID!, $input: CreateEventInput!) {
-    updateEvent(id: $id, input: $input) { id title }
+    updateEvent(id: $id, input: $input) { id title isAffiliateEnabled }
   }
 `;
 
 export const CREATE_EVENT = gql`
   mutation CreateEvent($input: CreateEventInput!) {
-    createEvent(input: $input) { id title imageUrl }
+    createEvent(input: $input) { id title imageUrl isAffiliateEnabled }
   }
 `;
 
@@ -235,6 +235,68 @@ export const REOPEN_TICKET = gql`
       user { id name }
       organizer { id name }
       messages { id message createdAt sender { id name role } }
+    }
+  }
+`;
+
+export const BECOME_PROMOTER = gql`
+  mutation BecomePromoter {
+    becomePromoter
+  }
+`;
+
+export const REQUEST_AFFILIATE_PARTNERSHIP = gql`
+  mutation RequestAffiliatePartnership($eventId: ID!) {
+    requestAffiliatePartnership(eventId: $eventId) {
+      id status
+    }
+  }
+`;
+
+export const REQUEST_COMMISSION_PAYOUT = gql`
+  mutation RequestCommissionPayout($partnershipId: ID!, $amount: Float!) {
+    requestCommissionPayout(partnershipId: $partnershipId, amount: $amount) {
+      id status amount
+    }
+  }
+`;
+
+export const APPROVE_AFFILIATE_PARTNERSHIP = gql`
+  mutation ApproveAffiliatePartnership($partnershipId: ID!, $commissionPercent: Float!, $customerDiscount: Float!) {
+    approveAffiliatePartnership(partnershipId: $partnershipId, commissionPercent: $commissionPercent, customerDiscount: $customerDiscount) {
+      id status promoCode commissionPercent customerDiscount
+    }
+  }
+`;
+
+export const REJECT_AFFILIATE_PARTNERSHIP = gql`
+  mutation RejectAffiliatePartnership($partnershipId: ID!) {
+    rejectAffiliatePartnership(partnershipId: $partnershipId) {
+      id status
+    }
+  }
+`;
+
+export const APPROVE_COMMISSION_PAYOUT = gql`
+  mutation ApproveCommissionPayout($payoutId: ID!) {
+    approveCommissionPayout(payoutId: $payoutId) {
+      id status
+    }
+  }
+`;
+
+export const REJECT_COMMISSION_PAYOUT = gql`
+  mutation RejectCommissionPayout($payoutId: ID!) {
+    rejectCommissionPayout(payoutId: $payoutId) {
+      id status
+    }
+  }
+`;
+
+export const TOGGLE_AFFILIATE_ENABLED = gql`
+  mutation ToggleAffiliateEnabled($eventId: ID!, $enabled: Boolean!) {
+    toggleAffiliateEnabled(eventId: $eventId, enabled: $enabled) {
+      id isAffiliateEnabled
     }
   }
 `;

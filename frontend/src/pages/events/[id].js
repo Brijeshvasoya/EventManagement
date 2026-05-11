@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useQuery, useMutation, useSubscription } from '@apollo/client/react';
-import { GET_EVENT_DETAILS, GET_MY_BOOKINGS, VALIDATE_PROMO_CODE, CHECK_IN_SUBSCRIPTION } from '@/features/events/graphql/queries';
-import { CANCEL_BOOKING, CREATE_CHECKOUT_SESSION, JOIN_WAITLIST, DELETE_EVENT, CONFIRM_PAYMENT } from '@/features/events/graphql/mutations';
+import { GET_EVENT_DETAILS, GET_MY_BOOKINGS, VALIDATE_PROMO_CODE, CHECK_IN_SUBSCRIPTION, VALIDATE_AFFILIATE_CODE } from '@/features/events/graphql/queries';
+import { CANCEL_BOOKING, CREATE_CHECKOUT_SESSION, JOIN_WAITLIST, DELETE_EVENT, CONFIRM_PAYMENT, REQUEST_AFFILIATE_PARTNERSHIP, BECOME_PROMOTER } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
 import ExcelJS from 'exceljs';
@@ -35,6 +35,7 @@ import dayjs from 'dayjs';
 import { IndianRupeeIcon, MapPin, Calendar, Users, Briefcase, Star, Info, CreditCard, Ticket } from 'lucide-react';
 import { motion } from 'framer-motion';
 import LoadingScreen from '@/components/LoadingScreen';
+import { GET_MY_PROMOTIONS } from '../../features/events/graphql/queries';
 
 const { Title: AntTitle, Text: AntText, Paragraph } = Typography;
 
@@ -109,6 +110,27 @@ export default function EventDetailsPage() {
     onError: (err) => toast.error(err.message)
   });
 
+  const [requestPartnership, { loading: requestLoading }] = useMutation(REQUEST_AFFILIATE_PARTNERSHIP, {
+    refetchQueries: [{ query: GET_MY_PROMOTIONS }]
+  });
+  const [becomePromoter] = useMutation(BECOME_PROMOTER);
+
+  const { data: promoData } = useQuery(GET_MY_PROMOTIONS, {
+    skip: !user
+  });
+
+  const handleRequestPartnership = async () => {
+    try {
+      if (!user.isPromoter) {
+        await becomePromoter();
+      }
+      await requestPartnership({ variables: { eventId: id } });
+      toast.success('Partnership requested! The organizer will review your application.');
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
   const handleConfirmPayment = async (bookingId) => {
     await confirmPayment({ variables: { bookingId } });
   };
@@ -118,6 +140,11 @@ export default function EventDetailsPage() {
   const [isValidatingPromo, setIsValidatingPromo] = useState(false);
 
   const { refetch: validatePromoQuery } = useQuery(VALIDATE_PROMO_CODE, {
+    variables: { code: promoCodeInput, eventId: id },
+    skip: true
+  });
+
+  const { refetch: validateAffiliateQuery } = useQuery(VALIDATE_AFFILIATE_CODE, {
     variables: { code: promoCodeInput, eventId: id },
     skip: true
   });
@@ -204,17 +231,36 @@ export default function EventDetailsPage() {
     if (!promoCodeInput) return;
     try {
       setIsValidatingPromo(true);
-      const { data: promoData } = await validatePromoQuery({
-        code: promoCodeInput,
-        eventId: id
-      });
 
+      // Try Affiliate Code first
+      try {
+        const { data: affData } = await validateAffiliateQuery({ code: promoCodeInput, eventId: id });
+        if (affData?.validateAffiliateCode?.valid) {
+          const isPercent = (affData.validateAffiliateCode.discountPercentage || 0) > 0;
+          setAppliedPromo({
+            code: promoCodeInput,
+            discountType: isPercent ? 'PERCENTAGE' : 'FIXED', 
+            discountValue: isPercent 
+              ? affData.validateAffiliateCode.discountPercentage 
+              : affData.validateAffiliateCode.discountAmount,
+            isAffiliate: true,
+            message: affData.validateAffiliateCode.message
+          });
+          toast.success(affData.validateAffiliateCode.message || `Affiliate code applied!`);
+          return;
+        }
+      } catch (e) {
+        // Fallback to regular promo code check if affiliate fails
+      }
+
+      // Try Regular Promo Code
+      const { data: promoData } = await validatePromoQuery({ code: promoCodeInput, eventId: id });
       if (promoData?.validatePromoCode) {
         setAppliedPromo(promoData.validatePromoCode);
         toast.success(`Promo code "${promoCodeInput.toUpperCase()}" applied!`);
       }
     } catch (e) {
-      toast.error(e.message);
+      toast.error(e.message || 'Invalid or expired code');
       setAppliedPromo(null);
     } finally {
       setIsValidatingPromo(false);
@@ -624,6 +670,95 @@ export default function EventDetailsPage() {
                               </Col>
                             ))}
                           </Row>
+
+                          {(() => {
+                            const myPromotions = promoData?.getMyPromotions || [];
+                            const existingPartnership = myPromotions.find(p => p.event.id === event.id);
+                            const showAffiliateBanner = event.isAffiliateEnabled && event.status === 'UPCOMING' && !isOwner && user;
+
+                            if (!showAffiliateBanner) return null;
+
+                            return (
+                              <>
+                                <Divider />
+                                <div style={{
+                                  background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                                  padding: '24px',
+                                  borderRadius: '24px',
+                                  border: '1px solid #bbf7d0',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  flexWrap: 'wrap',
+                                  gap: '16px',
+                                  boxShadow: '0 10px 15px -3px rgba(34, 197, 94, 0.05)'
+                                }}>
+                                  <div style={{ flex: 1, minWidth: '200px' }}>
+                                    <AntTitle level={4} style={{ color: '#166534', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800 }}>
+                                      <FireOutlined /> {existingPartnership ? 'Partnership Status' : 'Promote this Event'}
+                                    </AntTitle>
+                                    <AntText style={{ color: '#15803d', display: 'block', marginTop: '8px', fontSize: '0.95rem', fontWeight: 500 }}>
+                                      {existingPartnership
+                                        ? existingPartnership.status === 'APPROVED' 
+                                          ? <>Your application is approved! Use your code to promote.</>
+                                          : `Your application for this event is ${existingPartnership.status.toLowerCase()}.`
+                                        : 'Earn commission by selling tickets to your network! Apply to become an affiliate partner.'}
+                                    </AntText>
+                                  </div>
+
+                                  {existingPartnership ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                                      <Tag 
+                                        color={existingPartnership.status === 'APPROVED' ? 'green' : existingPartnership.status === 'PENDING' ? 'orange' : 'red'}
+                                        style={{ padding: '8px 16px', borderRadius: '12px', fontWeight: 800, fontSize: '0.9rem', border: 'none', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', margin: 0 }}
+                                      >
+                                        {existingPartnership.status}
+                                      </Tag>
+                                      {existingPartnership.status === 'APPROVED' && (
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                          <Button 
+                                            size="small"
+                                            onClick={() => {
+                                              navigator.clipboard.writeText(existingPartnership.promoCode);
+                                              toast.success('Promo code copied!');
+                                            }}
+                                            style={{ borderRadius: '8px', fontWeight: 600, border: '1px solid #bbf7d0', color: '#16a34a' }}
+                                          >
+                                            Copy Code
+                                          </Button>
+                                          <Button 
+                                            size="small"
+                                            type="primary"
+                                            onClick={() => router.push('/promotions')}
+                                            style={{ borderRadius: '8px', fontWeight: 600, background: '#16a34a', border: 'none' }}
+                                          >
+                                            Dashboard
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <Button 
+                                      type="primary" 
+                                      loading={requestLoading}
+                                      onClick={handleRequestPartnership}
+                                      style={{ 
+                                        background: '#16a34a', 
+                                        border: 'none', 
+                                        height: '48px', 
+                                        padding: '0 32px',
+                                        borderRadius: '12px', 
+                                        fontWeight: 800,
+                                        boxShadow: '0 8px 16px rgba(22, 163, 74, 0.2)'
+                                      }}
+                                    >
+                                      APPLY NOW
+                                    </Button>
+                                  )}
+                                </div>
+                              </>
+                            );
+                          })()}
                         </div>
                       )
                     },
@@ -825,9 +960,9 @@ export default function EventDetailsPage() {
                             </Space.Compact>
                             {appliedPromo && (
                               <div style={{ marginTop: '8px' }}>
-                                <Tag color="success" closable onClose={() => { setAppliedPromo(null); setPromoCodeInput(''); }} style={{ borderRadius: '6px' }}>
-                                  {appliedPromo.code}: {appliedPromo.discountType === 'PERCENTAGE' ? `${appliedPromo.discountValue}% OFF` : `₹${appliedPromo.discountValue} OFF`}
-                                </Tag>
+                                  <Tag color="success" closable onClose={() => { setAppliedPromo(null); setPromoCodeInput(''); }} style={{ borderRadius: '6px', padding: '4px 12px', fontWeight: 600 }}>
+                                    {appliedPromo.code}: {appliedPromo.discountType === 'PERCENTAGE' ? `${appliedPromo.discountValue}% OFF` : `₹${((appliedPromo.isAffiliate ? (appliedPromo.discountValue * bookingOptions.quantity) : appliedPromo.discountValue) || 0).toFixed(0)} OFF`}
+                                  </Tag>
                               </div>
                             )}
                           </div>
@@ -847,7 +982,7 @@ export default function EventDetailsPage() {
                                     if (!appliedPromo) return basePrice.toLocaleString();
                                     const discount = appliedPromo.discountType === 'PERCENTAGE'
                                       ? basePrice * (appliedPromo.discountValue / 100)
-                                      : appliedPromo.discountValue;
+                                      : (appliedPromo.isAffiliate ? (appliedPromo.discountValue * bookingOptions.quantity) : (appliedPromo.discountValue || 0));
                                     return Math.max(0, basePrice - discount).toLocaleString();
                                   })()}
                                 </AntText>

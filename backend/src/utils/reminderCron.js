@@ -96,19 +96,55 @@ const runReminderJob = async () => {
 const updateEventStatuses = async () => {
   try {
     const now = new Date();
-    const result = await Event.updateMany(
-      { 
-        date: { $lt: now }, 
-        status: 'UPCOMING' 
-      },
-      { 
-        $set: { status: 'COMPLETED' } 
-      }
-    );
     
-    if (result.modifiedCount > 0) {
-      console.log(`✅ [ReminderCron] Auto-completed ${result.modifiedCount} past event(s).`);
+    // Find events that need to be completed
+    const eventsToComplete = await Event.find({ 
+      date: { $lt: now }, 
+      status: 'UPCOMING' 
+    });
+
+    if (eventsToComplete.length === 0) return;
+
+    const eventIds = eventsToComplete.map(e => e._id);
+
+    // 1. Mark events as COMPLETED
+    const result = await Event.updateMany(
+      { _id: { $in: eventIds } },
+      { $set: { status: 'COMPLETED' } }
+    );
+
+    // 2. Unlock Promoter Commissions
+    const AffiliatePartnership = require('../models/AffiliatePartnership');
+    const User = require('../models/User');
+
+    // Find partnerships that are not yet withdrawable for these events
+    const partnershipsToUnlock = await AffiliatePartnership.find({ 
+      eventId: { $in: eventIds }, 
+      isWithdrawable: false 
+    });
+
+    if (partnershipsToUnlock.length > 0) {
+      await AffiliatePartnership.updateMany(
+        { _id: { $in: partnershipsToUnlock.map(p => p._id) } },
+        { $set: { isWithdrawable: true } }
+      );
+
+      for (const p of partnershipsToUnlock) {
+        if (p.totalCommissionEarned > 0) {
+          await User.updateOne(
+            { _id: p.promoterId },
+            { 
+              $inc: { 
+                pendingCommission: -p.totalCommissionEarned,
+                withdrawableCommission: p.totalCommissionEarned
+              } 
+            }
+          );
+        }
+      }
     }
+    
+    console.log(`✅ [ReminderCron] Auto-completed ${result.modifiedCount} past event(s) and unlocked commissions.`);
   } catch (error) {
     console.error('❌ [ReminderCron] Error in auto-completion:', error.message);
   }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { useQuery, useMutation, useSubscription } from '@apollo/client/react';
-import { Form, Modal, Input, Drawer, Badge, Avatar, Typography, Button } from 'antd';
-import { UserOutlined, SettingOutlined, BellOutlined, CheckCircleFilled, CheckOutlined } from '@ant-design/icons';
+import { Form, Modal, Input, Drawer, Badge, Avatar, Typography, Button, Dropdown } from 'antd';
+import { UserOutlined, SettingOutlined, BellOutlined, CheckCircleFilled, CheckOutlined, LogoutOutlined } from '@ant-design/icons';
 import { GET_MY_NOTIFICATIONS, GET_ME, NOTIFICATION_SUBSCRIPTION, UNREAD_NOTIFICATION_COUNT, GET_MY_BOOKINGS } from '@/features/events/graphql/queries';
 import { MARK_NOTIFICATION_AS_READ, MARK_ALL_NOTIFICATIONS_AS_READ, UPDATE_PROFILE } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
@@ -189,6 +189,12 @@ export function GlobalActionsProvider({ children }) {
                 BOOKING_CONFIRMED: { icon: '✅', bg: '#EFF6FF', iconBg: '#BFDBFE', iconColor: '#2563EB' },
                 EVENT_CANCELLED: { icon: '❌', bg: '#FEF2F2', iconBg: '#FECACA', iconColor: '#DC2626' },
                 TICKET_CHECKED_IN: { icon: '🤝', bg: '#F0F9FF', iconBg: '#BAE6FD', iconColor: '#0284C7' },
+                AFFILIATE_REQUEST: { icon: '🚀', bg: '#EEF2FF', iconBg: '#C7D2FE', iconColor: '#4338CA' },
+                AFFILIATE_APPROVED: { icon: '✨', bg: '#F0FDF4', iconBg: '#BBF7D0', iconColor: '#16A34A' },
+                AFFILIATE_REJECTED: { icon: '⚠️', bg: '#FFF7ED', iconBg: '#FFEDD5', iconColor: '#EA580C' },
+                COMMISSION_PAYOUT_REQUEST: { icon: '💰', bg: '#F5F3FF', iconBg: '#DDD6FE', iconColor: '#7C3AED' },
+                COMMISSION_PAYOUT_COMPLETED: { icon: '💸', bg: '#ECFDF5', iconBg: '#D1FAE5', iconColor: '#059669' },
+                REWARD_REDEEMED: { icon: '🎁', bg: '#FDF2F8', iconBg: '#FCE7F3', iconColor: '#DB2777' },
               };
               const cfg = item.read
                 ? { icon: <CheckCircleFilled />, bg: 'white', iconBg: '#F1F5F9', iconColor: '#64748B', isIcon: true }
@@ -244,29 +250,109 @@ export function TopbarMobileIcons() {
 }
 
 export function DesktopHeaderActions() {
-  const { mounted, user, unreadCount, handleOpenDrawer, setIsProfileModalVisible } = useContext(GlobalActionsContext);
-  if (!mounted || !user) return null;
+  const { mounted, user, unreadCount, handleOpenDrawer } = useContext(GlobalActionsContext);
+  const { logout } = useAuth();
+  const router = useRouter();
+
+  if (!mounted) return null;
+
+  if (!user) {
+    return (
+      <div className="desktop-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <Button type="text" onClick={() => router.push('/login')} style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Log In</Button>
+        <Button type="primary" onClick={() => router.push('/signup')} style={{ borderRadius: '12px', fontWeight: 700, height: '40px' }}>Get Started</Button>
+      </div>
+    );
+  }
+
+  const userMenuItems = [
+    {
+      key: 'profile',
+      icon: <SettingOutlined style={{ fontSize: '16px' }} />,
+      label: <span style={{ fontWeight: 600, paddingLeft: '4px' }}>Profile Settings</span>,
+      onClick: () => router.push('/profile')
+    },
+    { type: 'divider' },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined style={{ fontSize: '16px' }} />,
+      label: <span style={{ fontWeight: 600, paddingLeft: '4px' }}>Logout</span>,
+      danger: true,
+      onClick: logout
+    }
+  ];
 
   return (
-    <div className="desktop-actions" style={{ display: 'flex', alignItems: 'center' }}>
-      <div style={{ display: 'flex', gap: '12px' }}>
-        <Badge count={unreadCount} offset={[-2, 6]}>
-          <div
-            className="hover-bounce"
-            onClick={handleOpenDrawer}
-            style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 50%, rgb(67, 56, 202) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(27, 42, 78, 0.3)' }}
-          >
-            <BellOutlined style={{ fontSize: '20px' }} />
-          </div>
-        </Badge>
-      </div>
-      <div className="dashboard-profile-mobile" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '12px' }}>
-        <Avatar size={44} style={{ background: 'var(--gradient-main)', color: 'white' }} icon={<UserOutlined />} />
-        <div>
-          <div style={{ fontWeight: 700, color: '#1B2A4E', fontSize: '0.95rem' }}>{user.name || 'User'}</div>
-          <div style={{ color: '#6B7280', fontSize: '0.8rem', textTransform: 'capitalize' }}>{user.role?.toLowerCase() || 'User'}</div>
+    <div className="desktop-actions" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+      {/* Subtle Notification Bell */}
+      <Badge count={unreadCount} offset={[-2, 6]} size="small">
+        <div
+          className="hover-bounce"
+          onClick={handleOpenDrawer}
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '12px',
+            background: 'rgba(67, 56, 202, 0.05)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'rgb(67, 56, 202)',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            border: '1px solid rgba(67, 56, 202, 0.1)'
+          }}
+          onMouseOver={e => {
+            e.currentTarget.style.background = 'rgba(67, 56, 202, 0.1)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseOut={e => {
+            e.currentTarget.style.background = 'rgba(67, 56, 202, 0.05)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          <BellOutlined style={{ fontSize: '20px' }} />
         </div>
-      </div>
+      </Badge>
+
+      {/* Unified User Profile Dropdown */}
+      <Dropdown menu={{ items: userMenuItems }} placement="bottom" arrow={{ pointAtCenter: true }} trigger={['click']}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '6px 16px 6px 6px',
+            borderRadius: '16px',
+            background: '#F8FAFC',
+            border: '1px solid #E2E8F0',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease'
+          }}
+          onMouseOver={e => {
+            e.currentTarget.style.background = '#F1F5F9';
+            e.currentTarget.style.borderColor = '#CBD5E1';
+          }}
+          onMouseOut={e => {
+            e.currentTarget.style.background = '#F8FAFC';
+            e.currentTarget.style.borderColor = '#E2E8F0';
+          }}
+        >
+          <Avatar
+            size={36}
+            style={{
+              background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)',
+              color: 'white',
+              boxShadow: '0 4px 10px rgba(99, 102, 241, 0.2)'
+            }}
+            icon={<UserOutlined />}
+          />
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.9rem', lineHeight: 1.2 }}>{user.name || 'User'}</div>
+            <div style={{ color: '#64748B', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{user.role}</div>
+          </div>
+        </div>
+      </Dropdown>
     </div>
   );
 }

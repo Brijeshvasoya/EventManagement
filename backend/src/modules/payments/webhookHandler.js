@@ -42,6 +42,47 @@ exports.stripeWebhook = async (req, res) => {
           { $inc: { usageCount: 1 } }
         );
       }
+
+      // Handle Affiliate Commission tracking
+      const affiliatePartnershipId = session.metadata?.affiliatePartnershipId;
+      if (affiliatePartnershipId) {
+        try {
+          const AffiliatePartnership = require('../../models/AffiliatePartnership');
+          const User = require('../../models/User');
+          const partnership = await AffiliatePartnership.findById(affiliatePartnershipId);
+          
+          if (partnership) {
+            const ticketQty = parseInt(quantity) || 1;
+            
+            // OPTION 2: If the buyer is the promoter themselves, they get the discount (applied at checkout)
+            // but they DO NOT earn commission on their own purchase.
+            if (partnership.promoterId.toString() === userId) {
+              console.log(`ℹ️ Self-booking detected for promoter ${userId}. Discount applied, but no commission or sale count recorded.`);
+              // We do nothing else here — the booking is confirmed but metrics stay same
+            } else {
+              const commission = (partnership.commissionPercent / 100) * (session.amount_total / 100);
+
+              // Update partnership stats
+              partnership.usageCount += ticketQty;
+              partnership.totalCommissionEarned += commission;
+              await partnership.save();
+
+              // Update promoter's pending commission
+              await User.findByIdAndUpdate(partnership.promoterId, {
+                $inc: {
+                  pendingCommission: commission,
+                  totalCommissionEarned: commission,
+                  totalTicketsSold: ticketQty
+                }
+              });
+
+              console.log(`🤝 Affiliate commission tracked: ₹${commission} for partnership ${affiliatePartnershipId}`);
+            }
+          }
+        } catch (affiliateErr) {
+          console.error('❌ Webhook: Affiliate commission error -', affiliateErr.message);
+        }
+      }
     } catch (e) {
       console.error('❌ Webhook: Booking error -', e.message);
     }

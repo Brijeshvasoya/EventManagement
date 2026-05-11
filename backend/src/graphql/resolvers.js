@@ -15,6 +15,8 @@ const Booking = require('../models/Booking');
 const User = require('../models/User');
 const Event = require('../models/Event');
 const SupportTicket = require('../models/SupportTicket');
+const AffiliatePartnership = require('../models/AffiliatePartnership');
+const CommissionPayout = require('../models/CommissionPayout');
 const { pubsub, EVENTS } = require('../utils/pubsub');
 
 const resolvers = {
@@ -200,6 +202,63 @@ const resolvers = {
         console.error('Final fallback error:', error);
         return [];
       }
+    },
+    // ── Affiliate Queries ──
+    getMyPromoterRequests: async (_, __, { user }) => {
+      if (!user || (user.role !== 'ORGANIZER' && user.role !== 'ADMIN')) return [];
+      return AffiliatePartnership.find({ organizerId: user.id }).sort({ createdAt: -1 });
+    },
+    getMyPromoterPayoutRequests: async (_, __, { user }) => {
+      if (!user || (user.role !== 'ORGANIZER' && user.role !== 'ADMIN')) return [];
+      return CommissionPayout.find({ organizerId: user.id }).sort({ createdAt: -1 });
+    },
+    getMyPromotions: async (_, __, { user }) => {
+      if (!user) return [];
+      return AffiliatePartnership.find({ promoterId: user.id }).sort({ createdAt: -1 });
+    },
+    getMyCommissionPayouts: async (_, __, { user }) => {
+      if (!user) return [];
+      return CommissionPayout.find({ promoterId: user.id }).sort({ createdAt: -1 });
+    },
+    getAllPromoters: async (_, __, { user }) => {
+      if (!user || user.role !== 'SUPER_ADMIN') throw new GraphQLError('Unauthorized');
+      return User.find({ isPromoter: true }).sort({ createdAt: -1 });
+    },
+    getAllAffiliatePartnerships: async (_, __, { user }) => {
+      if (!user || user.role !== 'SUPER_ADMIN') throw new GraphQLError('Unauthorized');
+      return AffiliatePartnership.find().sort({ createdAt: -1 });
+    },
+    validateAffiliateCode: async (_, { code, eventId }) => {
+      const partnership = await AffiliatePartnership.findOne({
+        promoCode: code.toUpperCase(),
+        status: 'APPROVED'
+      });
+      if (!partnership) return { valid: false, message: 'Invalid promo code' };
+      if (partnership.eventId.toString() !== eventId) return { valid: false, message: 'This code is not valid for this event' };
+
+      const event = await Event.findById(eventId);
+      if (!event) return { valid: false, message: 'Event not found' };
+      if (new Date(event.date) < new Date()) return { valid: false, message: 'Event has already passed' };
+
+      const originalPrice = event.ticketTypes.length > 0 ? event.ticketTypes[0].price : 0;
+      const discountAmount = (originalPrice * (partnership.customerDiscount || 0)) / 100;
+      const sellingPrice = originalPrice - discountAmount;
+
+      return {
+        valid: true,
+        sellingPrice,
+        originalPrice,
+        discountAmount,
+        discountPercentage: partnership.customerDiscount,
+        pricingModel: partnership.pricingModel,
+        message: partnership.customerDiscount > 0
+          ? `Special Discount Applied! You save ₹${discountAmount.toFixed(2)} (${partnership.customerDiscount}% off)`
+          : 'Promo code applied!'
+      };
+    },
+    getAffiliateEvents: async (_, __, { user }) => {
+      if (!user) return [];
+      return Event.find({ isAffiliateEnabled: true, status: 'UPCOMING' }).sort({ date: 1 });
     }
   },
   Mutation: {
@@ -494,6 +553,239 @@ const resolvers = {
 
       return ticket;
     },
+    // ── Affiliate Mutations ──
+    becomePromoter: async (_, __, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      const fullUser = await User.findById(user.id);
+      if (!fullUser) throw new GraphQLError('User not found');
+
+      fullUser.isPromoter = true;
+      await fullUser.save();
+
+      // Reuse existing createConnectAccount for Stripe onboarding
+      const onboardingUrl = await stripeService.createConnectAccount(user);
+      return onboardingUrl;
+    },
+    requestAffiliatePartnership: async (_, { eventId }, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      const fullUser = await User.findById(user.id);
+      if (!fullUser || !fullUser.isPromoter) throw new GraphQLError('You must become a promoter first');
+
+      const event = await Event.findById(eventId);
+      if (!event) throw new GraphQLError('Event not found');
+      if (!event.isAffiliateEnabled) throw new GraphQLError('This event does not accept promoter applications');
+      if (event.organizer.toString() === user.id) throw new GraphQLError('You cannot promote your own event');
+
+      const existing = await AffiliatePartnership.findOne({ promoterId: user.id, eventId });
+      if (existing) throw new GraphQLError('You have already applied to promote this event');
+
+      const partnership = new AffiliatePartnership({
+        promoterId: user.id,
+        eventId,
+        organizerId: event.organizer
+      });
+      await partnership.save();
+
+      // Notify organizer
+      await notificationService.createNotification({
+        recipient: event.organizer,
+        title: 'New Promoter Application',
+        message: `${fullUser.name} wants to promote your event "${event.title}".`,
+        type: 'AFFILIATE_REQUEST',
+        event: eventId
+      });
+
+      return partnership;
+    },
+    approveAffiliatePartnership: async (_, { partnershipId, pricingModel, promoterSellingPrice, commissionPercent, customerDiscount }, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      const partnership = await AffiliatePartnership.findById(partnershipId);
+      if (!partnership) throw new GraphQLError('Partnership not found');
+      if (partnership.organizerId.toString() !== user.id) throw new GraphQLError('Unauthorized: not your event');
+      if (partnership.status !== 'PENDING') throw new GraphQLError('This request has already been processed');
+
+      // Validate pricing model
+      const event = await Event.findById(partnership.eventId);
+      const originalPrice = event.ticketTypes.length > 0 ? event.ticketTypes[0].price : 0;
+      if (commissionPercent < 0 || commissionPercent > 50) {
+        throw new GraphQLError('Commission must be between 0% and 50%');
+      }
+      if (customerDiscount < 0 || customerDiscount > 100) {
+        throw new GraphQLError('Customer discount must be between 0% and 100%');
+      }
+
+      // Generate unique promo code
+      const promoter = await User.findById(partnership.promoterId);
+      const nameSlug = (promoter.name || 'PROMO').split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '');
+      const discStr = Math.floor(customerDiscount || 0);
+      const randomSuffix = Math.random().toString(36).substring(2, 4).toUpperCase(); // 2 chars
+      const promoCode = `${nameSlug}${discStr}${randomSuffix}`;
+
+      partnership.status = 'APPROVED';
+      partnership.pricingModel = 'PERCENTAGE'; // Unified model
+      partnership.commissionPercent = commissionPercent;
+      partnership.customerDiscount = customerDiscount;
+      partnership.promoCode = promoCode;
+      partnership.approvedAt = new Date();
+      await partnership.save();
+
+      // Notify promoter
+      await notificationService.createNotification({
+        recipient: partnership.promoterId,
+        title: 'Partnership Approved!',
+        message: `Your request to promote "${event.title}" has been approved! Your promo code is: ${promoCode}`,
+        type: 'AFFILIATE_APPROVED',
+        event: partnership.eventId
+      });
+
+      return partnership;
+    },
+    rejectAffiliatePartnership: async (_, { partnershipId }, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      const partnership = await AffiliatePartnership.findById(partnershipId);
+      if (!partnership) throw new GraphQLError('Partnership not found');
+      if (partnership.organizerId.toString() !== user.id) throw new GraphQLError('Unauthorized: not your event');
+
+      partnership.status = 'REJECTED';
+      await partnership.save();
+
+      const event = await Event.findById(partnership.eventId);
+      await notificationService.createNotification({
+        recipient: partnership.promoterId,
+        title: 'Partnership Rejected',
+        message: `Your request to promote "${event?.title || 'an event'}" has been rejected.`,
+        type: 'AFFILIATE_REJECTED',
+        event: partnership.eventId
+      });
+
+      return partnership;
+    },
+    requestCommissionPayout: async (_, { partnershipId, amount }, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      const promoter = await User.findById(user.id);
+      if (!promoter || !promoter.isPromoter) throw new GraphQLError('Not a promoter');
+
+      const partnership = await AffiliatePartnership.findById(partnershipId);
+      if (!partnership) throw new GraphQLError('Partnership not found');
+      if (partnership.promoterId.toString() !== user.id) throw new GraphQLError('Unauthorized');
+
+      // Check event is completed
+      const event = await Event.findById(partnership.eventId);
+      if (!event || (new Date(event.date) > new Date() && event.status !== 'COMPLETED')) {
+        throw new GraphQLError('Commission can only be withdrawn after the event is completed.');
+      }
+
+      // Check withdrawable balance
+      const withdrawable = partnership.totalCommissionEarned - partnership.totalCommissionPaidOut;
+      if (amount > withdrawable) {
+        throw new GraphQLError(`Insufficient balance. Available: ₹${withdrawable.toFixed(2)}, Requested: ₹${amount}`);
+      }
+      if (amount < 100) throw new GraphQLError('Minimum payout amount is ₹100');
+
+      // Check no pending payout for same partnership
+      const existingPending = await CommissionPayout.findOne({ promoterId: user.id, partnershipId, status: 'PENDING' });
+      if (existingPending) throw new GraphQLError('You already have a pending payout request for this partnership');
+
+      // Check Stripe Connect onboarding
+      if (!promoter.stripeAccountId) {
+        throw new GraphQLError('Please complete your Stripe account setup before requesting a payout.');
+      }
+
+      const payout = new CommissionPayout({
+        promoterId: user.id,
+        organizerId: partnership.organizerId,
+        partnershipId,
+        eventId: partnership.eventId,
+        amount
+      });
+      await payout.save();
+
+      // Notify organizer
+      await notificationService.createNotification({
+        recipient: partnership.organizerId,
+        title: 'Commission Payout Request',
+        message: `${promoter.name} is requesting a commission payout of ₹${amount} for "${event.title}".`,
+        type: 'COMMISSION_PAYOUT_REQUEST',
+        event: partnership.eventId
+      });
+
+      return payout;
+    },
+    approveCommissionPayout: async (_, { payoutId }, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      const payout = await CommissionPayout.findById(payoutId);
+      if (!payout) throw new GraphQLError('Payout not found');
+      if (payout.organizerId.toString() !== user.id) throw new GraphQLError('Unauthorized: not your promoter');
+      if (payout.status !== 'PENDING') throw new GraphQLError('Payout already processed');
+
+      const promoter = await User.findById(payout.promoterId);
+      if (!promoter || !promoter.stripeAccountId) {
+        throw new GraphQLError('Promoter has not set up their Stripe account yet');
+      }
+
+      // Process transfer via Stripe Connect (reuse existing function)
+      try {
+        const transfer = await stripeService.createTransfer(payout, promoter);
+        payout.stripeTransferId = transfer.id;
+      } catch (e) {
+        payout.status = 'FAILED';
+        await payout.save();
+        throw new GraphQLError(`Stripe transfer failed: ${e.message}`);
+      }
+
+      payout.status = 'COMPLETED';
+      payout.processedAt = new Date();
+      await payout.save();
+
+      // Update partnership paid-out amount
+      const partnership = await AffiliatePartnership.findById(payout.partnershipId);
+      if (partnership) {
+        partnership.totalCommissionPaidOut += payout.amount;
+        await partnership.save();
+      }
+
+      // Update promoter user
+      promoter.withdrawableCommission = Math.max(0, promoter.withdrawableCommission - payout.amount);
+      await promoter.save();
+
+      // Notify promoter
+      await notificationService.createNotification({
+        recipient: payout.promoterId,
+        title: 'Payout Approved!',
+        message: `Your commission payout of ₹${payout.amount} has been approved and sent to your bank account.`,
+        type: 'COMMISSION_PAYOUT_COMPLETED'
+      });
+
+      return payout;
+    },
+    rejectCommissionPayout: async (_, { payoutId }, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      const payout = await CommissionPayout.findById(payoutId);
+      if (!payout) throw new GraphQLError('Payout not found');
+      if (payout.organizerId.toString() !== user.id) throw new GraphQLError('Unauthorized');
+      if (payout.status !== 'PENDING') throw new GraphQLError('Payout already processed');
+
+      payout.status = 'REJECTED';
+      await payout.save();
+
+      await notificationService.createNotification({
+        recipient: payout.promoterId,
+        title: 'Payout Rejected',
+        message: `Your commission payout request of ₹${payout.amount} has been rejected.`,
+        type: 'COMMISSION_PAYOUT_REJECTED'
+      });
+
+      return payout;
+    },
+    toggleAffiliateEnabled: async (_, { eventId, enabled }, { user }) => {
+      if (!user) throw new GraphQLError('Unauthorized');
+      const event = await Event.findById(eventId);
+      if (!event) throw new GraphQLError('Event not found');
+      if (event.organizer.toString() !== user.id) throw new GraphQLError('Unauthorized: not your event');
+      event.isAffiliateEnabled = enabled;
+      await event.save();
+      return event;
+    },
   },
   PromoCode: {
     event: async (parent) => {
@@ -730,6 +1022,22 @@ const resolvers = {
   },
   SupportMessage: {
     sender: (parent, _, { loaders }) => loaders.userLoader.load(parent.sender.toString()),
+  },
+  // ── Affiliate Type Resolvers ──
+  AffiliatePartnership: {
+    promoter: (parent, _, { loaders }) => loaders.userLoader.load(parent.promoterId.toString()),
+    event: (parent, _, { loaders }) => loaders.eventLoader.load(parent.eventId.toString()),
+    organizer: (parent, _, { loaders }) => loaders.userLoader.load(parent.organizerId.toString()),
+    requestedAt: (parent) => parent.requestedAt ? (typeof parent.requestedAt === 'string' ? parent.requestedAt : parent.requestedAt.toISOString()) : null,
+    approvedAt: (parent) => parent.approvedAt ? (typeof parent.approvedAt === 'string' ? parent.approvedAt : parent.approvedAt.toISOString()) : null,
+  },
+  CommissionPayout: {
+    promoter: (parent, _, { loaders }) => loaders.userLoader.load(parent.promoterId.toString()),
+    organizer: (parent, _, { loaders }) => loaders.userLoader.load(parent.organizerId.toString()),
+    partnership: async (parent) => await AffiliatePartnership.findById(parent.partnershipId),
+    event: (parent, _, { loaders }) => loaders.eventLoader.load(parent.eventId.toString()),
+    createdAt: (parent) => parent.createdAt ? (typeof parent.createdAt === 'string' ? parent.createdAt : parent.createdAt.toISOString()) : null,
+    processedAt: (parent) => parent.processedAt ? (typeof parent.processedAt === 'string' ? parent.processedAt : parent.processedAt.toISOString()) : null,
   }
 };
 module.exports = resolvers;

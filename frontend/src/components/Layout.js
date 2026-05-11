@@ -64,6 +64,7 @@ export default function AppLayout({ children }) {
       { key: '/superadmin', icon: <UserOutlined />, label: 'Total Users' },
       { key: '/superadmin/payments', icon: <DollarCircleOutlined />, label: 'Payment Tracking' },
       { key: '/superadmin/tickets', icon: <ScanOutlined />, label: 'All Tickets' },
+      { key: '/superadmin/promoters', icon: <UserAddOutlined />, label: 'All Promoters' },
       { key: '/support', icon: <QuestionCircleOutlined />, label: 'Support Center' }
     ];
   } else {
@@ -73,7 +74,8 @@ export default function AppLayout({ children }) {
         { key: '/browse', icon: <GlobalOutlined />, label: 'Browse Events' },
         ...(user ? [
           { key: '/my-tickets', icon: <CreditCardOutlined />, label: 'My Tickets' },
-          { key: '/calendar', icon: <CalendarOutlined />, label: 'Calendar' }
+          { key: '/calendar', icon: <CalendarOutlined />, label: 'Calendar' },
+          ...(user.isPromoter ? [{ key: '/promotions', icon: <DollarCircleOutlined />, label: 'My Promotions' }] : [])
         ] : [])
       ] : []),
       ...(user?.role === 'ORGANIZER' || user?.role === 'ADMIN' ? [
@@ -81,6 +83,7 @@ export default function AppLayout({ children }) {
         { key: '/calendar', icon: <CalendarOutlined />, label: 'Calendar' },
         { key: '/transactions', icon: <DollarCircleOutlined />, label: 'Transactions' },
         { key: '/promos', icon: <RocketOutlined />, label: 'Promo Codes' },
+        { key: '/promoters', icon: <UserAddOutlined />, label: 'Promoters' },
         { key: '/events/create', icon: <PlusCircleOutlined />, label: 'Create Event' },
         { key: '/vendors', icon: <ShopOutlined />, label: 'Vendors' },
         { key: '/verify', icon: <ScanOutlined />, label: 'Scan Ticket' },
@@ -194,48 +197,6 @@ export default function AppLayout({ children }) {
             {menuItems.map(item => <NavItem key={item.key} item={item} />)}
           </nav>
 
-          {/* User Bottom Profile */}
-          <div style={{ padding: '24px', borderTop: '1px solid var(--glass-border)', background: 'transparent' }}>
-            {user ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {/* <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <Avatar size={44} style={{ background: 'var(--gradient-main)' }} icon={<UserOutlined />} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>{user.role}</div>
-                  </div>
-                </div> */}
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <Button type="primary" icon={<SettingOutlined style={{ color: 'white' }} />} onClick={() => router.push('/profile')} style={{ flex: 1, borderRadius: '12px', background: 'linear-gradient(135deg, rgb(27, 42, 78) 0%, rgb(49, 46, 129) 100%)', border: 'none' }} />
-                  <div
-                    onClick={logout}
-                    style={{
-                      flex: 1,
-                      borderRadius: '12px',
-                      background: 'linear-gradient(135deg, #FF3B3B 0%, #950101 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      height: '44px',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 15px rgba(149, 1, 1, 0.3)',
-                      transition: 'all 0.3s ease'
-                    }}
-                    onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                    onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
-                  >
-                    <LogoutOutlined style={{ fontSize: '1.2rem' }} />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <Button type="primary" block onClick={() => router.push('/signup')} style={{ borderRadius: '12px', fontWeight: 700, height: '44px' }}>Get Started</Button>
-                <Button type="text" block onClick={() => router.push('/login')} style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Log In</Button>
-              </div>
-            )}
-          </div>
         </aside>
 
         {/* MOBILE TOPBAR */}

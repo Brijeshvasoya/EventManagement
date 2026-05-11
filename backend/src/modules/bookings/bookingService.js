@@ -242,6 +242,32 @@ const bookingService = {
     // ✅ Save booking AFTER paymentStatus is finalized — so email reads correct value
     await booking.save();
 
+    // Affiliate Commission Reversal
+    if (booking.affiliatePartnershipId) {
+      try {
+        const AffiliatePartnership = require('../../models/AffiliatePartnership');
+        const partnership = await AffiliatePartnership.findById(booking.affiliatePartnershipId);
+        if (partnership) {
+          const commissionToReverse = (partnership.commissionPercent / 100) * booking.amountPaid;
+          
+          partnership.usageCount = Math.max(0, partnership.usageCount - booking.quantity);
+          partnership.totalCommissionEarned = Math.max(0, partnership.totalCommissionEarned - commissionToReverse);
+          await partnership.save();
+
+          const promoter = await User.findById(partnership.promoterId);
+          if (promoter) {
+            promoter.pendingCommission = Math.max(0, promoter.pendingCommission - commissionToReverse);
+            promoter.totalCommissionEarned = Math.max(0, promoter.totalCommissionEarned - commissionToReverse);
+            promoter.totalTicketsSold = Math.max(0, promoter.totalTicketsSold - booking.quantity);
+            await promoter.save();
+          }
+          console.log(`📉 Affiliate commission reversed: ₹${commissionToReverse} for partnership ${partnership._id}`);
+        }
+      } catch (err) {
+        console.error('❌ Affiliate commission reversal failed:', err.message);
+      }
+    }
+
     // Check Waitlist: Hybrid Priority Approach
     (async () => {
       try {

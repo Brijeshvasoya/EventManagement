@@ -4,7 +4,7 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 import { GET_MY_VENDORS, GET_EVENT_DETAILS } from '@/features/events/graphql/queries';
 import { CREATE_EVENT, UPDATE_EVENT } from '@/features/events/graphql/mutations';
-import { Select, ConfigProvider, theme, Form, Input, InputNumber, Button, Divider, Typography, Space, Avatar } from 'antd';
+import { Select, ConfigProvider, theme, Form, Input, InputNumber, Button, Divider, Typography, Space, Avatar, Switch } from 'antd';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -436,9 +436,14 @@ export default function CreateEvent() {
                     <>
                       <PictureOutlined style={{ fontSize: '1.8rem', color: '#CBD5E1', marginBottom: '8px' }} />
                       <input type="file" accept="image/*" onChange={handleImageUpload} id="media-upload" style={{ display: 'none' }} />
-                      <label htmlFor="media-upload">
-                        <Button type="default" size="small" style={{ borderRadius: '8px', fontWeight: 800, color: '#1B2A4E', fontSize: '0.75rem' }}>UPLOAD IMAGE</Button>
-                      </label>
+                      <Button 
+                        type="default" 
+                        size="small" 
+                        onClick={() => document.getElementById('media-upload').click()}
+                        style={{ borderRadius: '8px', fontWeight: 800, color: '#1B2A4E', fontSize: '0.75rem' }}
+                      >
+                        UPLOAD IMAGE
+                      </Button>
                     </>
                   )}
                 </div>
@@ -489,6 +494,16 @@ export default function CreateEvent() {
                     <Select.Option value="LIVE_QA">⚡ Live Q&A Sessions</Select.Option>
                     <Select.Option value="DIGITAL_COLLECTIBLES">🎫 Digital Collectibles</Select.Option>
                   </Select>
+                </Form.Item>
+
+                <Form.Item 
+                  label="PROMOTER NETWORK" 
+                  name="isAffiliateEnabled" 
+                  valuePropName="checked"
+                  style={{ marginTop: '20px', marginBottom: 0 }}
+                  extra="Allow promoters to apply to sell tickets for this event on commission."
+                >
+                  <Switch /> 
                 </Form.Item>
               </div>
             </div>

@@ -13,7 +13,8 @@ const bookingSchema = new mongoose.Schema({
   paymentIntentId: { type: String, index: { unique: true, sparse: true } },
   abandonedEmailSent: { type: Boolean, default: false },
   welcomeEmailSent: { type: Boolean, default: false },
-  feedbackEmailSent: { type: Boolean, default: false }
+  feedbackEmailSent: { type: Boolean, default: false },
+  affiliatePartnershipId: { type: mongoose.Schema.Types.ObjectId, ref: 'AffiliatePartnership' }
 }, { timestamps: true });
 
 // Uniqueness is primarily managed by stripePaymentId to allow multiple bookings per user/event

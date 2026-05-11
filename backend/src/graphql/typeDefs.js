@@ -1,9 +1,12 @@
 const typeDefs = `#graphql
+  type AffiliatePartnership { id: ID! promoter: User! event: Event! organizer: User! status: String! promoCode: String pricingModel: String promoterSellingPrice: Float commissionPercent: Float customerDiscount: Float usageCount: Int! totalCommissionEarned: Float! totalCommissionPaidOut: Float! isWithdrawable: Boolean! requestedAt: String! approvedAt: String }
+  type CommissionPayout { id: ID! promoter: User! organizer: User! partnership: AffiliatePartnership! event: Event! amount: Float! status: String! stripeTransferId: String processedAt: String createdAt: String! }
+  type AffiliatePromoValidation { valid: Boolean! sellingPrice: Float originalPrice: Float discountAmount: Float discountPercentage: Float pricingModel: String message: String! }
   type BankDetails { accountHolderName: String accountNumber: String bankName: String ifscCode: String }
-  type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int averageRating: Float numReviews: Int redeemedRewards: [String] isPlanPurchased: Boolean planId: String planInterval: String planExpiresAt: String scheduledPlanId: String scheduledDowngradeAt: String totalWithdrawn: Float availablePayout: Float bankDetails: BankDetails }
+  type User { id: ID! name: String! email: String! role: String! createdAt: String loyaltyPoints: Int averageRating: Float numReviews: Int redeemedRewards: [String] isPlanPurchased: Boolean planId: String planInterval: String planExpiresAt: String scheduledPlanId: String scheduledDowngradeAt: String totalWithdrawn: Float availablePayout: Float bankDetails: BankDetails isPromoter: Boolean pendingCommission: Float withdrawableCommission: Float totalCommissionEarned: Float totalTicketsSold: Int }
   type TicketType { name: String! price: Float! capacity: Int! }
   type Feedback { id: ID! booking: Booking! event: Event! organizer: User! user: User! rating: Int! comment: String createdAt: String! }
-  type Event { id: ID! title: String! description: String! date: String! location: String! capacity: Int! imageUrl: String organizer: User! isBooked: Boolean isOnWaitlist: Boolean waitlistCount: Int eventType: String status: String ticketTypes: [TicketType] bookedCount: Int checkedInCount: Int attendees: [Booking!] vendors: [Vendor!] feedbacks: [Feedback!] features: [String] }
+  type Event { id: ID! title: String! description: String! date: String! location: String! capacity: Int! imageUrl: String organizer: User! isBooked: Boolean isOnWaitlist: Boolean waitlistCount: Int eventType: String status: String ticketTypes: [TicketType] bookedCount: Int checkedInCount: Int attendees: [Booking!] vendors: [Vendor!] feedbacks: [Feedback!] features: [String] isAffiliateEnabled: Boolean }
   type Booking { id: ID! event: Event! user: User! status: String! createdAt: String! qrCode: String ticketType: String amountPaid: Float quantity: Int checkedInCount: Int paymentStatus: String paymentUrl: String }
   type Vendor { id: ID! name: String! category: String! rating: Float cost: Float contactInfo: String availableDates: [String] organizer: User! events: [Event!] }
   type Notification { id: ID! recipient: User! title: String message: String! type: String! read: Boolean! booking: Booking event: Event createdAt: String! }
@@ -20,7 +23,7 @@ const typeDefs = `#graphql
   type SupportTicket { id: ID! user: User! event: Event organizer: User subject: String! description: String! type: String! status: String! messages: [SupportMessage!]! createdAt: String! }
   
   input TicketTypeInput { name: String! price: Float! capacity: Int! }
-  input CreateEventInput { title: String! description: String! date: String! location: String! capacity: Int imageUrl: String eventType: String ticketTypes: [TicketTypeInput] vendorIds: [ID] features: [String] }
+  input CreateEventInput { title: String! description: String! date: String! location: String! capacity: Int imageUrl: String eventType: String ticketTypes: [TicketTypeInput] vendorIds: [ID] features: [String] isAffiliateEnabled: Boolean }
   input VendorInput { name: String! category: String! cost: Float! contactInfo: String availableDates: [String] eventIds: [ID] }
   input PromoCodeInput { code: String! discountType: String! discountValue: Float! expiresAt: String! usageLimit: Int eventId: ID }
   
@@ -45,6 +48,14 @@ const typeDefs = `#graphql
     validatePromoCode(code: String!, eventId: ID!): PromoCode
     myPromoCodes: [PromoCode!]!
     mySupportTickets(status: String, type: String, eventId: ID, limit: Int, offset: Int): [SupportTicket!]!
+    getMyPromoterRequests: [AffiliatePartnership!]!
+    getMyPromoterPayoutRequests: [CommissionPayout!]!
+    getMyPromotions: [AffiliatePartnership!]!
+    getMyCommissionPayouts: [CommissionPayout!]!
+    getAllPromoters: [User!]!
+    getAllAffiliatePartnerships: [AffiliatePartnership!]!
+    validateAffiliateCode(code: String!, eventId: ID!): AffiliatePromoValidation!
+    getAffiliateEvents: [Event!]!
   }
   
   type Mutation {
@@ -85,6 +96,14 @@ const typeDefs = `#graphql
     replyToSupportTicket(ticketId: ID!, message: String!): SupportTicket!
     resolveSupportTicket(ticketId: ID!): SupportTicket!
     reopenSupportTicket(ticketId: ID!): SupportTicket!
+    becomePromoter: String!
+    requestAffiliatePartnership(eventId: ID!): AffiliatePartnership!
+    requestCommissionPayout(partnershipId: ID!, amount: Float!): CommissionPayout!
+    approveAffiliatePartnership(partnershipId: ID!, commissionPercent: Float!, customerDiscount: Float!): AffiliatePartnership!
+    rejectAffiliatePartnership(partnershipId: ID!): AffiliatePartnership!
+    approveCommissionPayout(payoutId: ID!): CommissionPayout!
+    rejectCommissionPayout(payoutId: ID!): CommissionPayout!
+    toggleAffiliateEnabled(eventId: ID!, enabled: Boolean!): Event!
   }
 
   type Subscription {

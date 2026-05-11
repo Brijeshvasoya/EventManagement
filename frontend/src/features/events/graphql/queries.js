@@ -7,6 +7,7 @@ export const GET_ME = gql`
       isPlanPurchased planId planInterval planExpiresAt scheduledPlanId scheduledDowngradeAt
       totalWithdrawn availablePayout
       bankDetails { accountHolderName accountNumber bankName ifscCode }
+      isPromoter pendingCommission withdrawableCommission totalCommissionEarned totalTicketsSold
     }
   }
 `;
@@ -64,6 +65,7 @@ export const GET_EVENT_DETAILS = gql`
       vendors { id name category cost contactInfo }
       feedbacks { id rating comment user { name } createdAt }
       features
+      isAffiliateEnabled
     }
   }
 `;
@@ -73,6 +75,77 @@ export const GET_MY_VENDORS = gql`
     myVendors {
       id name category cost contactInfo availableDates
       events { id title }
+    }
+  }
+`;
+
+export const GET_ORGANIZER_STATS = gql`
+  query GetOrganizerStats {
+    getOrganizerStats {
+      totalEvents totalTicketsSold totalRevenue totalAttendees
+      upcomingEvents countUpcoming countPast
+    }
+  }
+`;
+
+export const GET_MY_PROMOTIONS = gql`
+  query GetMyPromotions {
+    getMyPromotions {
+      id event { id title date imageUrl status } status
+      promoCode pricingModel promoterSellingPrice commissionPercent
+      usageCount totalCommissionEarned totalCommissionPaidOut isWithdrawable
+      requestedAt approvedAt
+    }
+  }
+`;
+
+export const GET_MY_COMMISSION_PAYOUTS = gql`
+  query GetMyCommissionPayouts {
+    getMyCommissionPayouts {
+      id event { id title } amount status processedAt createdAt
+    }
+  }
+`;
+
+export const GET_MY_PROMOTER_REQUESTS = gql`
+  query GetMyPromoterRequests {
+    getMyPromoterRequests {
+      id promoter { id name email } event { id title status date ticketTypes { name price } } status
+      promoCode pricingModel promoterSellingPrice commissionPercent
+      usageCount totalCommissionEarned totalCommissionPaidOut isWithdrawable
+      requestedAt approvedAt
+    }
+  }
+`;
+
+export const GET_MY_PROMOTER_PAYOUT_REQUESTS = gql`
+  query GetMyPromoterPayoutRequests {
+    getMyPromoterPayoutRequests {
+      id promoter { id name email } event { id title } amount status processedAt createdAt partnership { id }
+    }
+  }
+`;
+
+export const GET_ALL_PROMOTERS = gql`
+  query GetAllPromoters {
+    getAllPromoters {
+      id name email createdAt totalCommissionEarned totalTicketsSold withdrawableCommission
+    }
+  }
+`;
+
+export const VALIDATE_AFFILIATE_CODE = gql`
+  query ValidateAffiliateCode($code: String!, $eventId: ID!) {
+    validateAffiliateCode(code: $code, eventId: $eventId) {
+      valid sellingPrice originalPrice discountAmount discountPercentage pricingModel message
+    }
+  }
+`;
+
+export const GET_AFFILIATE_EVENTS = gql`
+  query GetAffiliateEvents {
+    getAffiliateEvents {
+      id title description date location imageUrl status
     }
   }
 `;

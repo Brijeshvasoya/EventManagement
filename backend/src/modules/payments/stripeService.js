@@ -46,22 +46,38 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user, prom
 
   let totalAmount = ticket.price * quantity;
   let appliedPromoId = null;
+  let affiliatePartnershipId = null;
 
   if (promoCode) {
-    const PromoCode = require('../../models/PromoCode');
-    const promo = await PromoCode.findOne({
-      code: promoCode.toUpperCase(),
-      isActive: true,
-      expiresAt: { $gte: new Date() }
+    // First check affiliate promo codes
+    const AffiliatePartnership = require('../../models/AffiliatePartnership');
+    const affiliatePartnership = await AffiliatePartnership.findOne({
+      promoCode: promoCode.toUpperCase(),
+      status: 'APPROVED'
     });
 
-    if (promo && promo.usageCount < promo.usageLimit && (!promo.eventId || promo.eventId.toString() === eventId)) {
-      if (promo.discountType === 'PERCENTAGE') {
-        totalAmount = totalAmount * (1 - promo.discountValue / 100);
-      } else {
-        totalAmount = Math.max(0, totalAmount - promo.discountValue);
+    if (affiliatePartnership && affiliatePartnership.eventId.toString() === eventId) {
+      // Affiliate promo code — use customer discount percentage
+      const discountPerTicket = (ticket.price * (affiliatePartnership.customerDiscount || 0)) / 100;
+      totalAmount = (ticket.price - discountPerTicket) * quantity;
+      affiliatePartnershipId = affiliatePartnership._id;
+    } else {
+      // Fallback to regular promo codes
+      const PromoCode = require('../../models/PromoCode');
+      const promo = await PromoCode.findOne({
+        code: promoCode.toUpperCase(),
+        isActive: true,
+        expiresAt: { $gte: new Date() }
+      });
+
+      if (promo && promo.usageCount < promo.usageLimit && (!promo.eventId || promo.eventId.toString() === eventId)) {
+        if (promo.discountType === 'PERCENTAGE') {
+          totalAmount = totalAmount * (1 - promo.discountValue / 100);
+        } else {
+          totalAmount = Math.max(0, totalAmount - promo.discountValue);
+        }
+        appliedPromoId = promo._id;
       }
-      appliedPromoId = promo._id;
     }
   }
 
@@ -82,7 +98,11 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user, prom
       mode: 'payment',
       customer_email: user.email,
       allow_promotion_codes: false, // We handle it manually now
-      metadata: { eventId, userId: user.id, ticketType, quantity: quantity.toString(), promoCode: promoCode || '' },
+      metadata: {
+        eventId, userId: user.id, ticketType, quantity: quantity.toString(),
+        promoCode: promoCode || '',
+        affiliatePartnershipId: affiliatePartnershipId ? affiliatePartnershipId.toString() : ''
+      },
       success_url: `${APP_URL}/checkout-success?eventId=${eventId}&ticketType=${ticketType}&quantity=${quantity}&sessionId={CHECKOUT_SESSION_ID}`,
       cancel_url: `${APP_URL}/checkout-cancel?sessionId={CHECKOUT_SESSION_ID}`,
     });
@@ -97,7 +117,8 @@ exports.createCheckoutSession = async (eventId, ticketType, quantity, user, prom
       stripePaymentId: session.id,
       status: 'PENDING',
       paymentStatus: 'PENDING',
-      abandonedEmailSent: false
+      abandonedEmailSent: false,
+      affiliatePartnershipId: affiliatePartnershipId || undefined
     });
 
     return session.url;
