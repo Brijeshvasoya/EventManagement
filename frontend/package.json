@@ -37,6 +37,7 @@
     "react-hot-toast": "^2.6.0",
     "react-markdown": "^10.1.0",
     "react-qr-code": "^2.0.18",
+    "react-youtube": "^10.1.0",
     "recharts": "^3.8.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",

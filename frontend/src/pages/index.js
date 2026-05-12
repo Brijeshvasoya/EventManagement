@@ -4,10 +4,11 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { Calendar, Users, Shield, ArrowRight, Check, Play, Star, Sparkles, Bot, TrendingUp, CloudRain } from 'lucide-react';
+import { Calendar, Users, Shield, ArrowRight, Check, Play, Star, Sparkles, Bot, TrendingUp, CloudRain, X } from 'lucide-react';
 import styles from '../styles/Landing.module.css';
 import { useAuth } from '@/context/AuthContext';
-import { Typography, Tag } from 'antd';
+import { Typography, Tag, Modal } from 'antd';
+import YouTube from 'react-youtube';
 const { Text: AntText } = Typography;
 
 // Animation Variants
@@ -34,6 +35,7 @@ export default function LandingPage() {
   // Form states for CTA
   const [ctaName, setCtaName] = useState('');
   const [ctaEmail, setCtaEmail] = useState('');
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
   const handleCtaSubmit = (e) => {
     e.preventDefault();
@@ -221,9 +223,6 @@ export default function LandingPage() {
               viewport={{ once: false }}
               className="flex-1"
             >
-              <div style={{ background: '#eef2ff', color: '#6366f1', padding: '6px 16px', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '8px', border: '1px solid #e0e7ff', marginBottom: '1.5rem' }}>
-                <Sparkles size={16} /> New AI Assistant
-              </div>
               <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 leading-tight uppercase">
                 Your Personal <br /> <span className="text-indigo-600">Event Strategist</span>
               </h2>
@@ -286,15 +285,34 @@ export default function LandingPage() {
           viewport={{ once: false }}
           transition={{ duration: 0.8 }}
           className={styles.aboutImageWrapper}
+          style={{ minHeight: '450px', cursor: 'pointer' }}
+          onClick={() => setIsVideoModalOpen(true)}
         >
-          <Image
-            src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=1000"
-            alt="Tech conference"
-            fill
-            unoptimized
-            style={{ objectFit: 'cover' }}
-            className={styles.aboutImage}
-          />
+          <div className="absolute inset-0 w-full h-full rounded-[40px] overflow-hidden shadow-2xl bg-slate-900 pointer-events-none">
+            <YouTube
+              videoId="bYIFcV_S_3k"
+              opts={{
+                playerVars: {
+                  autoplay: 1,
+                  mute: 1,
+                  loop: 1,
+                  playlist: 'bYIFcV_S_3k',
+                  controls: 0,
+                  showinfo: 0,
+                  modestbranding: 1,
+                  rel: 0,
+                },
+              }}
+              className="w-full h-full"
+              iframeClassName="w-full h-full scale-[1.5]"
+            />
+          </div>
+          {/* Video Play Overlay */}
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-all rounded-[40px] group">
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+              <Play size={32} fill="currentColor" className="text-indigo-600 ml-1" />
+            </div>
+          </div>
           <motion.div
             initial={{ scale: 0 }}
             whileInView={{ scale: 1 }}
@@ -350,9 +368,6 @@ export default function LandingPage() {
             transition={{ duration: 0.8 }}
             className={styles.affiliateContent}
           >
-            <div className={styles.affiliateBadge}>
-              <Sparkles size={16} /> Earn with Every Sale
-            </div>
             <h2 className={styles.sectionTitle} style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
               Become an <span style={{ color: 'var(--primary-color)' }}>Event Promoter</span>
             </h2>
@@ -545,6 +560,43 @@ export default function LandingPage() {
           </motion.form>
         </motion.div>
       </section>
+
+      {/* Video Modal */}
+      <Modal
+        open={isVideoModalOpen}
+        onCancel={() => setIsVideoModalOpen(false)}
+        footer={null}
+        width={1000}
+        centered
+        styles={{
+          body: { padding: 0, backgroundColor: '#000', overflow: 'hidden', borderRadius: '12px' },
+          mask: { backdropFilter: 'blur(8px)' }
+        }}
+        destroyOnHidden={true}
+        closeIcon={
+          <div className="absolute -top-7 -right-7 bg-white backdrop-blur-md p-3 rounded-full border border-white/20 shadow-4xl transition-all duration-300 transform hover:scale-110 flex items-center justify-center group">
+            <X size={22} className="text-black group-hover:rotate-90 transition-transform duration-300" />
+          </div>
+        }
+      >
+        <div className="aspect-video">
+          {isVideoModalOpen && (
+            <YouTube
+              videoId="bYIFcV_S_3k"
+              opts={{
+                width: '100%',
+                height: '100%',
+                playerVars: {
+                  autoplay: 1,
+                  modestbranding: 1,
+                  rel: 0,
+                },
+              }}
+              className="w-full h-full"
+            />
+          )}
+        </div>
+      </Modal>
 
       <footer className={styles.footer}>
         <p>© {new Date().getFullYear()} EventHub. All rights reserved.</p>
