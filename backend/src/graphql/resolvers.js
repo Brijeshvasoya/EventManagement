@@ -440,6 +440,8 @@ const resolvers = {
       const Event = require('../models/Event');
       const Payout = require('../models/Payout');
 
+      const CommissionPayout = require('../models/CommissionPayout');
+
       const events = await Event.find({ organizer: user.id });
       const eventIds = events.map(e => e._id);
 
@@ -456,7 +458,14 @@ const resolvers = {
       ]);
 
       const totalWithdrawnAndPending = payouts.length > 0 ? payouts[0].total : 0;
-      const availablePayout = Math.max(0, (totalRevenue * 0.9) - totalWithdrawnAndPending);
+
+      const commissionPayouts = await CommissionPayout.aggregate([
+        { $match: { organizerId: user.id, status: { $in: ['COMPLETED', 'PENDING'] } } },
+        { $group: { _id: null, total: { $sum: "$amount" } } }
+      ]);
+      const totalCommission = commissionPayouts.length > 0 ? commissionPayouts[0].total : 0;
+
+      const availablePayout = Math.max(0, (totalRevenue * 0.9) - totalWithdrawnAndPending - totalCommission);
 
       if (amount > availablePayout) {
         throw new GraphQLError(`Insufficient balance. Maximum you can withdraw is ₹${availablePayout.toFixed(2)} (after 10% platform fee).`);
@@ -1036,6 +1045,8 @@ const resolvers = {
         const Event = require('../models/Event');
         const Payout = require('../models/Payout');
 
+        const CommissionPayout = require('../models/CommissionPayout');
+
         const organizerId = parent._id || parent.id;
         const events = await Event.find({ organizer: organizerId });
         const eventIds = events.map(e => e._id);
@@ -1054,7 +1065,13 @@ const resolvers = {
 
         const totalWithdrawnAndPending = payouts.length > 0 ? payouts[0].total : 0;
 
-        const available = (totalRevenue * 0.9) - totalWithdrawnAndPending;
+        const commissionPayouts = await CommissionPayout.aggregate([
+          { $match: { organizerId: organizerId, status: { $in: ['COMPLETED', 'PENDING'] } } },
+          { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+        const totalCommission = commissionPayouts.length > 0 ? commissionPayouts[0].total : 0;
+
+        const available = (totalRevenue * 0.9) - totalWithdrawnAndPending - totalCommission;
         return Math.max(0, available);
       } catch (e) {
         return 0;

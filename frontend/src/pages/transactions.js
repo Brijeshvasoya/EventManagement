@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from '@apollo/client/react';
-import { GET_MY_EVENTS, GET_MY_ANALYTICS, GET_EVENTS, GET_ME, GET_MY_PAYOUTS } from '@/features/events/graphql/queries';
+import { GET_MY_EVENTS, GET_MY_ANALYTICS, GET_EVENTS, GET_ME, GET_MY_PAYOUTS, GET_MY_PROMOTER_PAYOUT_REQUESTS } from '@/features/events/graphql/queries';
 import { REQUEST_PAYOUT, UPDATE_BANK_DETAILS } from '@/features/events/graphql/mutations';
 import { useAuth } from '@/context/AuthContext';
 import Head from 'next/head';
@@ -37,6 +37,10 @@ function TransactionsContent() {
   });
 
   const { data: payoutData, refetch: refetchPayouts } = useQuery(GET_MY_PAYOUTS, {
+    skip: !user || user.role !== 'ORGANIZER'
+  });
+
+  const { data: promoterPayoutsData } = useQuery(GET_MY_PROMOTER_PAYOUT_REQUESTS, {
     skip: !user || user.role !== 'ORGANIZER'
   });
 
@@ -87,6 +91,10 @@ function TransactionsContent() {
   let stats = analyticsData?.myAnalytics || { totalRevenue: 0, ticketsSold: 0 };
   const availablePayout = userData?.me?.availablePayout || 0;
   const hasBankDetails = !!userData?.me?.bankDetails?.accountNumber;
+
+  const totalPlatformFees = stats.totalRevenue * 0.1;
+  const totalOrganizerWithdrawals = (payoutData?.myPayouts || []).filter(p => p.status === 'COMPLETED' || p.status === 'PENDING').reduce((sum, p) => sum + p.amount, 0);
+  const totalPromoterCommissions = (promoterPayoutsData?.getMyPromoterPayoutRequests || []).filter(p => p.status === 'COMPLETED' || p.status === 'PENDING').reduce((sum, p) => sum + p.amount, 0);
 
   const targetEvents = user?.role === 'SUPER_ADMIN' ? allEventsData?.events : eventsData?.myEvents;
 
@@ -276,8 +284,19 @@ function TransactionsContent() {
               prefix={<IndianRupee size={20} style={{ marginRight: 4, color: '#64748B' }} />}
               styles={{ content: { color: '#64748B', fontWeight: 900, fontSize: '2rem' } }}
             />
-            <div style={{ marginTop: '8px', fontSize: '0.8rem', color: '#64748B', fontWeight: 500 }}>
-              Withdrawals + Platform Fees
+            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.75rem', color: '#64748B', fontWeight: 500 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Platform Fees (10%):</span>
+                <span style={{ fontWeight: 700 }}>₹{totalPlatformFees.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Your Withdrawals:</span>
+                <span style={{ fontWeight: 700 }}>₹{totalOrganizerWithdrawals.toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Promoter Commissions:</span>
+                <span style={{ fontWeight: 700 }}>₹{totalPromoterCommissions.toFixed(2)}</span>
+              </div>
             </div>
           </Card>
         </Col>

@@ -183,9 +183,20 @@ export default function PromotersManagementPage() {
       >
         <div style={{ position: 'relative', zIndex: 2 }}>
           <Title level={1} style={{ color: 'white', margin: 0, fontWeight: 900, fontSize: '2.5rem' }}>Promoter Network</Title>
-          <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: '1.1rem', display: 'block', marginTop: '8px' }}>
+          <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: '1.1rem', display: 'block', marginTop: '8px', marginBottom: '24px' }}>
             Manage your affiliate partners, review applications, and process commission payouts.
           </Text>
+          
+          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+            <div style={{ background: 'rgba(255,255,255,0.1)', padding: '16px 24px', borderRadius: '16px', backdropFilter: 'blur(10px)' }}>
+              <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Paid Out</Text>
+              <Title level={2} style={{ color: '#10B981', margin: 0 }}>₹{partnerships.reduce((acc, p) => acc + (p.totalCommissionPaidOut || 0), 0).toFixed(2)}</Title>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.1)', padding: '16px 24px', borderRadius: '16px', backdropFilter: 'blur(10px)' }}>
+              <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Pending Payouts</Text>
+              <Title level={2} style={{ color: '#F59E0B', margin: 0 }}>₹{partnerships.reduce((acc, p) => acc + ((p.totalCommissionEarned || 0) - (p.totalCommissionPaidOut || 0)), 0).toFixed(2)}</Title>
+            </div>
+          </div>
         </div>
         <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '300px', height: '300px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
       </motion.div>

@@ -343,15 +343,27 @@ exports.createTransfer = async (payout, organizer) => {
       throw new Error('Organizer has not linked a Stripe account');
     }
 
-    const transfer = await stripe.transfers.create({
-      amount: Math.round(payout.amount * 100),
-      currency: 'inr',
-      destination: organizer.stripeAccountId,
-      description: `Payout for request ${payout._id}`,
-      metadata: { payoutId: payout._id.toString() }
-    });
+    try {
+      const transfer = await stripe.transfers.create({
+        amount: Math.round(payout.amount * 100),
+        currency: 'inr',
+        destination: organizer.stripeAccountId,
+        description: `Payout for request ${payout._id}`,
+        metadata: { payoutId: payout._id.toString() }
+      });
 
-    return transfer;
+      return transfer;
+    } catch (e) {
+      if (e.code === 'insufficient_capabilities_for_transfer') {
+        if (process.env.STRIPE_SECRET_KEY.startsWith('sk_test_')) {
+          console.warn(`[TEST MODE] Bypassing insufficient capabilities for transfer to account ${organizer.stripeAccountId}`);
+          return { id: 'tr_mock_bypassed_' + Date.now() };
+        } else {
+          throw new Error('Destination account has not completed Stripe onboarding. Transfers cannot be processed yet.');
+        }
+      }
+      throw e;
+    }
   }
   return { id: 'tr_mock_' + Date.now() };
 };
