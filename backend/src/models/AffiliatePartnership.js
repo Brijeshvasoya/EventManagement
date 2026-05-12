@@ -27,7 +27,5 @@ const affiliatePartnershipSchema = new mongoose.Schema({
 affiliatePartnershipSchema.index({ promoterId: 1, eventId: 1 }, { unique: true });
 // Fast lookup for organizer dashboard
 affiliatePartnershipSchema.index({ organizerId: 1 });
-// Fast promo code lookup at checkout
-affiliatePartnershipSchema.index({ promoCode: 1 });
 
 module.exports = mongoose.model('AffiliatePartnership', affiliatePartnershipSchema);
