@@ -4,7 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { Calendar, Users, Shield, ArrowRight, Check, Play, Star, Sparkles } from 'lucide-react';
+import { Calendar, Users, Shield, ArrowRight, Check, Play, Star, Sparkles, Bot, TrendingUp, CloudRain } from 'lucide-react';
 import styles from '../styles/Landing.module.css';
 import { useAuth } from '@/context/AuthContext';
 import { Typography, Tag } from 'antd';
@@ -48,7 +48,7 @@ export default function LandingPage() {
     if (typeof window !== 'undefined' && (window).Capacitor?.isNativePlatform()) {
       router.replace('/login');
     }
-    
+
     setTimeout(() => setMounted(true), 0);
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
@@ -70,6 +70,33 @@ export default function LandingPage() {
       <Head>
         <title>EventHub | Reveal Your Best Events</title>
       </Head>
+
+      {/* ── Background Animated Orbs (AI Project Style) ── */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-50">
+        <motion.div
+          animate={{
+            x: [0, 100, 0],
+            y: [0, 50, 0],
+            scale: [1, 1.2, 1]
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-200 rounded-full blur-[120px]"
+        />
+        <motion.div
+          animate={{
+            x: [0, -80, 0],
+            y: [0, 100, 0],
+            scale: [1, 1.1, 1]
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-100 rounded-full blur-[100px]"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+
+        {/* Subtle Cinematic Overlay */}
+        <img src="/hero_bg.png" className="absolute inset-0 w-full h-full object-cover opacity-[0.03] mix-blend-overlay" alt="" />
+      </div>
+
 
       {/* Navbar */}
       <motion.nav
@@ -124,20 +151,25 @@ export default function LandingPage() {
             className={styles.heroRight}
           >
             <div className={styles.heroImageContainer}>
-                <Image 
-                  src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1000" 
-                  alt="Concert crowd" 
-                  fill
-                  unoptimized
-                  style={{ objectFit: 'cover' }}
-                />
+              <Image
+                src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1000"
+                alt="Concert crowd"
+                fill
+                unoptimized
+                style={{ objectFit: 'cover' }}
+              />
             </div>
           </motion.div>
         </div>
       </section>
 
       {/* Services / Features */}
-      <section id="services" className={styles.features}>
+      <section id="services" className="relative py-24 z-10">
+        {/* Decorative Background Image */}
+        <div className="absolute top-0 left-[-5%] w-[400px] h-[400px] opacity-[0.07] pointer-events-none grayscale">
+          <img src="/hologram_calendar.png" alt="" className="w-full animate-[spin_40s_linear_infinite]" />
+        </div>
+
         <motion.div
           initial="initial"
           whileInView="animate"
@@ -179,6 +211,73 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
+      {/* AI Assistant Showcase Section (New Feature) */}
+      <section id="ai-assistant" className="relative py-24 z-10 overflow-hidden bg-slate-50/30">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col lg:flex-row items-center gap-20">
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: false }}
+              className="flex-1"
+            >
+              <div style={{ background: '#eef2ff', color: '#6366f1', padding: '6px 16px', borderRadius: '100px', fontSize: '0.75rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '8px', border: '1px solid #e0e7ff', marginBottom: '1.5rem' }}>
+                <Sparkles size={16} /> New AI Assistant
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 leading-tight uppercase">
+                Your Personal <br /> <span className="text-indigo-600">Event Strategist</span>
+              </h2>
+              <p className="text-lg text-slate-500 mb-10 font-medium">
+                Our advanced AI isn't just a chatbot—it's a tool-powered engine that helps you plan, budget, and predict every detail of your event.
+              </p>
+
+              <div className="grid sm:grid-cols-2 gap-6">
+                {[
+                  { icon: <Bot size={20} />, title: "Smart Chat", color: "#6366f1" },
+                  { icon: <Calendar size={20} />, title: "AI Planning", color: "#8b5cf6" },
+                  { icon: <TrendingUp size={20} />, title: "Budget Logic", color: "#ec4899" },
+                  { icon: <CloudRain size={20} />, title: "Weather Guard", color: "#3b82f6" }
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <div style={{ color: item.color }} className="shrink-0">{item.icon}</div>
+                    <span className="font-bold text-slate-700 text-sm">{item.title}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: false }}
+              className="flex-1 relative"
+            >
+              <motion.div
+                animate={{
+                  y: [0, -25, 0],
+                  rotate: [0, 3, -3, 0],
+                  scale: [1, 0.96, 1.04, 1]
+                }}
+                transition={{
+                  y: { duration: 5, repeat: Infinity, ease: "easeInOut" },
+                  rotate: { duration: 7, repeat: Infinity, ease: "easeInOut" },
+                  scale: { duration: 6, repeat: Infinity, ease: "easeInOut" }
+                }}
+                className="relative z-10"
+              >
+                <img
+                  src="/chatbot_avatar.png"
+                  alt="AI Assistant Bot"
+                  className="w-full h-auto rounded-[3rem] drop-shadow-[0_20px_60px_rgba(99,102,241,0.5)] transition-all duration-500"
+                />
+              </motion.div>
+              {/* Decorative Circle Background */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-100 rounded-full blur-3xl -z-10"></div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* About / Expert Care */}
       <section id="why-us" className={styles.aboutSection}>
         <motion.div
@@ -188,13 +287,13 @@ export default function LandingPage() {
           transition={{ duration: 0.8 }}
           className={styles.aboutImageWrapper}
         >
-          <Image 
-            src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=1000" 
-            alt="Tech conference" 
+          <Image
+            src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=1000"
+            alt="Tech conference"
             fill
             unoptimized
             style={{ objectFit: 'cover' }}
-            className={styles.aboutImage} 
+            className={styles.aboutImage}
           />
           <motion.div
             initial={{ scale: 0 }}
@@ -244,7 +343,7 @@ export default function LandingPage() {
       {/* Affiliate / Promoter Network Section */}
       <section id="affiliate" className={styles.affiliateSection}>
         <div className={styles.affiliateGrid}>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: false }}
@@ -260,7 +359,7 @@ export default function LandingPage() {
             <p className={styles.sectionSubtitle} style={{ textAlign: 'left', marginLeft: 0, maxWidth: '100%' }}>
               Turn your social network into a source of income. Promote your favorite events, offer exclusive discounts to your followers, and earn instant commissions on every ticket sold through your link.
             </p>
-            
+
             <div className={styles.affiliateFeatures}>
               {[
                 { title: "High Commissions", desc: "Earn competitive commissions on every ticket sale you refer." },
@@ -276,13 +375,13 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            
+
             <Link href="/signup" className={styles.primaryBtn} style={{ marginTop: '2.5rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
               Join Affiliate Network <ArrowRight size={18} />
             </Link>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: false }}
@@ -308,7 +407,7 @@ export default function LandingPage() {
                 <AntText type="secondary" style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>Real-time performance graph</AntText>
               </div>
             </div>
-            
+
             {/* Floating decoration badge */}
             <motion.div
               animate={{ y: [0, -10, 0] }}
